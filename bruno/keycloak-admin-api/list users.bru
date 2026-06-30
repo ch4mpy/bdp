@@ -1,0 +1,26 @@
+meta {
+  name: list users
+  type: http
+  seq: 7
+}
+
+get {
+  url: https://host.docker.internal/auth/admin/realms/labs/users?email=manager&enabled=true
+  body: none
+  auth: inherit
+}
+
+params:query {
+  email: manager
+  enabled: true
+  ~idpAlias: tenant1
+  ~briefRepresentation: false
+  ~exact: true
+  ~search: *tenant
+  ~username: manager
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

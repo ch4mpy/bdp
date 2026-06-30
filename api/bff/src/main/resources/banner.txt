@@ -1,0 +1,14 @@
+${AnsiColor.BLUE}   ____      _ _____    _       _         
+${AnsiColor.BLUE}  |  _ \    | |  __ \  | |     | |        
+${AnsiColor.BLUE}  | |_) | __| | |__) | | | __ _| |__  ___ 
+${AnsiColor.BLUE}  |  _ < / _` |  ___/  | |/ _` | '_ \/ __|
+${AnsiColor.BLUE}  | |_) | (_| | |      | | (_| | |_) \__ \
+${AnsiColor.BLUE}  |____/ \__,_|_|      |_|\__,_|_.__/|___/
+${AnsiColor.BLUE}   ____  ______ ______                    
+${AnsiColor.BLUE}  |  _ \|  ____|  ____|                   
+${AnsiColor.BLUE}  | |_) | |__  | |__                      
+${AnsiColor.BLUE}  |  _ <|  __| |  __|                     
+${AnsiColor.BLUE}  | |_) | |    | |                        
+${AnsiColor.BLUE}  |____/|_|    |_|                        
+${AnsiColor.RED}Spring Boot ${spring-boot.formatted-version}
+${AnsiColor.BLACK}

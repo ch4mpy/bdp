@@ -1,0 +1,38 @@
+{"properties": [
+    {
+      "name": "cn",
+      "type": "java.lang.String",
+      "description": "'Common Name' as defined in SSL certificate (hostname)"
+    },
+    {
+      "name": "tenant",
+      "type": "java.lang.String",
+      "description": "Name of the tenant for wich the BFF instance is spawned"
+    },
+    {
+      "name": "bff-client-id",
+      "type": "java.lang.String",
+      "description": "OAuth2 client ID defined on the OpenID Provider for the BFF to authenticate users"
+    },
+    {
+      "name": "bff-client-secret",
+      "type": "java.lang.String",
+      "description": "OAuth2 client secret defined on the OpenID Provider the BFF to authenticate users"
+    },
+    {
+      "name": "reverse-proxy-uri",
+      "type": "java.net.URI",
+      "description": "URI of the reverse proxy in front of the BFF and the frontend"
+    },
+    {
+      "name": "issuer",
+      "type": "java.net.URI",
+      "description": "OpenID Provider's identifier. The OpenID configuration should be available by appending /.well-known/openid-configuration to it"
+    },
+    {
+      "name": "api-internal-uri",
+      "type": "java.net.URI",
+      "description": "Root URI for the REST API"
+    }
+  ]}
+  

@@ -1,0 +1,19 @@
+auth {
+  mode: oauth2
+}
+
+auth:oauth2 {
+  grant_type: client_credentials
+  access_token_url: https://host.docker.internal/auth/realms/labs/protocol/openid-connect/token
+  refresh_token_url: https://host.docker.internal/auth/realms/labs/protocol/openid-connect/token
+  client_id: rest-api
+  client_secret: secret
+  scope: openid
+  credentials_placement: body
+  credentials_id: credentials
+  token_source: access_token
+  token_placement: header
+  token_header_prefix: Bearer
+  auto_fetch_token: true
+  auto_refresh_token: true
+}

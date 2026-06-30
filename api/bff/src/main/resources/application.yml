@@ -1,0 +1,155 @@
+cn: host.docker.internal
+bff-client-id: rest-api-bff
+bff-client-secret: secret
+reverse-proxy-uri: https://${cn}
+issuer: ${reverse-proxy-uri}/auth/realms/labs
+api-internal-uri: https://${cn}:8080
+
+server:
+  port: 7080
+  servlet:
+    context-path: /bff
+  shutdown: immediate
+  ssl:
+    enabled: true
+    bundle: self-signed
+
+spring:
+  application:
+    name: ${bff-client-id}
+  security:
+    oauth2:
+      client:
+        provider:
+          sso:
+            issuer-uri: ${issuer}
+        registration:
+          bff:
+            client-name: ${bff-client-id}
+            provider: sso
+            client-id: ${bff-client-id}
+            client-secret: ${bff-client-secret}
+            authorization-grant-type: authorization_code
+            scope: openid, profile, email
+  ssl:
+    bundle:
+      pem:
+        self-signed:
+          keystore:
+            certificate: classpath:${cn}.crt
+            private-key: classpath:${cn}.key
+          truststore:
+            certificate: classpath:${cn}.crt
+          reload-on-update: true
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            # Applies the OAuth2 BFF pattern (oauth2Login SecurityFilterChain and TokenRelay= filter to replace the session cookie with the access token in session)
+            - id: bff
+              uri: ${api-internal-uri}
+              predicates:
+                - Path=/api/**
+              filters:
+                # replace the session cookie with the access token in session
+                - TokenRelay=
+                # remove the /bff/api prefix
+                - StripPrefix=2
+    refresh:
+      enabled: false
+  web:
+    error:
+      include-message: always
+
+springdoc:
+  # currently broken (boot 4.1.0, springdoc-openapi 3.0.3)
+  # workaround: SpringDocAuthenticationConfiguration
+  show-login-endpoint: true
+
+com:
+  c4-soft:
+    springaddons:
+      oidc:
+        ops:
+          - iss: ${issuer}
+            authorities:
+              - path: $.resource_access.${bff-client-id}.roles
+        client:
+          client-uri: ${reverse-proxy-uri}
+          pkce-forced: true
+          post-login-allowed-uri-patterns:
+            - ${reverse-proxy-uri}/bdp-labs(/.*)?
+          post-login-redirect-host: ${reverse-proxy-uri}
+          post-login-redirect-path: /bdp-labs/
+          post-logout-allowed-uri-patterns:
+            - ${reverse-proxy-uri}/bdp-labs(/.*)?
+          post-logout-redirect-host: ${reverse-proxy-uri}
+          post-logout-redirect-path: /bdp-labs/
+          security-matchers:
+            - /login/**
+            - /oauth2/**
+            - /logout/**
+            - /api/**
+            - /me
+          permit-all:
+            - /login/**
+            - /oauth2/**
+            - /logout/connect/back-channel/bff
+            - /api/**
+            - /me
+          csrf: cookie-accessible-from-js
+          # the CSRF cookie must be accessible to both the BFF and the SPA code
+          # while not colliding with other apps CSRF cookies
+          csrf-cookie-path: /
+          oauth2-redirections:
+            authentication-entry-point: UNAUTHORIZED
+            pre-authorization-code: OK
+            rp-initiated-logout: ACCEPTED
+          back-channel-logout:
+            enabled: true
+            internal-logout-uri: ${reverse-proxy-uri}${server.servlet.context-path}/logout/connect/back-channel/bff
+        resourceserver:
+          permit-all:
+            - /actuator/health
+            # This endpoint is exposed only with the Maven "openapi" profile
+            - /v3/api-docs
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  observations:
+    key-values:
+      application: ${spring.application.name}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://host.docker.internal:4318/v1/traces
+    logging:
+      export:
+        otlp:
+          endpoint: http://host.docker.internal:4318/v1/logs
+  otlp:
+    metrics:
+      export:
+        url: http://host.docker.internal:4318/v1/metrics
+
+logging:
+  level:
+    "[org.springframework]": INFO
+    "[com.c4soft.demo.multitenancy]": DEBUG

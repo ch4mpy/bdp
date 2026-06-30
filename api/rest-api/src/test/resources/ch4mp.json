@@ -1,0 +1,7 @@
+{
+  "sub": "cac4811a-0d59-4d67-91c0-e8be764dd5ff",
+  "preferred_username": "ch4mp",
+  "scope": "openid email",
+  "iss": "https://localhost/auth/realms/labs",
+  "email": "ch4mp@c4-soft.com"
+}

@@ -1,0 +1,36 @@
+name: bdp-labs
+
+volumes:
+  rest_api_data:
+    driver: local
+
+secrets:
+  rest_api_db_password:
+    file: ./secrets/rest-api/postgres_password.txt
+  rest_api_db_user:
+    file: ./secrets/rest-api/postgres_user.txt
+
+services:
+  rest_api_db:
+    container_name: bdp-labs.rest-api-db
+    image: postgres:18
+    command:
+      - -p 5432
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    secrets:
+      - rest_api_db_user
+      - rest_api_db_password
+    environment:
+      TZ: "Pacific/Tahiti"
+      POSTGRES_USER_FILE: /run/secrets/rest_api_db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/rest_api_db_password
+      POSTGRES_DB: bdp-labs
+    volumes:
+      - rest_api_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d bdp-labs -U $(cat /run/secrets/rest_api_db_user) -p 5432"]
+      interval: 3s
+      timeout: 60s
+      retries: 20

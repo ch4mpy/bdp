@@ -1,0 +1,16 @@
+meta {
+  name: user by ID
+  type: http
+  seq: 9
+}
+
+get {
+  url: https://host.docker.internal/auth/admin/realms/labs/users/5ccae7e8-2b1e-4910-a0b8-90b373315f63
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

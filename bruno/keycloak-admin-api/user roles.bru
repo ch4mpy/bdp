@@ -1,0 +1,21 @@
+meta {
+  name: user roles
+  type: http
+  seq: 10
+}
+
+get {
+  url: https://host.docker.internal/auth/admin/realms/labs/users/5ccae7e8-2b1e-4910-a0b8-90b373315f63/groups?briefRepresentation=false
+  body: none
+  auth: inherit
+}
+
+params:query {
+  briefRepresentation: false
+  ~search: tenant2
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

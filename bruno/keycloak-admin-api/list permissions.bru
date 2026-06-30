@@ -1,0 +1,20 @@
+meta {
+  name: list permissions
+  type: http
+  seq: 5
+}
+
+get {
+  url: https://host.docker.internal/auth/admin/realms/labs/roles?search=.
+  body: none
+  auth: inherit
+}
+
+params:query {
+  search: .
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
