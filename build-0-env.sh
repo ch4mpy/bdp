@@ -93,6 +93,7 @@ if [ ! -d ./certs ]; then
 fi
 if [ ! -f ./certs/$CN.crt ]; then
   if [ ! -f ~/.ssh/${CN}.crt ]; then
+    export SSL_PASSWORD=$(cat ./secrets/ssl/password.txt)
     echo "Generating self-signed SSL certificates for ${CN} in ~/.ssh"
     bash ./certs/self-signed.sh $CN $SSL_PASSWORD `echo ~/.ssh`
 
