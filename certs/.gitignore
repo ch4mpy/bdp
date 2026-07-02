@@ -1,0 +1,5 @@
+*.config
+*.crt
+*.jks
+*.key
+*.p12

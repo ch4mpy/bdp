@@ -1,5 +1,4 @@
 .env
 secrets/
-certs/
 /.metadata/
 .DS_Store
