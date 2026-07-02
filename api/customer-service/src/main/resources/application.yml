@@ -1,0 +1,109 @@
+cn: host.docker.internal
+reverse-proxy-uri: https://${cn}
+issuer: https://host.docker.internal/auth/realms/labs
+
+server:
+  port: 8083
+  ssl:
+    enabled: true
+    bundle: self-signed
+
+spring:
+  application:
+    name: customer-service
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  profiles:
+    active:
+      - postgresql
+  ssl:
+    bundle:
+      pem:
+        self-signed:
+          keystore:
+            certificate: classpath:${cn}.crt
+            private-key: classpath:${cn}.key
+          truststore:
+            certificate: classpath:${cn}.crt
+  web:
+    error:
+      include-message: always
+
+com:
+  c4-soft:
+    springaddons:
+      oidc:
+        ops:
+          - iss: ${issuer}
+            authorities:
+              - path: $.realm_access.roles
+        resourceserver:
+          permit-all:
+            - /card-payments/**
+            - /actuator/health/readiness
+            - /actuator/health/liveness
+            - /actuator/prometheus
+            - /v3/api-docs/**
+            - /swagger-ui/**
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  observations:
+    key-values:
+      application: ${spring.application.name}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://host.docker.internal:4318/v1/traces
+    logging:
+      export:
+        otlp:
+          endpoint: http://host.docker.internal:4318/v1/logs
+  otlp:
+    metrics:
+      export:
+        url: http://host.docker.internal:4318/v1/metrics
+
+logging:
+  level:
+    "[org.springframework]": INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: h2
+  datasource:
+    url: jdbc:h2:mem:customers
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+---
+spring:
+  config:
+    activate:
+      on-profile: postgresql
+  datasource:
+    url: jdbc:postgresql://host.docker.internal:5432/customers
+    username: rest-api
+    password: secret
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

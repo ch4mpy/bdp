@@ -1,0 +1,109 @@
+bdp-labs:
+  keycloak-admin-api:
+    base-uri: ${reverse-proxy-uri}/auth
+    realm-name: labs
+    secret: secret
+
+cn: host.docker.internal
+reverse-proxy-uri: https://${cn}
+issuer: ${bdp-labs.keycloak-admin-api.base-uri}/realms/${bdp-labs.keycloak-admin-api.realm-name}
+
+server:
+  port: 8083
+  ssl:
+    enabled: true
+    bundle: self-signed
+
+spring:
+  application:
+    name: user-service
+  security:
+    oauth2:
+      client:
+        provider:
+          sso:
+            issuer-uri: ${issuer}
+        registration:
+          keycloak-admin-api:
+            provider: sso
+            client-id: rest-api
+            client-secret: ${bdp-labs.keycloak-admin-api.secret}
+            authorization-grant-type: client_credentials
+            scope:
+              - openid
+  ssl:
+    bundle:
+      pem:
+        self-signed:
+          keystore:
+            certificate: classpath:${cn}.crt
+            private-key: classpath:${cn}.key
+          truststore:
+            certificate: classpath:${cn}.crt
+  web:
+    error:
+      include-message: always
+
+com:
+  c4-soft:
+    springaddons:
+      oidc:
+        ops:
+          - iss: ${issuer}
+            authorities:
+              - path: $.realm_access.roles
+        resourceserver:
+          permit-all:
+            - /me
+            - /users/**
+            - /actuator/health/readiness
+            - /actuator/health/liveness
+            - /actuator/prometheus
+            - /v3/api-docs/**
+            - /swagger-ui/**
+      rest:
+        client:
+          keycloak-admin-api:
+            group: keycloak
+            base-url: ${bdp-labs.keycloak-admin-api.base-uri}
+            ssl-bundle: self-signed
+            authorization:
+              oauth2:
+                oauth2-registration-id: keycloak-admin-api
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  observations:
+    key-values:
+      application: ${spring.application.name}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://host.docker.internal:4318/v1/traces
+    logging:
+      export:
+        otlp:
+          endpoint: http://host.docker.internal:4318/v1/logs
+  otlp:
+    metrics:
+      export:
+        url: http://host.docker.internal:4318/v1/metrics
+
+logging:
+  level:
+    "[org.springframework]": INFO

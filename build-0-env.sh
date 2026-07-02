@@ -80,9 +80,6 @@ echo "$(cat ./secrets/mail/username.txt):$(cat ./secrets/mail/password.txt)" > .
 if [ ! -d ./secrets/rest-api ]; then
   mkdir ./secrets/rest-api
 fi
-if [ ! -f ./secrets/rest-api/postgres_user.txt ]; then
-  echo rest-api > ./secrets/rest-api/postgres_user.txt
-fi
 if [ ! -f ./secrets/rest-api/postgres_password.txt ]; then
   echo $(openssl rand -hex 16) > ./secrets/rest-api/postgres_password.txt
 fi
@@ -101,5 +98,6 @@ if [ ! -f ./certs/$CN.crt ]; then
     bash ./certs/add-to-jre-cacerts.sh ~/.ssh/$CN.jks $SSL_PASSWORD $CN
   fi
 
+  echo "Copying self-signed SSL certificates for ${CN} from ~/.ssh to ./certs"
   cp ~/.ssh/${CN}.* ./certs/
 fi
