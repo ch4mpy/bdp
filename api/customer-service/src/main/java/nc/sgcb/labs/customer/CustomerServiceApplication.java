@@ -1,10 +1,9 @@
 package nc.sgcb.labs.customer;
 
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.customer.domain.Customer;
-import nc.sgcb.labs.customer.jpa.CustomerRepository;
+import nc.sgcb.labs.customer.jpa.CustomerJpaRepository;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -28,7 +27,7 @@ public class CustomerServiceApplication {
    @Slf4j
    static class CustomerServiceInitializer implements ApplicationRunner {
 
-        private final CustomerRepository customerRepo;
+        private final CustomerJpaRepository customerRepo;
 
        @Override
        @Transactional
