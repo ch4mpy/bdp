@@ -17,7 +17,7 @@ public class Customer {
 
     @Id
     @GeneratedValue(generator = "customerSeq")
-    @SequenceGenerator(name = "customerSeq", sequenceName = "customers_seq")
+    @SequenceGenerator(name = "customerSeq", sequenceName = "customers_seq", allocationSize = 1)
     @EqualsAndHashCode.Include
     @ToString.Include
     private Long id;
@@ -35,7 +35,5 @@ public class Customer {
 
     @Column(nullable = false)
     private String birthLocation;
-
-
 
 }
