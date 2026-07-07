@@ -102,7 +102,7 @@ spring:
     activate:
       on-profile: postgresql
   datasource:
-    url: jdbc:postgresql://host.docker.internal:5432/accounts
+    url: jdbc:postgresql://host.docker.internal:2633/accounts
     username: rest-api
     password: secret
   jpa:

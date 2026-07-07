@@ -13,7 +13,7 @@ MAIL_PORT=1025\n\
 \n\
 # Keycloak database\n\
 KC_DB_IMAGE=postgres:18\n\
-KC_DB_HOST=keycloak-db\n\
+KC_DB_HOST=host.docker.internal\n\
 KC_DB_PORT=2632\n\
 KC_DB_NAME=keycloak\n\
 KC_DB_SCHEMA=public\n\
@@ -26,6 +26,10 @@ KC_DB=postgres\n\
 KC_HTTP_ENABLED=false\n\
 KC_HTTPS_PORT=3643\n\
 KC_LOG_LEVEL=INFO\n\
+\n\
+ACCOUNTS_DB_PORT=2633\n\
+CARD_PAYMENTS_DB_PORT=2634\n\
+CUSTOMERS_DB_PORT=2635\n\
 " > .env
 fi
 source ./.env

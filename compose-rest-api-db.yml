@@ -1,7 +1,11 @@
 name: bdp-labs
 
 volumes:
-  rest_api_data:
+  accounts_data:
+    driver: local
+  card_payments_data:
+    driver: local
+  customers_data:
     driver: local
 
 secrets:
@@ -9,32 +13,72 @@ secrets:
     file: ./secrets/rest-api/postgres_password.txt
 
 services:
-  rest_api_db:
-    container_name: bdp-labs.rest-api-db
+  accounts_db:
+    container_name: bdp-labs.accounts-db
     image: postgres:18
+    hostname: ${CN}
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "${ACCOUNTS_DB_PORT}:5432"
     secrets:
       - rest_api_db_password
     environment:
-      TZ: "Pacific/Tahiti"
+      POSTGRES_DB: accounts
       POSTGRES_USER: rest-api
       POSTGRES_PASSWORD_FILE: /run/secrets/rest_api_db_password
+      TZ: "Pacific/Tahiti"
     volumes:
-      - rest_api_data:/var/lib/postgresql
-    entrypoint: [ "/bin/bash", "-c","
-      docker-entrypoint.sh postgres &
-      rm -f /initialised.txt || true &&
-      until pg_isready -U postgres; do sleep 3; done &&
-      psql -U rest-api -d postgres -c 'CREATE DATABASE accounts;' || true &&
-      psql -U rest-api -d postgres -c 'CREATE DATABASE card_payments;' || true &&
-      psql -U rest-api -d postgres -c 'CREATE DATABASE customers;' || true &&
-      echo done > /initialised.txt &&
-      wait"
-    ]
+      - accounts_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d bdp-labs -U $(cat /run/secrets/rest_api_db_user) -p 5432"]
+      test: ["CMD-SHELL", "pg_isready -d bdp-labs -U rest-api -p 5432"]
+      interval: 3s
+      timeout: 60s
+      retries: 20
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  card_payments_db:
+    container_name: bdp-labs.card-payments-db
+    image: postgres:18
+    hostname: ${CN}
+    restart: unless-stopped
+    ports:
+      - "${CARD_PAYMENTS_DB_PORT}:5432"
+    secrets:
+      - rest_api_db_password
+    environment:
+      POSTGRES_DB: card_payments
+      POSTGRES_USER: rest-api
+      POSTGRES_PASSWORD_FILE: /run/secrets/rest_api_db_password
+      TZ: "Pacific/Tahiti"
+    volumes:
+      - card_payments_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d bdp-labs -U rest-api -p 5432"]
+      interval: 3s
+      timeout: 60s
+      retries: 20
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  customers_db:
+    container_name: bdp-labs.customers-db
+    image: postgres:18
+    hostname: ${CN}
+    restart: unless-stopped
+    ports:
+      - "${CUSTOMERS_DB_PORT}:5432"
+    secrets:
+      - rest_api_db_password
+    environment:
+      POSTGRES_DB: customers
+      POSTGRES_USER: rest-api
+      POSTGRES_PASSWORD_FILE: /run/secrets/rest_api_db_password
+      TZ: "Pacific/Tahiti"
+    volumes:
+      - customers_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d bdp-labs -U rest-api -p 5432"]
       interval: 3s
       timeout: 60s
       retries: 20

@@ -14,6 +14,7 @@ services:
   keycloak-db:
     container_name: bdp-labs.keycloak-db
     image: ${KC_DB_IMAGE}
+    hostname: ${CN}
     command:
       - -p ${KC_DB_PORT}
     restart: unless-stopped
@@ -23,10 +24,10 @@ services:
       - kc_db_user
       - kc_db_password
     environment:
-      TZ: "Pacific/Tahiti"
+      POSTGRES_DB: ${KC_DB_NAME}
       POSTGRES_USER_FILE: /run/secrets/kc_db_user
       POSTGRES_PASSWORD_FILE: /run/secrets/kc_db_password
-      POSTGRES_DB: ${KC_DB_NAME}
+      TZ: "Pacific/Tahiti"
     volumes:
       -  keycloak:/var/lib/postgresql
     healthcheck:

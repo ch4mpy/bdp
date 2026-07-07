@@ -22,7 +22,7 @@ docker build \
   --build-arg KC_HEALTH_ENABLED=true \
   --build-arg KC_METRICS_ENABLED=true \
   --build-arg KC_DB=postgres \
-  --build-arg KC_DB_HOST=$CN \
+  --build-arg KC_DB_HOST=$KC_DB_HOST \
   --build-arg KC_DB_PORT=2632 \
   --build-arg KC_DB_NAME=keycloak \
   --build-arg KC_DB_SCHEMA=public \

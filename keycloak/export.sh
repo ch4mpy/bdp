@@ -1,6 +1,6 @@
 cd /opt/keycloak/bin/
 export KC_DB=postgres
-export KC_DB_HOST=keycloak-db
+export KC_DB_HOST=host.docker.internal
 export KC_DB_PORT=2632
 export KC_DB_NAME=keycloak
 export KC_DB_SCHEMA=public
