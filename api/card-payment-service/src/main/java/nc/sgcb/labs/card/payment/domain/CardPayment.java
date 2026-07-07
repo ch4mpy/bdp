@@ -2,6 +2,7 @@ package nc.sgcb.labs.card.payment.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nc.sgcb.labs.commons.domain.Amount;
 
 import java.time.Instant;
 
@@ -21,10 +22,11 @@ public class CardPayment {
     private Long id;
 
     @Column(nullable = false)
-    private Instant timestamp;
+    @Builder.Default
+    private Instant timestamp = Instant.now();
 
-    @Embedded
-    private nc.sgcb.labs.commons.domain.Amount amount;
+    @Embedded()
+    private Amount amount;
 
     @ManyToOne
     @JoinColumn(name = "card_number", nullable = false, updatable = false)
@@ -32,4 +34,7 @@ public class CardPayment {
 
     @Column(nullable = false)
     private String destAccountNumber;
+
+    @Column(nullable = false)
+    private Boolean isAccepted;
 }

@@ -18,5 +18,5 @@ public class Amount {
      * In minor unit (i.e. 1000 for 1000 XPF, 10.00 USD, 1.000 KWD)
      */
     @Column(nullable = false)
-    private Long amount;
+    private Long digits;
 }

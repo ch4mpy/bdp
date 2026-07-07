@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import nc.sgcb.labs.commons.domain.Amount;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "transfers")
 @Data
@@ -29,6 +31,10 @@ public class MoneyTransfer {
 
     @Embedded
     private Amount amount;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Instant timestamp = Instant.now();
 
     private String label;
 }

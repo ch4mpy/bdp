@@ -6,8 +6,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface CardPaymentJpaRepository
-    extends JpaRepository<CardPayment, String>, JpaSpecificationExecutor<CardPayment> {
+import java.time.Instant;
+import java.util.List;
 
-  Page<CardPayment> findByCardNumber(String cardNumber, Pageable pageable);
+public interface CardPaymentJpaRepository
+        extends JpaRepository<CardPayment, String>, JpaSpecificationExecutor<CardPayment> {
+
+    Page<CardPayment> findByCardNumber(String cardNumber, Pageable pageable);
+
+    List<CardPayment> findByCardNumberAndTimestampAfter(String cardNumber, Instant from);
 }

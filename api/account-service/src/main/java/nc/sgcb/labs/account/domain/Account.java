@@ -2,6 +2,7 @@ package nc.sgcb.labs.account.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nc.sgcb.labs.commons.domain.Amount;
 
 @Entity
 @Table(name = "accounts")
@@ -21,4 +22,7 @@ public class Account {
     @Column(nullable = false)
     @ToString.Include
     private String customerId;
+
+    @Embedded
+    private Amount balance;
 }
