@@ -30,7 +30,7 @@ services:
     volumes:
       - accounts_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d bdp-labs -U rest-api -p 5432"]
+      test: [ "CMD-SHELL", "pg_isready -d accounts -U rest-api -p 5432" ]
       interval: 3s
       timeout: 60s
       retries: 20
@@ -54,7 +54,7 @@ services:
     volumes:
       - card_payments_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d bdp-labs -U rest-api -p 5432"]
+      test: [ "CMD-SHELL", "pg_isready -d card_payments -U rest-api -p 5432" ]
       interval: 3s
       timeout: 60s
       retries: 20
@@ -78,7 +78,7 @@ services:
     volumes:
       - customers_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d bdp-labs -U rest-api -p 5432"]
+      test: [ "CMD-SHELL", "pg_isready -d customers -U rest-api -p 5432" ]
       interval: 3s
       timeout: 60s
       retries: 20
