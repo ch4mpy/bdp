@@ -1,5 +1,18 @@
 # BdP-labs : TPs de création d'APIs REST avec Spring Boot
 
+#### Pré-requis
+
+- [Git](https://git-scm.com/install/). Sur Windows, Git bash avec Mingw
+- [nvm](https://www.nvmnode.com/fr/guide/download.html)
+- [SDKMan](https://sdkman.io/install/)
+- Docker ou [Docker Desktop](https://docs.docker.com/desktop/)
+- une entrée `127.0.0.1 host.docker.internal` dans `/etc/hosts` (`C:\windows\system32\drivers\etc\hosts` sous Windows)
+
+```bash
+sdk env install
+bash ./deploy-dev.sh
+```
+
 ## 1. Build avec Maven
 
 ### 1.1. Introduction
