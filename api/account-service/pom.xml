@@ -9,8 +9,8 @@
         <relativePath>..</relativePath>
     </parent>
     <artifactId>account-service</artifactId>
-    <name>account-service</name>
-    <description>account-service</description>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Bank accounts REST API</description>
 
     <dependencies>
          <dependency>
