@@ -17,9 +17,11 @@ import java.time.Instant;
 public class MoneyTransfer {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "transferSeq")
+    @SequenceGenerator(name = "transferSeq", sequenceName = "transfers_seq", allocationSize = 1)
     @EqualsAndHashCode.Include
     @ToString.Include
-    private String number;
+    private Long number;
 
     @Column(nullable = false)
     @ToString.Include
