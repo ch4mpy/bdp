@@ -44,39 +44,39 @@ public interface MoneyTransferJpaRepository
         return orderBytimestampDesc(spec);
     }
 
-    static Specification<MoneyTransfer> fromAccountNumberLike(String accountNumber) {
+    private static Specification<MoneyTransfer> fromAccountNumberLike(String accountNumber) {
         return (root, query, cb) -> cb.like(root.get(MoneyTransfer_.fromAccountNumber), accountNumber);
     }
 
-    static Specification<MoneyTransfer> toAccountNumberLike(String accountNumber) {
+    private static Specification<MoneyTransfer> toAccountNumberLike(String accountNumber) {
         return (root, query, cb) -> cb.like(root.get(MoneyTransfer_.toAccountNumber), accountNumber);
     }
 
-    static Specification<MoneyTransfer> currencyLike(String iso3) {
+    private static Specification<MoneyTransfer> currencyLike(String iso3) {
         return (root, query, cb) -> cb.like(root.get(MoneyTransfer_.amount).get(Amount_.currencyIso3), iso3);
     }
 
-    static Specification<MoneyTransfer> amountGe(Long digits) {
+    private static Specification<MoneyTransfer> amountGe(Long digits) {
         return (root, query, cb) -> cb.ge(root.get(MoneyTransfer_.amount).get(Amount_.digits), digits);
     }
 
-    static Specification<MoneyTransfer> amountLe(Long digits) {
+    private static Specification<MoneyTransfer> amountLe(Long digits) {
         return (root, query, cb) -> cb.le(root.get(MoneyTransfer_.amount).get(Amount_.digits), digits);
     }
 
-    static Specification<MoneyTransfer> timestampAfter(Instant timestamp) {
+    private static Specification<MoneyTransfer> timestampAfter(Instant timestamp) {
         return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get(MoneyTransfer_.timestamp), timestamp);
     }
 
-    static Specification<MoneyTransfer> timestampBefore(Instant timestamp) {
+    private static Specification<MoneyTransfer> timestampBefore(Instant timestamp) {
         return (root, query, cb) -> cb.lessThanOrEqualTo(root.get(MoneyTransfer_.timestamp), timestamp);
     }
 
-    static Specification<MoneyTransfer> labelLike(String labelPart) {
-        return (root, query, cb) -> cb.like(cb.upper(root.get(MoneyTransfer_.amount).get(Amount_.currencyIso3)), labelPart.toUpperCase());
+    private static Specification<MoneyTransfer> labelLike(String labelPart) {
+        return (root, query, cb) -> cb.like(cb.upper(root.get(MoneyTransfer_.label)), "%%%s%%".formatted(labelPart.toUpperCase()));
     }
 
-    static Specification<MoneyTransfer> orderBytimestampDesc(Specification<MoneyTransfer> spec) {
+    private static Specification<MoneyTransfer> orderBytimestampDesc(Specification<MoneyTransfer> spec) {
         return (root, query, cb) -> {
             query.orderBy(cb.desc(root.get(MoneyTransfer_.timestamp)));
             return spec.toPredicate(root, query, cb);
