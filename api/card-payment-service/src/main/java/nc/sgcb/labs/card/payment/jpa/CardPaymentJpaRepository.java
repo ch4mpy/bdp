@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.List;
 
 public interface CardPaymentJpaRepository
-        extends JpaRepository<CardPayment, String> {
+        extends JpaRepository<CardPayment, Long> {
 
     Page<CardPayment> findByCardNumber(String cardNumber, Pageable pageable);
 

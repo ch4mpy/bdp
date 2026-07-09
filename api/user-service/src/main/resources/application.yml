@@ -1,12 +1,6 @@
-bdp-labs:
-  keycloak-admin-api:
-    base-uri: ${reverse-proxy-uri}/auth
-    realm-name: labs
-    secret: secret
-
 cn: host.docker.internal
 reverse-proxy-uri: https://${cn}
-issuer: ${bdp-labs.keycloak-admin-api.base-uri}/realms/${bdp-labs.keycloak-admin-api.realm-name}
+issuer: ${reverse-proxy-uri}/auth/realms/labs
 
 server:
   port: 8083
@@ -16,21 +10,7 @@ server:
 
 spring:
   application:
-    name: user-service
-  security:
-    oauth2:
-      client:
-        provider:
-          sso:
-            issuer-uri: ${issuer}
-        registration:
-          keycloak-admin-api:
-            provider: sso
-            client-id: rest-api
-            client-secret: ${bdp-labs.keycloak-admin-api.secret}
-            authorization-grant-type: client_credentials
-            scope:
-              - openid
+    name: user-service$
   ssl:
     bundle:
       pem:
@@ -61,15 +41,6 @@ com:
             - /actuator/prometheus
             - /v3/api-docs/**
             - /swagger-ui/**
-      rest:
-        client:
-          keycloak-admin-api:
-            group: keycloak
-            base-url: ${bdp-labs.keycloak-admin-api.base-uri}
-            ssl-bundle: self-signed
-            authorization:
-              oauth2:
-                oauth2-registration-id: keycloak-admin-api
 management:
   endpoint:
     health:
