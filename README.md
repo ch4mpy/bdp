@@ -67,18 +67,35 @@ La section `build` permet de contrôler l'assemblage du projet, notamment via se
 `pluginManagement`) et `resources`.
 
 La section `profiles` permet de surcharger toute partie du build pour certaines exécutions. Dans les TPs, nous utilisons
-le profile `openapi` pour ajouter des dépendances à SpringDoc-OpenAPI, lancer l'application avant les test d'intgration,
+le profile `openapi` pour ajouter des dépendances à SpringDoc-OpenAPI, lancer l'application avant les test d'
+intégration,
 récupérer la spec OpenAPI sur la swagger-ui; puis arrêter l'application après les tests d'intégration.
 
 #### Phases
 
-- `validate` : intégrité des POMs
-- `compile` : peut comprendre des manipulations de ressources et de la génération de code
-- `test` : exécution des tests unitaires et d'intégration
-- `package` : assemblage du jar / war
-- `verify` : assertions sur l'état de sortie de l'environnement de build (peu utilisé)
-- `install` : copie des packages dans le repo local
-- `deplo` : export des packages sur le repos distants
+- **_validate_** : intégrité des POMs
+- _initialize_ :
+- _generate-sources_ :
+- _process-sources_ :
+- _generate-resources_ :
+- _process-resources_ :
+- **_compile_** :
+- _process-classes_ :
+- _generate-test-sources_ :
+- _process-test-sources_ :
+- _generate-test-resources_ :
+- _process-test-resources_ :
+- _test-compile_ :
+- _process-test-classes_ :
+- **_test_** : exécution des tests unitaires
+- _prepare-package_ :
+- **_package_** : assemblage du jar / war
+- _pre-integration-test_ :
+- _integration-test_ :
+- _post-integration-test_ :
+- **_verify_** : assertions sur l'état de sortie de l'environnement de build (peu utilisé)
+- **_install_** : copie des packages dans le repo local
+- **_deploy_** : export des packages sur le repos distants
 
 L'exécution d'une phase implique celle de toutes les phases précédentes. `mvn install` et
 `mvn validate compile test package verify install` reviennent donc au même.
@@ -355,35 +372,202 @@ de modifier ce comportement dans le `buils`. Par exemple :
 
 ## 2. Modèles objet-relationnel et accès aux données
 
-### 2.1. diagramme entité-relation d’une base de données relationnelle
+Les bases de données relationnelles sont modélisées avec des entités (tables) et des relations (clefs étrangères).
 
-### 2.2. rappels sur les fomres normales
+Le code Java comprend des relations qui ne sont pas modélisables directement avec une représentation entité-relation (
+héritage, relations bi-directionnelles, ...)
 
-### 2.3. diagramme de classes UML
+La JPA (Java Persistence API) permet de faire le pont entre les deux représentations (classes VS entité-relation). Il
+permet l'ORM (Object-Relational Mapping).
 
+### 2.1. `@Entity`
+
+**La Javadoc JPA est excellente et contient de très nombreux exemples.** Il faut la consulter sans retenue.
+
+Une entité est une classe mappée sur une table en base de donnée.
+
+Son `@Id` correspond à la clef primaire de la table.
+
+Elle doit avoir un constructeur par défaut (sans paramètre) dont la visibilité peut être restreinte.
+
+Il est possible (et souvent recommandé) de limiter les méthodes `equals` et `hasCode` à la (ou aux) propriété(s) `@Id`.
+
+```java
+
+@Entity
+@Table(name = "cards")
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class Card {
+
+    @Id
+    @EqualsAndHashCode.Include
+    @ToString.Include
+    private String number;
+
+    @Column(nullable = false)
+    @ToString.Include
+    private String accountNumber;
+  
+  ...
+}
 ```
-+-----------------+       +--------------+      +--------------+
-|    UserRoles    |<>---->|     Role     |<>--->|  Permission  |
-|-----------------|       |--------------|      |--------------|
-|userSub: String  |       |label: String |      |label: String |
-+-----------------+       +--------------+      +--------------+
+
+### 2.2. Identifiants générés
+
+H2 et Postgres utilisent les séquences pour les identifiants numériques auto-générés (pas de PK auto-incrémentée come
+MySQL par exemple).
+
+`@GenratedValue` indique qu'une valeur est fournie par la BDD lors du 1er enregistrement d'une entité. Elle est associée
+à `@Id` et doit référencer un générateur (dans le cas H2 ou Postgres, une séquence).
+
+Les séquences sont décrites avec `@Generator`.
+
+```java
+
+@Id
+@GeneratedValue(generator = "cardPaymentSeq")
+@SequenceGenerator(name = "cardPaymentSeq", sequenceName = "payment_seq", allocationSize = 1)
+private Long id;
 ```
 
-### 2.4. rappels sur les patrons de conception (design patterns)
+### 2.3. Relations
 
-### 2.5. mapping des propriétés
+Une propriété ayant pour type une autre entité doit être décorées avec `OneToOne` ou `@ManyToOne`.
 
-### 2.6. relations entre entités
+Une propriété ayant pour type une collection d'entités doit être décorées avec `OneToMany` ou `@ManyToMany`.
 
-### 2.7. conversion de types
+En cas de relation bidirectionnelle, il faut indiquer un `mappedBy` du côté _"faible"_ (`OneToMany` ou un des deux
+`OneToOne`).
 
-### 2.8. @Repositoy Spring Data JPA
+`@Embeddable` indique qu'une classe n'est pas mappée sur une table.
+A la place, ses propriétés sont ajoutées aux colonnes de la table des entités dans lesquelles elle est `@Embedded`.
 
-### 2.9. JPA query methods
+### 2.4. Conversion de types
 
-### 2.10. spécifications JPA
+Lorsqu'un objet est mappé sur un type simple en base, il possible définir un `@Converter(autoApply = true)` qui
+implémente `AttributeConverter<E, C>`.
 
-### 2.11. Mise en cache
+```java
+
+@Converter(autoApply = true)
+public class InstantStringAttributeConverter implements AttributeConverter<Instant, String> {
+
+    @Override
+    public String convertToDatabaseColumn(Instant attribute) {
+        if (attribute == null) {
+            return null;
+        }
+        return attribute.toString();
+    }
+
+    @Override
+    public Instant convertToEntityAttribute(String dbData) throws DateTimeParseException {
+        if (dbData == null) {
+            return null;
+        }
+        return Instant.parse(dbData);
+    }
+}
+```
+
+### 2.5. `@Repository` Spring Data JPA
+
+Leur rôle est de manipuler les données en base. Ce sont généralement des singletons générés par Spring à partir d'une
+interface.
+
+Il y a une arborescence d'interfaces qui apportent diverses fonctionnalités nous nous intéressons à
+`JpaRepository<E, ID>` (CRUD, éventuellement paginé) et `JpaSpecificationExecutor<E>` (filtres avec spécifications).
+
+### 2.6. JPA query methods
+
+Spring Data expose
+un [DSL pour les opérations simples sur les entités](https://docs.spring.io/spring-data/jpa/reference/repositories/query-keywords-reference.html).
+
+```java
+public interface CardPaymentJpaRepository extends JpaRepository<CardPayment, String> {
+
+    Page<CardPayment> findByCardNumber(String cardNumber, Pageable pageable);
+
+    List<CardPayment> findByCardNumberAndTimestampBetween(String cardNumber, Instant from, Instant to);
+}
+```
+
+Cet exemple fonctionne dans les deux cas suivants:
+
+- `CardPayment` a une propriété `cardNumber` de type `String`
+- `CardPayment` a une propriété `card` d'un type complexe (par exemple `Card`) qui a lui même une propriété `number` de
+  type `String`
+
+### 2.7. Spécifications JPA
+
+Lorsque la logique de filtrage devient trop complexe (notamment lors de l'application de critères optionnels), les _"
+query methods"_ sont généralement inadaptées.
+
+Les Spécifications JPA sont souvent plus adaptées.
+
+Le `@Repository` qui les utilise doit implémenter `JpaSpecificationExecutor<E>`.
+
+Je recommande d'exposer des factories sur le repo pour convertir les critères de filtre en spécification. Se reporter à
+`MoneyTransferJpaRepository` pour un exemple.
+
+### 2.8. Transactions
+
+Les opérations d'accès aux données en base se font à l'intérieur d'une transaction.
+
+On utilise `@Transactionnal` pour déclarer qu'une méthode doit être exécutée à l'intérieur d'une transaction.
+
+Les relations (`OneToMany`, `OneToOne`, etc.) étant _lazy_ par défaut, il faut parcourrir le graph d'objet à l'intérieur
+de la transaction dans laquelle la racine a été récupérée.
+
+Le plus simple est généralement de décorer les méthodes de `@Controller` avec `@Transactionnal`.
+
+### 2.9. Mise en cache
+
+L'enjeu principal de la mise en cache est de gérer l'obsolescence des données. Il faut donc remplacer les données en
+cache (ou supprimer des entrées) lors des accès en écriture, ce qui implique :
+
+- avoir la maîtrise totale de ces écritures
+- utiliser un cache distribué (Redis ?) en environnement distribué
+
+Pour activer la mise en cache dans l'application (utiliser un autre `CacheManager` pour un cache distribué):
+
+```java
+
+@Configuration
+@EnableCaching
+public class CacheConfiguration {
+
+    @Bean
+    CacheManager cacheManager() {
+        return new ConcurrentMapCacheManager();
+    }
+}
+```
+
+Pour déclarer un ou plusieurs caches, on décore généralement une classe:
+
+```java
+@CacheConfig(cacheNames = {"bidulesParTruc", "bidulesParMachin"})
+```
+
+Pour indiquer que la valeur de retour peut ête mise en cache:
+
+```java
+@Cacheable(cacheNames = "bidulesParTruc")
+```
+
+Utiliser `@Caching` pour indiquer qu'une opération (`save`, `delete`, ...) nécessite des opérations sur le cache (
+`evict` et / ou `put`)
+
+Lorsqu'une classe expose une interface publique plus importante que nécessaire celà peut grandement compliquer la
+gestion des caches. Je recommande dans ce cas de faire un proxy n'exposant que le strict nécessaire et gérer les caches
+à
+ce niveau.
 
 ## 3. Web avec Spring Boot
 
