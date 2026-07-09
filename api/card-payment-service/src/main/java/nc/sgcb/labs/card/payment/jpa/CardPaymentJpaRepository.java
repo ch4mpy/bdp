@@ -14,5 +14,5 @@ public interface CardPaymentJpaRepository
 
     Page<CardPayment> findByCardNumber(String cardNumber, Pageable pageable);
 
-    List<CardPayment> findByCardNumberAndTimestampAfter(String cardNumber, Instant from);
+    List<CardPayment> findByCardNumberAndTimestampBetween(String cardNumber, Instant from, Instant to);
 }

@@ -3,8 +3,6 @@ package nc.sgcb.labs.card.payment.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
 @Entity
 @Table(name = "cards")
 @Data
@@ -22,7 +20,7 @@ public class Card {
 
     @Column(nullable = false)
     @ToString.Include
-    private  String accountNumber;
+    private String accountNumber;
 
     @Embedded
     private Ceilings ceilings;
@@ -35,9 +33,9 @@ public class Card {
     public static class Ceilings {
 
         @Column(name = "transaction_ceiling", nullable = false)
-        private Double transaction;
+        private Long transaction;
 
         @Column(name = "rolling30_ceiling", nullable = false)
-        private Double rolling30;
+        private Long rolling30;
     }
 }
