@@ -1,7 +1,19 @@
 package nc.sgcb.labs.card.payment.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import nc.sgcb.labs.commons.domain.Iban;
 
 @Entity
 @Table(name = "cards")
@@ -13,29 +25,29 @@ import lombok.*;
 @AllArgsConstructor
 public class Card {
 
-    @Id
-    @EqualsAndHashCode.Include
-    @ToString.Include
-    private String number;
+  @Id
+  @EqualsAndHashCode.Include
+  @ToString.Include
+  private String number;
 
-    @Column(nullable = false)
-    @ToString.Include
-    private String accountNumber;
+  @Column(nullable = false)
+  @ToString.Include
+  private Iban iban;
 
-    @Embedded
-    private Ceilings ceilings;
+  @Embedded
+  private Ceilings ceilings;
 
-    @Embeddable
-    @Data
-    @Builder
-    @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    @AllArgsConstructor
-    public static class Ceilings {
+  @Embeddable
+  @Data
+  @Builder
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
+  @AllArgsConstructor
+  public static class Ceilings {
 
-        @Column(name = "transaction_ceiling", nullable = false)
-        private Long transaction;
+    @Column(name = "transaction_ceiling", nullable = false)
+    private Long transaction;
 
-        @Column(name = "rolling30_ceiling", nullable = false)
-        private Long rolling30;
-    }
+    @Column(name = "rolling30_ceiling", nullable = false)
+    private Long rolling30;
+  }
 }

@@ -39,6 +39,7 @@ public class ExceptionsHandler {
     return ResponseEntity.status(detail.getStatus()).body(detail);
   }
 
+  @SuppressWarnings("null")
   @ExceptionHandler(ConstraintViolationException.class)
   @ApiResponse(responseCode = "422",
       content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -84,6 +85,7 @@ public class ExceptionsHandler {
   public static class ValidationProblemDetail extends ProblemDetail {
     private static final long serialVersionUID = -757082078248225594L;
 
+    @SuppressWarnings("null")
     public static final URI TYPE = URI.create("https://sgbdp.pf/problems/validation");
     public static final String INVALID_FIELDS_PROPERTY = "invalidFields";
 
@@ -93,7 +95,7 @@ public class ExceptionsHandler {
       super.setProperty(INVALID_FIELDS_PROPERTY, invalidFields);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "null"})
     @JsonSerialize
     Map<String, String> getInvalidFields() {
       final var properties = super.getProperties();

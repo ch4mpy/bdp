@@ -1,10 +1,23 @@
 package nc.sgcb.labs.account.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
-import nc.sgcb.labs.commons.domain.Amount;
-
 import java.time.Instant;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import nc.sgcb.labs.commons.domain.Amount;
+import nc.sgcb.labs.commons.domain.Iban;
 
 @Entity
 @Table(name = "transfers")
@@ -16,27 +29,27 @@ import java.time.Instant;
 @AllArgsConstructor
 public class MoneyTransfer {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "transferSeq")
-    @SequenceGenerator(name = "transferSeq", sequenceName = "transfers_seq", allocationSize = 1)
-    @EqualsAndHashCode.Include
-    @ToString.Include
-    private Long number;
+  @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "transferSeq")
+  @SequenceGenerator(name = "transferSeq", sequenceName = "transfers_seq", allocationSize = 1)
+  @EqualsAndHashCode.Include
+  @ToString.Include
+  private Long number;
 
-    @Column(nullable = false)
-    @ToString.Include
-    private String fromAccountNumber;
+  @Column(nullable = false)
+  @ToString.Include
+  private Iban fromIban;
 
-    @Column(nullable = false)
-    @ToString.Include
-    private String toAccountNumber;
+  @Column(nullable = false)
+  @ToString.Include
+  private Iban toIban;
 
-    @Embedded
-    private Amount amount;
+  @Embedded
+  private Amount amount;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Instant timestamp = Instant.now();
+  @Column(nullable = false)
+  @Builder.Default
+  private Instant timestamp = Instant.now();
 
-    private String label;
+  private String label;
 }

@@ -1,0 +1,5 @@
+package nc.sgcb.labs.account.web;
+
+public record AccountResponse(String iban, Long customerId, String currency, Long balance) {
+
+}

@@ -2,11 +2,12 @@ package nc.sgcb.labs.account.domain;
 
 import java.time.Instant;
 import java.util.Optional;
+import nc.sgcb.labs.commons.domain.Iban;
 
 // @formatter:off
 public record MoneyTransferFilteringCriteria(
-        Optional<String> fromAccountNumber,
-        Optional<String> toAccountNumber,
+        Optional<Iban> fromIban,
+        Optional<Iban> toIban,
         Optional<Long> minAmount,
         Optional<Long> maxAmount,
         Optional<String> currencyIso3,

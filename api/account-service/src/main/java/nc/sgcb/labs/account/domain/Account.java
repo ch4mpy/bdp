@@ -1,8 +1,19 @@
 package nc.sgcb.labs.account.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import nc.sgcb.labs.commons.domain.Amount;
+import nc.sgcb.labs.commons.domain.Iban;
 
 @Entity
 @Table(name = "accounts")
@@ -14,15 +25,15 @@ import nc.sgcb.labs.commons.domain.Amount;
 @AllArgsConstructor
 public class Account {
 
-    @Id
-    @EqualsAndHashCode.Include
-    @ToString.Include
-    private String number;
+  @Id
+  @EqualsAndHashCode.Include
+  @ToString.Include
+  private Iban iban;
 
-    @Column(nullable = false)
-    @ToString.Include
-    private String customerId;
+  @Column(nullable = false)
+  @ToString.Include
+  private Long customerId;
 
-    @Embedded
-    private Amount balance;
+  @Embedded
+  private Amount balance;
 }

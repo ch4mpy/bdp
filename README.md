@@ -10,6 +10,7 @@
 
 ```bash
 sdk env install
+nvm use
 bash ./deploy-dev.sh
 ```
 
