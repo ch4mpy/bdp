@@ -1,10 +1,10 @@
 package nc.sgcb.labs.commons.jpa;
 
-import org.jspecify.annotations.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.domain.IbanStringMapper;
+import org.jspecify.annotations.Nullable;
 
 @Converter(autoApply = true)
 public class IbanStringAttributeConverter implements AttributeConverter<Iban, String> {

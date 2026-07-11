@@ -1,10 +1,11 @@
 package nc.sgcb.labs.account.web;
 
-import java.time.Instant;
-import org.jspecify.annotations.Nullable;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.jspecify.annotations.Nullable;
+
+import java.time.Instant;
 
 // @formatter:off
 public record MoneyTransferFilterRequest(

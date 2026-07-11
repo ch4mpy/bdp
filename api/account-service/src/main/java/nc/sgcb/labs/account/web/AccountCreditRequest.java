@@ -6,7 +6,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import nc.sgcb.labs.commons.validation.Iban;
 
-public record AccountCreditRequest(@NotNull @Iban String fromIban, @Min(1) Long amount,
-    @Pattern(regexp = "\\w{3}") String currency, @NotEmpty String label) {
+public record AccountCreditRequest(
+    @NotNull @Iban String fromIban,
+    @Min(1) Long amount,
+    @Pattern(regexp = "\\w{3}") String currency,
+    @NotEmpty String label) {
 
 }

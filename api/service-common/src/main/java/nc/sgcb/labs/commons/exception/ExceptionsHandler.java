@@ -1,4 +1,4 @@
-/** */
+/**  */
 package nc.sgcb.labs.commons.exception;
 
 import java.net.URI;
@@ -34,8 +34,12 @@ public class ExceptionsHandler {
           schema = @Schema(implementation = ValidationProblemDetail.class))})
   public ResponseEntity<ValidationProblemDetail> handleMethodArgumentNotValid(
       MethodArgumentNotValidException ex) {
-    final var detail = new ValidationProblemDetail(ex.getMessage(), ex.getFieldErrors().stream()
-        .collect(Collectors.toMap(FieldError::getField, FieldError::getCode)));
+    final var detail = new ValidationProblemDetail(
+        ex.getMessage(),
+        ex
+            .getFieldErrors()
+            .stream()
+            .collect(Collectors.toMap(FieldError::getField, FieldError::getCode)));
     return ResponseEntity.status(detail.getStatus()).body(detail);
   }
 
@@ -46,9 +50,16 @@ public class ExceptionsHandler {
           schema = @Schema(implementation = ValidationProblemDetail.class))})
   public ResponseEntity<ValidationProblemDetail> handleConstraintViolation(
       ConstraintViolationException ex) {
-    final var problem = new ValidationProblemDetail(ex.getMessage(),
-        ex.getConstraintViolations().stream().collect(Collectors
-            .toMap(cv -> cv.getPropertyPath().toString(), ConstraintViolation::getMessage)));
+    final var problem = new ValidationProblemDetail(
+        ex.getMessage(),
+        ex
+            .getConstraintViolations()
+            .stream()
+            .collect(
+                Collectors
+                    .toMap(
+                        cv -> cv.getPropertyPath().toString(),
+                        ConstraintViolation::getMessage)));
     return ResponseEntity.status(problem.getStatus()).body(problem);
   }
 

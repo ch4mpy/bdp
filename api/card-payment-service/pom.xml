@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>nc.sgcb.labs</groupId>
@@ -61,7 +61,7 @@
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>nc.sgcb.labs</groupId>
             <artifactId>service-common</artifactId>
@@ -76,12 +76,12 @@
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-common</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -227,7 +227,8 @@
                         <artifactId>springdoc-openapi-maven-plugin</artifactId>
                         <configuration>
                             <apiDocsUrl>
-                                ${integration-tests.scheme}://${integration-tests.hostname}:${integration-tests.port}/v3/api-docs</apiDocsUrl>
+                                ${integration-tests.scheme}://${integration-tests.hostname}:${integration-tests.port}/v3/api-docs
+                            </apiDocsUrl>
                         </configuration>
                         <executions>
                             <execution>
@@ -253,7 +254,8 @@
                                 <configuration>
                                     <arguments>
                                         <argument>
-                                            --issuer=http://localhost:8089/auth/realms/labs</argument>
+                                            --issuer=http://localhost:8089/auth/realms/labs
+                                        </argument>
                                     </arguments>
                                     <environmentVariables>
                                         <!--SERVER_SSL_ENABLED>false</SERVER_SSL_ENABLED-->

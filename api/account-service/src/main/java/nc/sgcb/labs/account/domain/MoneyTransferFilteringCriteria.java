@@ -1,8 +1,9 @@
 package nc.sgcb.labs.account.domain;
 
+import nc.sgcb.labs.commons.domain.Iban;
+
 import java.time.Instant;
 import java.util.Optional;
-import nc.sgcb.labs.commons.domain.Iban;
 
 // @formatter:off
 public record MoneyTransferFilteringCriteria(

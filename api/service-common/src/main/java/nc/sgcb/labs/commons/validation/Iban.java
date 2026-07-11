@@ -1,19 +1,20 @@
 package nc.sgcb.labs.commons.validation;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import org.jspecify.annotations.Nullable;
 import jakarta.validation.Constraint;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.Payload;
 import nc.sgcb.labs.commons.domain.Iban.NotAnIbanException;
+import org.jspecify.annotations.Nullable;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Custom validation annotation sample
- * 
+ *
  * @author Jérôme Wacongne &lt;ch4mp#64;c4-soft.com&gt;
  */
 @Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.RECORD_COMPONENT})

@@ -1,40 +1,40 @@
 {
-	"folders": {},
-	"connections": {
-		"postgres-jdbc-19f13f6b3ed-6c4d80fb2d3ccf7": {
-			"provider": "postgresql",
-			"driver": "postgres-jdbc",
-			"name": "bdp-labs",
-			"save-password": true,
-			"configuration": {
-				"host": "host.docker.internal",
-				"port": "5432",
-				"database": "bdp-labs",
-				"url": "jdbc:postgresql://host.docker.internal:5432/bdp-labs",
-				"configurationType": "MANUAL",
-				"type": "dev",
-				"closeIdleConnection": true,
-				"provider-properties": {
-					"@dbeaver-show-non-default-db@": "false"
-				},
-				"auth-model": "native"
-			}
-		}
-	},
-	"connection-types": {
-		"dev": {
-			"name": "Development",
-			"color": "255,255,255",
-			"description": "Regular development database",
-			"auto-commit": true,
-			"confirm-execute": false,
-			"confirm-data-change": false,
-			"smart-commit": false,
-			"smart-commit-recover": true,
-			"auto-close-transactions": true,
-			"close-transactions-period": 1800,
-			"auto-close-connections": true,
-			"close-connections-period": 14400
-		}
-	}
+  "folders": {},
+  "connections": {
+    "postgres-jdbc-19f13f6b3ed-6c4d80fb2d3ccf7": {
+      "provider": "postgresql",
+      "driver": "postgres-jdbc",
+      "name": "bdp-labs",
+      "save-password": true,
+      "configuration": {
+        "host": "host.docker.internal",
+        "port": "5432",
+        "database": "bdp-labs",
+        "url": "jdbc:postgresql://host.docker.internal:5432/bdp-labs",
+        "configurationType": "MANUAL",
+        "type": "dev",
+        "closeIdleConnection": true,
+        "provider-properties": {
+          "@dbeaver-show-non-default-db@": "false"
+        },
+        "auth-model": "native"
+      }
+    }
+  },
+  "connection-types": {
+    "dev": {
+      "name": "Development",
+      "color": "255,255,255",
+      "description": "Regular development database",
+      "auto-commit": true,
+      "confirm-execute": false,
+      "confirm-data-change": false,
+      "smart-commit": false,
+      "smart-commit-recover": true,
+      "auto-close-transactions": true,
+      "close-transactions-period": 1800,
+      "auto-close-connections": true,
+      "close-connections-period": 14400
+    }
+  }
 }

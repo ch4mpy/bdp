@@ -1,8 +1,9 @@
 package nc.sgcb.labs.commons.jpa;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.Test;
 import nc.sgcb.labs.commons.domain.Iban;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class IbanStringAttributeConverterTest {
 

@@ -1,10 +1,11 @@
 package nc.sgcb.labs.commons.domain;
 
-import java.io.Serializable;
-import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+
+import java.io.Serializable;
+import java.util.regex.Pattern;
 
 @Data
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)

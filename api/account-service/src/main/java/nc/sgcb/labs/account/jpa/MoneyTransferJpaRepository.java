@@ -1,14 +1,15 @@
 package nc.sgcb.labs.account.jpa;
 
-import java.time.Instant;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import nc.sgcb.labs.account.domain.MoneyTransfer;
 import nc.sgcb.labs.account.domain.MoneyTransferFilteringCriteria;
 import nc.sgcb.labs.account.domain.MoneyTransfer_;
 import nc.sgcb.labs.commons.domain.Amount_;
 import nc.sgcb.labs.commons.domain.Iban;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+import java.time.Instant;
 
 public interface MoneyTransferJpaRepository
     extends JpaRepository<MoneyTransfer, Long>, JpaSpecificationExecutor<MoneyTransfer> {
@@ -57,7 +58,8 @@ public interface MoneyTransferJpaRepository
 
   @SuppressWarnings("unused")
   private static Specification<MoneyTransfer> currencyLike(String iso3) {
-    return (root, query, cb) -> cb.like(root.get(MoneyTransfer_.amount).get(Amount_.currencyIso3),
+    return (root, query, cb) -> cb.like(
+        root.get(MoneyTransfer_.amount).get(Amount_.currencyIso3),
         iso3);
   }
 
@@ -73,7 +75,8 @@ public interface MoneyTransferJpaRepository
 
   @SuppressWarnings({"unused", "null"})
   private static Specification<MoneyTransfer> timestampAfter(Instant timestamp) {
-    return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get(MoneyTransfer_.timestamp),
+    return (root, query, cb) -> cb.greaterThanOrEqualTo(
+        root.get(MoneyTransfer_.timestamp),
         timestamp);
   }
 
@@ -84,7 +87,8 @@ public interface MoneyTransferJpaRepository
 
   @SuppressWarnings("unused")
   private static Specification<MoneyTransfer> labelLike(String labelPart) {
-    return (root, query, cb) -> cb.like(cb.upper(root.get(MoneyTransfer_.label)),
+    return (root, query, cb) -> cb.like(
+        cb.upper(root.get(MoneyTransfer_.label)),
         "%%%s%%".formatted(labelPart.toUpperCase()));
   }
 

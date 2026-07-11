@@ -1,10 +1,11 @@
 /**
- * 
+ *
  */
 package nc.sgcb.labs.user.web;
 
-import java.util.List;
 import org.jspecify.annotations.Nullable;
+
+import java.util.List;
 
 public record MeResponse(
     @Nullable String sub,

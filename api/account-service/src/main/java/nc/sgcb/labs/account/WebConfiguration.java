@@ -1,6 +1,9 @@
 package nc.sgcb.labs.account;
 
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import nc.sgcb.labs.account.domain.Account;
+import nc.sgcb.labs.account.jpa.AccountJpaRepository;
+import nc.sgcb.labs.commons.domain.IbanStringMapper;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -9,10 +12,8 @@ import org.springframework.format.FormatterRegistry;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import lombok.RequiredArgsConstructor;
-import nc.sgcb.labs.account.domain.Account;
-import nc.sgcb.labs.account.jpa.AccountJpaRepository;
-import nc.sgcb.labs.commons.domain.IbanStringMapper;
+
+import java.util.Optional;
 
 @Configuration
 public class WebConfiguration implements WebMvcConfigurer {
@@ -30,8 +31,10 @@ public class WebConfiguration implements WebMvcConfigurer {
 
     @Override
     public @Nullable Account convert(@Nullable String source) {
-      return source == null ? null
-          : accountRepo.flatMap(r -> r.findById(IbanStringMapper.mapStringToIban(source)))
+      return source == null
+          ? null
+          : accountRepo
+              .flatMap(r -> r.findById(IbanStringMapper.mapStringToIban(source)))
               .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
   }

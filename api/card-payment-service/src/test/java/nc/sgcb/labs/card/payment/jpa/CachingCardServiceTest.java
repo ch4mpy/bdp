@@ -1,10 +1,7 @@
 package nc.sgcb.labs.card.payment.jpa;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import java.util.HashMap;
-import java.util.Map;
+import nc.sgcb.labs.card.payment.domain.Card;
+import nc.sgcb.labs.commons.domain.Iban;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +9,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import nc.sgcb.labs.card.payment.domain.Card;
-import nc.sgcb.labs.commons.domain.Iban;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @ActiveProfiles("h2")
@@ -47,7 +49,8 @@ class CachingCardServiceTest {
   }
 
   @Test
-  @DirtiesContext // prevent cache operation conflict between tests
+  @DirtiesContext
+    // prevent cache operation conflict between tests
   void givenFindByIdCalledTwiceWithSameNumber_whenSaveCardWithSameNumberAndCallFindByIdAgain_thenCacheUpdatedAndFindByIdCalledOnlyOnceOverall() {
     // cardService.findByNumber called twice, but underlying cardRepo.findById should be called only
     // once.
@@ -58,8 +61,12 @@ class CachingCardServiceTest {
 
     // save a new Card instance with the same card number and different ceilings
     // (do not work with a reference to the instance already in the cache)
-    var card = cardService.save(Card.builder().iban(accountIban)
-        .ceilings(new Card.Ceilings(150000L, 300000L)).number(cardNumber).build());
+    var card = cardService.save(Card
+        .builder()
+        .iban(accountIban)
+        .ceilings(new Card.Ceilings(150000L, 300000L))
+        .number(cardNumber)
+        .build());
     assertEquals(300000L, card.getCeilings().getRolling30());
 
     // retrieve the card from the cache to verify that it was updated when saving the new instance
@@ -72,7 +79,8 @@ class CachingCardServiceTest {
   }
 
   @Test
-  @DirtiesContext // prevent cache operation conflict between tests
+  @DirtiesContext
+    // prevent cache operation conflict between tests
   void givenFindByIbanCalledTwiceWithSameIban_whenSaveCardWithSameIbanAndCallFindByIbanAgain_thenCacheEvictedAndFindByIbanCalledOnlyTwiceOverall() {
     // cardService.findByNumber called twice, but underlying cardRepo.findById should be called only
     // once.
@@ -83,8 +91,12 @@ class CachingCardServiceTest {
 
     // save a new Card instance with the same card number and different ceilings
     // (do not work with a reference to the instance already in the cache)
-    var card = cardService.save(Card.builder().iban(accountIban)
-        .ceilings(new Card.Ceilings(150000L, 300000L)).number(cardNumber).build());
+    var card = cardService.save(Card
+        .builder()
+        .iban(accountIban)
+        .ceilings(new Card.Ceilings(150000L, 300000L))
+        .number(cardNumber)
+        .build());
     assertEquals(300000L, card.getCeilings().getRolling30());
 
     // retrieve the card from the cache to verify that it was evicted when saving the new instance

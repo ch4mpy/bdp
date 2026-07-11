@@ -13,7 +13,10 @@
       "authorization_endpoint": "http://localhost:8089/auth/realms/labs/protocol/openid-connect/auth",
       "token_endpoint": "http://localhost:8089/auth/realms/labs/protocol/openid-connect/token",
       "jwks_uri": "http://localhost:8089/auth/realms/labs/protocol/openid-connect/certs",
-      "subject_types_supported": ["public", "pairwise"]
+      "subject_types_supported": [
+        "public",
+        "pairwise"
+      ]
     }
   }
 }

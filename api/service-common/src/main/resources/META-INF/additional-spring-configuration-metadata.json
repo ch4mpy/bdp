@@ -1,23 +1,24 @@
-{"properties": [
-	{
-	  "name": "cn",
-	  "type": "java.lang.String",
-	  "description": "'Common Name' as defined in SSL certificate (hostname)"
-	},
-	{
-	  "name": "reverse-proxy-uri",
-	  "type": "java.net.URI",
-	  "description": "URI of the reverse proxy in front of the BFF and the frontend"
-	},
-	{
-	  "name": "issuer",
-	  "type": "java.net.URI",
-	  "description": "OpenID Provider's identifier. The OpenID configuration should be available by appending /.well-known/openid-configuration to it"
-	},
-	{
-	  "name": "bdp-labs.keycloak-admin-api.secret",
-	  "type": "java.lang.String",
-	  "description": "OAuth2 client secret for the REST API to call Keycloak's admin API"
-	}
-  ]}
-  
+{
+  "properties": [
+    {
+      "name": "cn",
+      "type": "java.lang.String",
+      "description": "'Common Name' as defined in SSL certificate (hostname)"
+    },
+    {
+      "name": "reverse-proxy-uri",
+      "type": "java.net.URI",
+      "description": "URI of the reverse proxy in front of the BFF and the frontend"
+    },
+    {
+      "name": "issuer",
+      "type": "java.net.URI",
+      "description": "OpenID Provider's identifier. The OpenID configuration should be available by appending /.well-known/openid-configuration to it"
+    },
+    {
+      "name": "bdp-labs.keycloak-admin-api.secret",
+      "type": "java.lang.String",
+      "description": "OAuth2 client secret for the REST API to call Keycloak's admin API"
+    }
+  ]
+}

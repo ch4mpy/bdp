@@ -1,8 +1,9 @@
 package nc.sgcb.labs.card.payment.domain;
 
+import nc.sgcb.labs.commons.domain.Iban;
+
 import java.util.List;
 import java.util.Optional;
-import nc.sgcb.labs.commons.domain.Iban;
 
 public interface CardService {
 

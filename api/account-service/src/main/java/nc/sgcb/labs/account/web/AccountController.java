@@ -1,20 +1,7 @@
 package nc.sgcb.labs.account.web;
 
-import java.util.List;
-import java.util.Objects;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PagedModel;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +11,16 @@ import nc.sgcb.labs.account.jpa.AccountJpaRepository;
 import nc.sgcb.labs.account.jpa.MoneyTransferJpaRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Objects;
 
 @Tag(name = "Accounts")
 @RestController
@@ -51,14 +48,18 @@ public class AccountController {
   }
 
   @GetMapping(ACCOUNT_PATH)
-  public AccountResponse getAccount(@PathVariable(name = ACCOUNT_PLACEHOLDER) Account account) {
+  public AccountResponse getAccount(
+      @Parameter(schema = @Schema(type = "string"))
+      @PathVariable(name = ACCOUNT_PLACEHOLDER) Account account) {
     return accountMapper.map(account);
   }
 
   @GetMapping(TRANSFER_LIST_PATH)
   public PagedModel<MoneyTransferResponse> listTransfers(
+      @Parameter(schema = @Schema(type = "string"))
       @PathVariable(name = ACCOUNT_PLACEHOLDER) Account account,
-      @Valid MoneyTransferFilterRequest dto, Pageable pageable) {
+      @Valid MoneyTransferFilterRequest dto,
+      Pageable pageable) {
     var criteria = transferMapper.map(dto);
     var transferPage =
         transferRepo.findAll(MoneyTransferJpaRepository.searchSpec(criteria), pageable);
@@ -69,21 +70,37 @@ public class AccountController {
 
   @PostMapping(WITHDRAW_PATH)
   @ResponseStatus(code = HttpStatus.ACCEPTED)
-  public void withdraw(@PathVariable(name = ACCOUNT_PLACEHOLDER) Account account,
+  public void withdraw(
+      @Parameter(schema = @Schema(type = "string"))
+      @PathVariable(name = ACCOUNT_PLACEHOLDER) Account account,
       @Valid AccountWithdrawRequest dto) {
     assert Objects.equals(account.getBalance().getCurrencyIso3(), dto.currency());
-    var transfer = transferRepo.save(MoneyTransfer.builder()
-        .amount(new Amount(dto.currency(), dto.amount())).fromIban(account.getIban())
-        .toIban(Iban.parse(dto.toIban())).label(dto.label()).build());
+    transferRepo
+        .save(
+            MoneyTransfer
+                .builder()
+                .amount(new Amount(dto.currency(), dto.amount()))
+                .fromIban(account.getIban())
+                .toIban(Iban.parse(dto.toIban()))
+                .label(dto.label())
+                .build());
   }
 
   @PostMapping(CREDIT_PATH)
-  public ResponseEntity<Void> credit(@PathVariable(name = ACCOUNT_PLACEHOLDER) Account account,
+  public ResponseEntity<Void> credit(
+      @Parameter(schema = @Schema(type = "string"))
+      @PathVariable(name = ACCOUNT_PLACEHOLDER) Account account,
       @Valid AccountCreditRequest dto) {
     assert Objects.equals(account.getBalance().getCurrencyIso3(), dto.currency());
-    var transfer = transferRepo.save(MoneyTransfer.builder()
-        .amount(new Amount(dto.currency(), dto.amount())).fromIban(Iban.parse(dto.fromIban()))
-        .toIban(account.getIban()).label(dto.label()).build());
+    transferRepo
+        .save(
+            MoneyTransfer
+                .builder()
+                .amount(new Amount(dto.currency(), dto.amount()))
+                .fromIban(Iban.parse(dto.fromIban()))
+                .toIban(account.getIban())
+                .label(dto.label())
+                .build());
     return ResponseEntity.accepted().build();
   }
 

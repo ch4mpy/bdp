@@ -1,7 +1,9 @@
 package com.c4soft.bdp.labs;
 
-import java.io.IOException;
-import java.util.List;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -20,24 +22,22 @@ import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.util.ThrowableAnalyzer;
 import org.springframework.stereotype.Component;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Workaround https://github.com/spring-projects/spring-security/issues/17754
- * 
+ *
  * @author Jerome Wacongne ch4mp&#64;c4-soft.com
  */
 @Component
 public class SpringSecurityPatchConfiguration implements BeanPostProcessor {
 
   @Override
-  public @Nullable
-      Object
-      postProcessBeforeInitialization(@Nullable Object bean, @Nullable String beanName)
-          throws BeansException {
+  public @Nullable Object postProcessBeforeInitialization(
+      @Nullable Object bean,
+      @Nullable String beanName) throws BeansException {
     if (bean instanceof OAuth2AuthorizationRequestRedirectFilter oauth2AuthorizationRequestRedirectFilter) {
       return new RestfulOAuth2Filter(oauth2AuthorizationRequestRedirectFilter);
     }
@@ -51,22 +51,23 @@ public class SpringSecurityPatchConfiguration implements BeanPostProcessor {
     private final RedirectStrategy authorizationRedirectStrategy;
 
     private final RedirectStrategy unauthorizedStrategy = (
-        @SuppressWarnings("unused") HttpServletRequest request,
-        HttpServletResponse response,
-        String location) -> {
+        @SuppressWarnings("unused")
+    HttpServletRequest request, HttpServletResponse response, String location) -> {
       response.setStatus(HttpStatus.UNAUTHORIZED.value());
       response.setHeader(HttpHeaders.LOCATION, location);
     };
 
     private final OAuth2AuthorizationRequestResolver authorizationRequestResolver;
 
-    private final AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
+    private final AuthorizationRequestRepository<OAuth2AuthorizationRequest>
+        authorizationRequestRepository;
 
     private final AuthenticationFailureHandler authenticationFailureHandler;
 
     /**
-     * Constructs an {@code OAuth2AuthorizationRequestRedirectFilter} using the provided parameters.
-     * 
+     * Constructs an {@code OAuth2AuthorizationRequestRedirectFilter} using the provided
+     * parameters.
+     *
      * @param authorizationRequestResolver the resolver used for resolving authorization requests
      */
     public RestfulOAuth2Filter(
@@ -114,9 +115,7 @@ public class SpringSecurityPatchConfiguration implements BeanPostProcessor {
     protected void doFilterInternal(
         HttpServletRequest request,
         HttpServletResponse response,
-        FilterChain filterChain)
-        throws ServletException,
-        IOException {
+        FilterChain filterChain) throws ServletException, IOException {
       try {
         OAuth2AuthorizationRequest authorizationRequest =
             this.authorizationRequestResolver.resolve(request);
@@ -126,8 +125,10 @@ public class SpringSecurityPatchConfiguration implements BeanPostProcessor {
         }
       } catch (Exception ex) {
         AuthenticationException wrappedException = new OAuth2AuthorizationRequestException(ex);
-        this.authenticationFailureHandler
-            .onAuthenticationFailure(request, response, wrappedException);
+        this.authenticationFailureHandler.onAuthenticationFailure(
+            request,
+            response,
+            wrappedException);
         return;
       }
       try {
@@ -138,24 +139,30 @@ public class SpringSecurityPatchConfiguration implements BeanPostProcessor {
         // Check to see if we need to handle ClientAuthorizationRequiredException
         Throwable[] causeChain = this.throwableAnalyzer.determineCauseChain(ex);
         ClientAuthorizationRequiredException authzEx =
-            (ClientAuthorizationRequiredException) this.throwableAnalyzer
-                .getFirstThrowableOfType(ClientAuthorizationRequiredException.class, causeChain);
+            (ClientAuthorizationRequiredException) this.throwableAnalyzer.getFirstThrowableOfType(
+                ClientAuthorizationRequiredException.class,
+                causeChain);
         if (authzEx != null) {
           if ("401".equals(authzEx.getError().getErrorCode())) {
-            SecurityContextHolder.getContext()
+            SecurityContextHolder
+                .getContext()
                 .setAuthentication(new AnonymousAuthenticationToken("anonymous", "", List.of()));
           }
           try {
-            OAuth2AuthorizationRequest authorizationRequest = this.authorizationRequestResolver
-                .resolve(request, authzEx.getClientRegistrationId());
+            OAuth2AuthorizationRequest authorizationRequest =
+                this.authorizationRequestResolver.resolve(
+                    request,
+                    authzEx.getClientRegistrationId());
             if (authorizationRequest == null) {
               throw authzEx;
             }
             this.sendUnauthorized(request, response, authorizationRequest);
           } catch (Exception failed) {
             AuthenticationException wrappedException = new OAuth2AuthorizationRequestException(ex);
-            this.authenticationFailureHandler
-                .onAuthenticationFailure(request, response, wrappedException);
+            this.authenticationFailureHandler.onAuthenticationFailure(
+                request,
+                response,
+                wrappedException);
           }
           return;
         }
@@ -172,23 +179,27 @@ public class SpringSecurityPatchConfiguration implements BeanPostProcessor {
     private void sendUnauthorized(
         HttpServletRequest request,
         HttpServletResponse response,
-        OAuth2AuthorizationRequest authorizationRequest)
-        throws IOException {
-      this.unauthorizedStrategy
-          .sendRedirect(request, response, authorizationRequest.getAuthorizationRequestUri());
+        OAuth2AuthorizationRequest authorizationRequest) throws IOException {
+      this.unauthorizedStrategy.sendRedirect(
+          request,
+          response,
+          authorizationRequest.getAuthorizationRequestUri());
     }
 
     private void sendRedirectForAuthorization(
         HttpServletRequest request,
         HttpServletResponse response,
-        OAuth2AuthorizationRequest authorizationRequest)
-        throws IOException {
+        OAuth2AuthorizationRequest authorizationRequest) throws IOException {
       if (AuthorizationGrantType.AUTHORIZATION_CODE.equals(authorizationRequest.getGrantType())) {
-        this.authorizationRequestRepository
-            .saveAuthorizationRequest(authorizationRequest, request, response);
+        this.authorizationRequestRepository.saveAuthorizationRequest(
+            authorizationRequest,
+            request,
+            response);
       }
-      this.authorizationRedirectStrategy
-          .sendRedirect(request, response, authorizationRequest.getAuthorizationRequestUri());
+      this.authorizationRedirectStrategy.sendRedirect(
+          request,
+          response,
+          authorizationRequest.getAuthorizationRequestUri());
     }
 
     private static final class OAuth2AuthorizationRequestException extends AuthenticationException {
