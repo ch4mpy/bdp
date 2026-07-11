@@ -30,8 +30,7 @@ import nc.sgcb.labs.commons.domain.Iban;
 
 @Tag(name = "Accounts")
 @RestController
-@RequestMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
-    produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+@RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
 @RequiredArgsConstructor
 public class AccountController {
   public static final String BASE_PATH = "/accounts";
