@@ -1,5 +1,6 @@
 package nc.sgcb.labs.card.payment.web;
 
+import java.net.URI;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -7,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,7 +19,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import nc.sgcb.labs.account.api.AccountsApi;
 import nc.sgcb.labs.card.payment.domain.Card;
+import nc.sgcb.labs.card.payment.domain.Card.Ceilings;
 import nc.sgcb.labs.card.payment.domain.CardService;
 import nc.sgcb.labs.commons.domain.Iban;
 
@@ -30,9 +34,11 @@ public class CardController {
   public static final String CARD_NUMBER_PLACEHOLDER = "cardNumber";
   public static final String CARD_PATH = BASE_PATH + "/{" + CARD_NUMBER_PLACEHOLDER + "}";
   public static final String CARD_STATUS_PATH = CARD_PATH + "/status";
+  public static final String CARD_CEILINGS_PATH = CARD_PATH + "/ceilings";
 
   private final CardService cardService;
   private final CardMapper cardMapper;
+  private final AccountsApi accountsApi;
 
   @GetMapping(path = BASE_PATH)
   public List<CardResponse> listCards(@RequestParam Iban iban) {
@@ -42,8 +48,34 @@ public class CardController {
 
   @PostMapping(path = BASE_PATH)
   public ResponseEntity<Void> createCard(@RequestBody @Valid CardCreationRequest dto) {
-    // FIXME: implement
-    return ResponseEntity.created(null).build();
+    // Check that the account is known by the account service
+    var account = accountsApi.getAccount(dto.iban());
+    var iban = Iban.parse(dto.iban());
+    var existingCards = cardService.findByIban(iban);
+    var cardNumber = "4%s%d".formatted(iban.getBban(), existingCards.size());
+
+    var card = cardService
+        .save(
+            Card
+                .builder()
+                .number(cardNumber)
+                .iban(iban)
+                .ceilings(
+                    Ceilings
+                        .builder()
+                        .rolling30(dto.rolling30Ceiling())
+                        .transaction(dto.transactionCeiling())
+                        .build())
+                .active(true)
+                .build());
+
+    return ResponseEntity
+        .created(
+            URI
+                .create(
+                    CARD_PATH
+                        .replaceAll("{%s}".formatted(CARD_NUMBER_PLACEHOLDER), card.getNumber())))
+        .build();
   }
 
   @GetMapping(path = CARD_PATH)
@@ -53,12 +85,24 @@ public class CardController {
     return cardMapper.map(card);
   }
 
-  @GetMapping(path = CARD_STATUS_PATH)
+  @PutMapping(path = CARD_STATUS_PATH)
   @ResponseStatus(HttpStatus.ACCEPTED)
   public void setCardStatus(
       @Parameter(schema = @Schema(type = "string"))
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
       @RequestBody CardStatusRequest dto) {
-    // FIXME: implement
+    card.setActive(dto.isActive());
+    cardService.save(card);
   }
+
+  @PutMapping(path = CARD_CEILINGS_PATH)
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  public void setCardCeilings(
+      @Parameter(schema = @Schema(type = "string"))
+      @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
+      @RequestBody CardStatusRequest dto) {
+    card.setActive(dto.isActive());
+    cardService.save(card);
+  }
+
 }

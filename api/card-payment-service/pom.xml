@@ -141,6 +141,25 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <skipValidateSpec>true</skipValidateSpec>
+                            <inputSpec>
+                                ${project.basedir}/../../openapi/account-service.openapi.json
+                            </inputSpec>
+                            <apiPackage>nc.sgcb.labs.account.api</apiPackage>
+                            <modelPackage>nc.sgcb.labs.account.model</modelPackage>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
 
         <resources>

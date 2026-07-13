@@ -148,7 +148,7 @@
                         <configuration>
                             <skipValidateSpec>true</skipValidateSpec>
                             <inputSpec>
-                                ${project.basedir}/../keycloak-admin-api.openapi.json
+                                ${project.basedir}/../../openapi/keycloak-admin-api.openapi.json
                             </inputSpec>
                             <apiPackage>org.keycloak.admin.api</apiPackage>
                             <modelPackage>org.keycloak.admin.model</modelPackage>
