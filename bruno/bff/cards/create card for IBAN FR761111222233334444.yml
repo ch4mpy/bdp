@@ -1,0 +1,23 @@
+info:
+  name: create card for IBAN FR761111222233334444
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: https://host.docker.internal/bff/m2m/cards
+  body:
+    type: json
+    data: |-
+      {
+        "iban": "FR761111222233334444",
+        "transactionCeiling": 100000,
+        "rolling30Ceiling": 300000
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

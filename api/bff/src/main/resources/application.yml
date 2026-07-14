@@ -1,9 +1,12 @@
 cn: host.docker.internal
-bff-client-id: rest-api-bff
+bff-client-id: bff
 bff-client-secret: secret
 reverse-proxy-uri: https://${cn}
 issuer: ${reverse-proxy-uri}/auth/realms/labs
-api-internal-uri: https://${cn}:8080
+accounts-service: https://${cn}:8081
+cards-service: https://${cn}:8082
+customers-service: https://${cn}:8083
+users-service: https://${cn}:8084
 
 server:
   port: 7080
@@ -47,14 +50,61 @@ spring:
         webmvc:
           routes:
             # Applies the OAuth2 BFF pattern (oauth2Login SecurityFilterChain and TokenRelay= filter to replace the session cookie with the access token in session)
-            - id: bff
-              uri: ${api-internal-uri}
+            - id: accounts-bff
+              uri: ${accounts-service}
               predicates:
-                - Path=/api/**
+                - Path=/api/accounts/**
               filters:
                 # replace the session cookie with the access token in session
                 - TokenRelay=
                 # remove the /bff/api prefix
+                - StripPrefix=2
+            # Do not apply the TokenRelay= filter (machine-to-machine communication)
+            - id: accounts-m2m
+              uri: ${accounts-service}
+              predicates:
+                - Path=/m2m/accounts/**
+              filters:
+                # remove the /bff/api prefix
+                - StripPrefix=2
+            - id: cards-bff
+              uri: ${cards-service}
+              predicates:
+                - Path=/api/cards/**
+              filters:
+                - TokenRelay=
+                - StripPrefix=2
+            - id: cards-m2m
+              uri: ${cards-service}
+              predicates:
+                - Path=/m2m/cards/**
+              filters:
+                - StripPrefix=2
+            - id: customers-bff
+              uri: ${customers-service}
+              predicates:
+                - Path=/api/customers/**
+              filters:
+                - TokenRelay=
+                - StripPrefix=2
+            - id: customers-m2m
+              uri: ${customers-service}
+              predicates:
+                - Path=/m2m/customers/**
+              filters:
+                - StripPrefix=2
+            - id: users-bff
+              uri: ${users-service}
+              predicates:
+                - Path=/api/users/**
+              filters:
+                - TokenRelay=
+                - StripPrefix=2
+            - id: users-m2m
+              uri: ${users-service}
+              predicates:
+                - Path=/m2m/users/**
+              filters:
                 - StripPrefix=2
     refresh:
       enabled: false

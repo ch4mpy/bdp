@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +25,7 @@ import nc.sgcb.labs.card.payment.domain.Card;
 import nc.sgcb.labs.card.payment.domain.Card.Ceilings;
 import nc.sgcb.labs.card.payment.domain.CardService;
 import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.exception.ResourceNotFoundException;
 
 @Tag(name = "Cards")
 @RestController
@@ -47,9 +49,18 @@ public class CardController {
   }
 
   @PostMapping(path = BASE_PATH)
-  public ResponseEntity<Void> createCard(@RequestBody @Valid CardCreationRequest dto) {
-    // Check that the account is known by the account service
-    var account = accountsApi.getAccount(dto.iban());
+  public ResponseEntity<Void> createCard(@RequestBody @Valid CardCreationRequest dto)
+      throws ResourceNotFoundException {
+    // Assert that the account is known by the account service
+    try {
+      accountsApi.getAccount(dto.iban());
+    } catch (HttpClientErrorException e) {
+      if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+        throw new ResourceNotFoundException(
+            "%s account is not known to the account-service".formatted(dto.iban()));
+      }
+      throw e;
+    }
     var iban = Iban.parse(dto.iban());
     var existingCards = cardService.findByIban(iban);
     var cardNumber = "4%s%d".formatted(iban.getBban(), existingCards.size());
@@ -73,8 +84,7 @@ public class CardController {
         .created(
             URI
                 .create(
-                    CARD_PATH
-                        .replaceAll("{%s}".formatted(CARD_NUMBER_PLACEHOLDER), card.getNumber())))
+                    CARD_PATH.replace("{%s}".formatted(CARD_NUMBER_PLACEHOLDER), card.getNumber())))
         .build();
   }
 

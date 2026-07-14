@@ -55,7 +55,7 @@
 
         <dependency>
             <groupId>nc.sgcb.labs</groupId>
-            <artifactId>service-common</artifactId>
+            <artifactId>sgcb-starter-service-common</artifactId>
         </dependency>
 
         <dependency>

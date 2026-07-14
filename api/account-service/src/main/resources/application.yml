@@ -1,6 +1,8 @@
 cn: host.docker.internal
 reverse-proxy-uri: https://${cn}
 issuer: https://host.docker.internal/auth/realms/labs
+account-service-client-id: account-service
+account-service-client-secret: secret
 
 server:
   port: 8081
@@ -18,6 +20,18 @@ spring:
   profiles:
     active:
       - postgresql
+  security:
+    oauth2:
+      client:
+        provider:
+          sso:
+            issuer-uri: ${issuer}
+        registration:
+          account-service:
+            provider: sso
+            authorization-grant-type: client_credentials
+            client-id: ${account-service-client-id}
+            client-secret: ${account-service-client-secret}
   ssl:
     bundle:
       pem:
@@ -47,6 +61,14 @@ com:
             - /actuator/prometheus
             - /v3/api-docs/**
             - /swagger-ui/**
+      rest:
+        client:
+          customer-service-client:
+            base-url: ${reverse-proxy-uri}/bff/m2m
+            ssl-bundle: self-signed
+            authorization:
+              oauth2:
+                oauth2-registration-id: account-service
 management:
   endpoint:
     health:

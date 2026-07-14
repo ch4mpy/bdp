@@ -1,11 +1,10 @@
 package nc.sgcb.labs.commons.domain;
 
+import java.io.Serializable;
+import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-
-import java.io.Serializable;
-import java.util.regex.Pattern;
 
 @Data
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -19,11 +18,11 @@ public class Iban implements Serializable {
   private final String checkDigits;
   private final String bban;
 
-  private Iban(Iban other) {
+  public Iban(Iban other) {
     this(other.countryCode, other.checkDigits, other.bban);
   }
 
-  private Iban(String iban) {
+  public Iban(String iban) {
     this(Iban.parse(iban));
   }
 

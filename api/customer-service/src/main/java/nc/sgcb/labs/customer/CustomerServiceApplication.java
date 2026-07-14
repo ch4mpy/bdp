@@ -1,20 +1,20 @@
 package nc.sgcb.labs.customer;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import nc.sgcb.labs.customer.domain.Customer;
-import nc.sgcb.labs.customer.jpa.CustomerJpaRepository;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import nc.sgcb.labs.customer.domain.Customer;
+import nc.sgcb.labs.customer.jpa.CustomerJpaRepository;
 
 @SpringBootApplication
 public class CustomerServiceApplication {
@@ -39,7 +39,8 @@ public class CustomerServiceApplication {
 
       customerRepo.saveAllAndFlush(List.of(createRandomCustomer(), john(), sarah()));
 
-      var found = customerRepo.findByFirstOrLastNameContainingIgnoreCase("h");
+      var found =
+          customerRepo.findByFirstOrLastNameContainingIgnoreCase("h", PageRequest.of(0, 100));
 
       for (var c : found) {
         log.info(c.toString());

@@ -1,18 +1,29 @@
 package nc.sgcb.labs.customer.jpa;
 
-import nc.sgcb.labs.customer.domain.Customer;
+import java.time.LocalDate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.List;
+import nc.sgcb.labs.customer.domain.Customer;
 
 public interface CustomerJpaRepository extends JpaRepository<Customer, Long> {
-  List<Customer> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+  Page<Customer> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
       String firstNamePart,
-      String lastNamePart);
+      String lastNamePart,
+      Pageable pageable);
 
-  default List<Customer> findByFirstOrLastNameContainingIgnoreCase(String firstOrLastNamePart) {
+  default Page<Customer> findByFirstOrLastNameContainingIgnoreCase(
+      String firstOrLastNamePart,
+      Pageable pageable) {
     return findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
         firstOrLastNamePart,
-        firstOrLastNamePart);
+        firstOrLastNamePart,
+        pageable);
   }
+
+  boolean existsByFirstNameAndLastNameAndBirthDateAndBirthLocationAllIgnoreCase(
+      String firstName,
+      String lastName,
+      LocalDate birthDate,
+      String birthLocation);
 }

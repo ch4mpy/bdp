@@ -1,0 +1,15 @@
+info:
+  name: account FR761111222233334444
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: https://host.docker.internal/bff/m2m/accounts/FR761111222233334444
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

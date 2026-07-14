@@ -1,17 +1,16 @@
 package nc.sgcb.labs.customer.jpa;
 
-import nc.sgcb.labs.customer.domain.Customer;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.time.LocalDate;
+import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.time.LocalDate;
-import java.util.Objects;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import nc.sgcb.labs.customer.domain.Customer;
 
 @DataJpaTest
 @ActiveProfiles("h2")
@@ -24,32 +23,39 @@ class CustomerJpaRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    customer1 = customerJpaRepository.save(Customer
-        .builder()
-        .firstName("Jean")
-        .lastName("Bonot")
-        .birthDate(LocalDate.of(1978, 10, 31))
-        .birthLocation("Longjumeau (91)")
-        .build());
-    customer2 = customerJpaRepository.save(Customer
-        .builder()
-        .firstName("John")
-        .lastName("Deuf")
-        .birthDate(LocalDate.of(1980, 10, 29))
-        .birthLocation("Aix-en-Provence (13)")
-        .build());
-    customer3 = customerJpaRepository.save(Customer
-        .builder()
-        .firstName("Jef")
-        .lastName("Hini")
-        .birthDate(LocalDate.of(1985, 11, 23))
-        .birthLocation("St Mandé (94)")
-        .build());
+    customer1 = customerJpaRepository
+        .save(
+            Customer
+                .builder()
+                .firstName("Jean")
+                .lastName("Bonot")
+                .birthDate(LocalDate.of(1978, 10, 31))
+                .birthLocation("Longjumeau (91)")
+                .build());
+    customer2 = customerJpaRepository
+        .save(
+            Customer
+                .builder()
+                .firstName("John")
+                .lastName("Deuf")
+                .birthDate(LocalDate.of(1980, 10, 29))
+                .birthLocation("Aix-en-Provence (13)")
+                .build());
+    customer3 = customerJpaRepository
+        .save(
+            Customer
+                .builder()
+                .firstName("Jef")
+                .lastName("Hini")
+                .birthDate(LocalDate.of(1985, 11, 23))
+                .birthLocation("St Mandé (94)")
+                .build());
   }
 
   @Test
   void givenTwoCustomersWithNeedleInFirstNameAndAnotherInLastName_whenFindByFirstOrLastNameContainingIgnoreCase_thenAll3Returned() {
-    final var actual = customerJpaRepository.findByFirstOrLastNameContainingIgnoreCase("e");
+    final var actual =
+        customerJpaRepository.findByFirstOrLastNameContainingIgnoreCase("e", PageRequest.of(0, 10));
     assertThat(actual).hasSize(3);
     assertTrue(actual.stream().anyMatch(c -> Objects.equals("Jean", c.getFirstName())));
     assertTrue(actual.stream().anyMatch(c -> Objects.equals("Jef", c.getFirstName())));
@@ -58,7 +64,8 @@ class CustomerJpaRepositoryTest {
 
   @Test
   void givenOnlyOneCustomersWithNeedleInForstOrLastName_whenFindByFirstOrLastNameContainingIgnoreCase_thenOnlyItReturned() {
-    final var actual = customerJpaRepository.findByFirstOrLastNameContainingIgnoreCase("hin");
+    final var actual = customerJpaRepository
+        .findByFirstOrLastNameContainingIgnoreCase("hin", PageRequest.of(0, 10));
     assertThat(actual).hasSize(1);
     assertTrue(actual.stream().anyMatch(c -> Objects.equals("Hini", c.getLastName())));
   }

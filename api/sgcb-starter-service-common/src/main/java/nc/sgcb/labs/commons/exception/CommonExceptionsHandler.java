@@ -14,6 +14,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,7 +28,7 @@ import tools.jackson.databind.annotation.JsonSerialize;
  * @author Jerome Wacongne ch4mp&#64;c4-soft.com
  */
 @RestControllerAdvice
-public class ExceptionsHandler {
+public class CommonExceptionsHandler {
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   @ApiResponse(responseCode = "422",
@@ -43,7 +45,6 @@ public class ExceptionsHandler {
     return ResponseEntity.status(detail.getStatus()).body(detail);
   }
 
-  @SuppressWarnings("null")
   @ExceptionHandler(ConstraintViolationException.class)
   @ApiResponse(responseCode = "422",
       content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -83,7 +84,7 @@ public class ExceptionsHandler {
     return ResponseEntity.status(problem.getStatus()).body(problem);
   }
 
-  @ExceptionHandler({InternalServerErrorException.class})
+  @ExceptionHandler({InternalServerErrorException.class, HttpClientErrorException.class})
   @ApiResponse(responseCode = "500",
       content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
           schema = @Schema(implementation = ProblemDetail.class))})
@@ -93,10 +94,15 @@ public class ExceptionsHandler {
     return ResponseEntity.status(problem.getStatus()).body(problem);
   }
 
+  @ExceptionHandler({ResponseStatusException.class})
+  public ResponseEntity<ProblemDetail> handleInternalServerError(ResponseStatusException ex) {
+    final var problem = ProblemDetail.forStatusAndDetail(ex.getStatusCode(), ex.getReason());
+    return ResponseEntity.status(problem.getStatus()).body(problem);
+  }
+
   public static class ValidationProblemDetail extends ProblemDetail {
     private static final long serialVersionUID = -757082078248225594L;
 
-    @SuppressWarnings("null")
     public static final URI TYPE = URI.create("https://sgbdp.pf/problems/validation");
     public static final String INVALID_FIELDS_PROPERTY = "invalidFields";
 
@@ -106,7 +112,7 @@ public class ExceptionsHandler {
       super.setProperty(INVALID_FIELDS_PROPERTY, invalidFields);
     }
 
-    @SuppressWarnings({"unchecked", "null"})
+    @SuppressWarnings({"unchecked"})
     @JsonSerialize
     Map<String, String> getInvalidFields() {
       final var properties = super.getProperties();

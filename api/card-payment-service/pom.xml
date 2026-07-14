@@ -32,6 +32,10 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security-oauth2-client</artifactId>
         </dependency>
         <dependency>
@@ -51,6 +55,10 @@
             <groupId>com.c4-soft.springaddons</groupId>
             <artifactId>spring-addons-starter-oidc</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.c4-soft.springaddons</groupId>
+            <artifactId>spring-addons-starter-rest</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>io.opentelemetry.instrumentation</groupId>
@@ -64,7 +72,7 @@
 
         <dependency>
             <groupId>nc.sgcb.labs</groupId>
-            <artifactId>service-common</artifactId>
+            <artifactId>sgcb-starter-service-common</artifactId>
         </dependency>
 
         <dependency>
@@ -111,6 +119,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-opentelemetry-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

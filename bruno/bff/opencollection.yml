@@ -1,0 +1,43 @@
+opencollection: 1.0.0
+
+info:
+  name: bdp-labs BFF
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: oauth2
+    flow: authorization_code
+    authorizationUrl: https://host.docker.internal/auth/realms/labs/protocol/openid-connect/auth
+    accessTokenUrl: https://host.docker.internal/auth/realms/labs/protocol/openid-connect/token
+    callbackUrl: https://host.docker.internal/bff/login/oauth2/code/bff
+    credentials:
+      clientId: bff
+      clientSecret: secret
+      placement: body
+    scope: openid
+    pkce: {}
+    tokenConfig:
+      id: credentials
+      placement:
+        header: Bearer
+      source: access_token
+    settings:
+      autoFetchToken: true
+      autoRefreshToken: false
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

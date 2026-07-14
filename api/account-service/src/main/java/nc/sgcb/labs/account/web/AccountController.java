@@ -1,5 +1,6 @@
 package nc.sgcb.labs.account.web;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import org.springdoc.core.annotations.ParameterObject;
@@ -12,10 +13,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,6 +31,8 @@ import nc.sgcb.labs.account.jpa.AccountJpaRepository;
 import nc.sgcb.labs.account.jpa.MoneyTransferJpaRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.exception.ResourceNotFoundException;
+import nc.sgcb.labs.customer.api.CustomersApi;
 
 @Tag(name = "Accounts")
 @RestController
@@ -46,10 +52,55 @@ public class AccountController {
   private final MoneyTransferJpaRepository transferRepo;
   private final MoneyTransferMapper transferMapper;
 
+  private final CustomersApi customersApi;
+
   @GetMapping(BASE_PATH)
   public List<AccountResponse> listAccounts(@RequestParam Long customerId) {
     final var accounts = accountRepo.findByCustomerId(customerId);
     return accounts.stream().map(accountMapper::map).toList();
+  }
+
+  @PostMapping(BASE_PATH)
+  public ResponseEntity<Void> createAccount(@RequestBody @Valid AccountCreationRequest dto)
+      throws ResourceNotFoundException {
+    final var iban = Iban.parse(dto.iban());
+
+    // Assert that no account with this IBAN is managed already
+    if (accountRepo.existsById(iban)) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          "The account-service already manages account %s".formatted(iban.toHumanReadableString()));
+    }
+
+    // Assert that the customer ID is known by the customer service
+    try {
+      customersApi.getCustomer(dto.customerId());
+    } catch (HttpClientErrorException e) {
+      if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+        throw new ResourceNotFoundException(
+            "Customer %s is not known by the customer-service".formatted(dto.iban()));
+      }
+      throw e;
+    }
+
+    // Create the new account
+    final var account = accountRepo
+        .save(
+            Account
+                .builder()
+                .customerId(dto.customerId())
+                .iban(iban)
+                .balance(Amount.builder().currencyIso3(dto.currency()).digits(0L).build())
+                .build());
+    return ResponseEntity
+        .created(
+            URI
+                .create(
+                    ACCOUNT_PATH
+                        .replace(
+                            "{%s}".formatted(ACCOUNT_PLACEHOLDER),
+                            account.getIban().toMachineReadableString())))
+        .build();
   }
 
   @GetMapping(ACCOUNT_PATH)
@@ -60,7 +111,7 @@ public class AccountController {
   }
 
   @GetMapping(TRANSFER_LIST_PATH)
-  public PagedModel<MoneyTransferResponse> listTransfers(
+  public PagedModel<MoneyTransferResponse> listAccountTransfers(
       @Parameter(schema = @Schema(type = "string"))
       @PathVariable(name = ACCOUNT_PLACEHOLDER) Account account,
       @Valid @ParameterObject MoneyTransferFilterRequest dto,
@@ -75,7 +126,7 @@ public class AccountController {
 
   @PostMapping(WITHDRAW_PATH)
   @ResponseStatus(code = HttpStatus.ACCEPTED)
-  public void withdraw(
+  public void withdrawAccount(
       @Parameter(schema = @Schema(type = "string"))
       @PathVariable(name = ACCOUNT_PLACEHOLDER) Account account,
       @Valid AccountWithdrawRequest dto) {
@@ -92,7 +143,7 @@ public class AccountController {
   }
 
   @PostMapping(CREDIT_PATH)
-  public ResponseEntity<Void> credit(
+  public ResponseEntity<Void> creditAccount(
       @Parameter(schema = @Schema(type = "string"))
       @PathVariable(name = ACCOUNT_PLACEHOLDER) Account account,
       @Valid AccountCreditRequest dto) {
