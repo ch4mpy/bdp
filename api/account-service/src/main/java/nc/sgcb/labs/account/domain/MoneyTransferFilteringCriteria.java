@@ -7,8 +7,8 @@ import java.util.Optional;
 
 // @formatter:off
 public record MoneyTransferFilteringCriteria(
-        Optional<Iban> fromIban,
-        Optional<Iban> toIban,
+        Optional<Iban> sourceIban,
+        Optional<Iban> destinationIban,
         Optional<Long> minAmount,
         Optional<Long> maxAmount,
         Optional<String> currencyIso3,

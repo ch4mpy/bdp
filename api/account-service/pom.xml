@@ -174,7 +174,6 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<skipValidateSpec>true</skipValidateSpec>
 							<inputSpec>
 								${project.basedir}/../../openapi/customer-service.openapi.json
 							</inputSpec>

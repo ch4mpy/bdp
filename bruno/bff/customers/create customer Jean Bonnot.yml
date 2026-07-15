@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: https://host.docker.internal/bff/m2m/customers
+  url: https://host.docker.internal/gateway/m2m/customers
   body:
     type: json
     data: |-
@@ -13,7 +13,8 @@ http:
         "firstName": "Jean",
         "lastName": "Bonnot",
         "birthDate": "1985-11-23",
-        "birthLocation": "St Mandé(94)"
+        "birthLocation": "St Mandé(94)",
+        "email": "jean.bonnot@mail.pf"
       }
   auth: inherit
 

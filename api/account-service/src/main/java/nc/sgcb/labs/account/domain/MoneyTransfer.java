@@ -26,11 +26,11 @@ public class MoneyTransfer {
 
   @Column(nullable = false)
   @ToString.Include
-  private Iban fromIban;
+  private Iban sourceIban;
 
   @Column(nullable = false)
   @ToString.Include
-  private Iban toIban;
+  private Iban destinationIban;
 
   @Embedded
   private Amount amount;

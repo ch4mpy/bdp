@@ -10,9 +10,12 @@
 
 ```bash
 sdk env install
+nvm install --lts
 nvm use
 bash ./deploy-dev.sh
 ```
+
+Editer le mot de passe SMTP avec la valeur de `secrets/mail/password.txt` dans [Keycloak](https://host.docker.internal/auth/admin/master/console/#/labs/realm-settings/email)
 
 ## 1. Build avec Maven
 
@@ -23,15 +26,15 @@ répertoires.
 
 ```
 api/
-|─ bff
-|─ service-common
 |─ account-service
-|─ card-payment-service
+|─ card-service
 |─ customer-service
+|─ gateway
+|─ sgcb-starter-service-common
 |─ user-service
 ```
 
-Ce qui est défini dans le pom parent sert de valeur par défaut pour les modules.
+Ce qui est défini dans le pom parent sert de valeur par défaut pour les modules (group-id, version, dépendances, etc.).
 
 #### Structure
 
@@ -529,13 +532,18 @@ Le plus simple est généralement de décorer les méthodes de `@Controller` ave
 
 ### 2.9. Mise en cache
 
-L'enjeu principal de la mise en cache est de gérer l'obsolescence des données. Il faut donc remplacer les données en
-cache (ou supprimer des entrées) lors des accès en écriture, ce qui implique :
+L'enjeu principal de la mise en cache est l'obsolescence des données. Il faut donc remplacer ou supprimer des données en
+cache lors d'accès en écriture, ce qui implique :
 
 - avoir la maîtrise totale de ces écritures
 - utiliser un cache distribué (Redis ?) en environnement distribué
 
-Pour activer la mise en cache dans l'application (utiliser un autre `CacheManager` pour un cache distribué):
+Je conseille de créer un cache par type de donnée à mettre en cache et par index. 
+Par exemple, si on souhaite accéder à des instances de `Bidule` 
+soit par la valeur de leur propriété `truc`, soit par celle de lor propriété `machin`, 
+on créera deux caches: `bidulesParTruc` et `bidulesParMachin`.
+
+Pour activer la mise en cache dans l'application :
 
 ```java
 
@@ -543,27 +551,32 @@ Pour activer la mise en cache dans l'application (utiliser un autre `CacheManage
 @EnableCaching
 public class CacheConfiguration {
 
-    @Bean
-    CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager();
-    }
+  @Bean
+  CacheManager cacheManager() {
+    // utiliser un autre `CacheManager` pour un cache distribué
+    return new ConcurrentMapCacheManager();
+  }
 }
 ```
 
-Pour déclarer un ou plusieurs caches, on décore généralement une classe:
+Pour déclarer un ou plusieurs caches, on décore généralement une classe :
 
 ```java
 @CacheConfig(cacheNames = {"bidulesParTruc", "bidulesParMachin"})
 ```
 
-Pour indiquer que la valeur de retour peut ête mise en cache:
+Pour indiquer que la valeur de retour peut ête mise en cache :
 
 ```java
 @Cacheable(cacheNames = "bidulesParTruc")
 ```
 
-Utiliser `@Caching` pour indiquer qu'une opération (`save`, `delete`, ...) nécessite des opérations sur le cache (
-`evict` et / ou `put`)
+Pour indiquer qu'une opération en écriture nécessite des opérations de mise à jour du cache :
+
+```java
+@Caching(put = @CachePut(cacheNames = "bidulesParTruc", key = "#bidule.truc"),
+        evict = @CacheEvict(cacheNames = "bidulesParMachin", key = "#bidule.machin"))
+```
 
 Lorsqu'une classe expose une interface publique plus importante que nécessaire celà peut grandement compliquer la
 gestion des caches. Je recommande dans ce cas de faire un proxy n'exposant que le strict nécessaire et gérer les caches

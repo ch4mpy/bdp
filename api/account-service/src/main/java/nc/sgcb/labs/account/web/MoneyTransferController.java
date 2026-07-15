@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,12 +27,12 @@ import nc.sgcb.labs.account.jpa.AccountJpaRepository;
 import nc.sgcb.labs.account.jpa.MoneyTransferJpaRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
-import nc.sgcb.labs.customer.api.CustomersApi;
 
 @Tag(name = "MoneyTransfers")
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
 @RequiredArgsConstructor
+@Observed
 public class MoneyTransferController {
   public static final String BASE_PATH = "/transfers";
   public static final String TRANSFER_ID_PLACEHOLDER = "transferId";
@@ -42,9 +43,7 @@ public class MoneyTransferController {
   private final MoneyTransferJpaRepository transferRepo;
   private final MoneyTransferMapper transferMapper;
 
-  private final CustomersApi customersApi;
-
-  @Transactional
+  @Transactional(readOnly = true)
   @GetMapping(BASE_PATH)
   public PagedModel<MoneyTransferResponse> listMoneyTransfers(
       @Valid @ParameterObject MoneyTransferFilterRequest dto,
@@ -57,7 +56,7 @@ public class MoneyTransferController {
         new PageImpl<>(content, transferPage.getPageable(), transferPage.getTotalElements()));
   }
 
-  @Transactional(readOnly = false)
+  @Transactional
   @PostMapping(BASE_PATH)
   @ResponseStatus(code = HttpStatus.ACCEPTED)
   public void transferMoneyBetweenAccounts(@Valid MoneyTransferRequest dto) {
@@ -96,13 +95,13 @@ public class MoneyTransferController {
             MoneyTransfer
                 .builder()
                 .amount(new Amount(dto.currency(), dto.amount()))
-                .fromIban(sourceAccount.getIban())
-                .toIban(destinationAccount.getIban())
+                .sourceIban(sourceAccount.getIban())
+                .destinationIban(destinationAccount.getIban())
                 .label(dto.label())
                 .build());
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   @GetMapping(TRANSFER_PATH)
   public MoneyTransferResponse getMoneyTransfer(
       @Parameter(schema = @Schema(type = "integer"))

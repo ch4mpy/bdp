@@ -31,6 +31,7 @@ class CustomerJpaRepositoryTest {
                 .lastName("Bonot")
                 .birthDate(LocalDate.of(1978, 10, 31))
                 .birthLocation("Longjumeau (91)")
+                .email("jean.bonot@test.pf")
                 .build());
     customer2 = customerJpaRepository
         .save(
@@ -40,6 +41,7 @@ class CustomerJpaRepositoryTest {
                 .lastName("Deuf")
                 .birthDate(LocalDate.of(1980, 10, 29))
                 .birthLocation("Aix-en-Provence (13)")
+                .email("john.deuf@test.pf")
                 .build());
     customer3 = customerJpaRepository
         .save(
@@ -49,6 +51,7 @@ class CustomerJpaRepositoryTest {
                 .lastName("Hini")
                 .birthDate(LocalDate.of(1985, 11, 23))
                 .birthLocation("St Mandé (94)")
+                .email("jef.ini@test.pf")
                 .build());
   }
 

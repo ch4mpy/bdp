@@ -1,9 +1,17 @@
 package nc.sgcb.labs.customer.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "customers")
@@ -16,11 +24,9 @@ import java.time.LocalDate;
 public class Customer {
 
   @Id
-  @GeneratedValue(generator = "customerSeq")
-  @SequenceGenerator(name = "customerSeq", sequenceName = "customers_seq", allocationSize = 1)
   @EqualsAndHashCode.Include
   @ToString.Include
-  private Long id;
+  private String id;
 
   @Column(nullable = false, name = "firstname")
   @ToString.Include
@@ -35,5 +41,8 @@ public class Customer {
 
   @Column(nullable = false)
   private String birthLocation;
+
+  @Column(nullable = false)
+  private String email;
 
 }

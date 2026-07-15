@@ -11,6 +11,18 @@ server:
 spring:
   application:
     name: user-service$
+  security:
+    oauth2:
+      client:
+        provider:
+          sso:
+            issuer-uri: ${issuer}
+        registration:
+          user-service:
+            provider: sso
+            authorization-grant-type: client_credentials
+            client-id: user-service
+            client-secret: secret
   ssl:
     bundle:
       pem:
@@ -34,13 +46,20 @@ com:
               - path: $.realm_access.roles
         resourceserver:
           permit-all:
-            - /me
-            - /users/**
+            - /users/me
             - /actuator/health/readiness
             - /actuator/health/liveness
             - /actuator/prometheus
             - /v3/api-docs/**
             - /swagger-ui/**
+      rest:
+        client:
+          keycloak-admin-api-client:
+            base-url: ${reverse-proxy-uri}/auth
+            ssl-bundle: self-signed
+            authorization:
+              oauth2:
+                oauth2-registration-id: user-service
 management:
   endpoint:
     health:

@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: https://host.docker.internal/bff/m2m/accounts
+  url: https://host.docker.internal/gateway/m2m/accounts
   body:
     type: json
     data: |-

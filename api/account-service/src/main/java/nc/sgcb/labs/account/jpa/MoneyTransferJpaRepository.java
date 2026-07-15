@@ -1,15 +1,14 @@
 package nc.sgcb.labs.account.jpa;
 
+import java.time.Instant;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import nc.sgcb.labs.account.domain.MoneyTransfer;
 import nc.sgcb.labs.account.domain.MoneyTransferFilteringCriteria;
 import nc.sgcb.labs.account.domain.MoneyTransfer_;
 import nc.sgcb.labs.commons.domain.Amount_;
 import nc.sgcb.labs.commons.domain.Iban;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-
-import java.time.Instant;
 
 public interface MoneyTransferJpaRepository
     extends JpaRepository<MoneyTransfer, Long>, JpaSpecificationExecutor<MoneyTransfer> {
@@ -18,11 +17,11 @@ public interface MoneyTransferJpaRepository
   static Specification<MoneyTransfer> searchSpec(MoneyTransferFilteringCriteria criteria) {
     var spec = Specification.<MoneyTransfer>unrestricted();
 
-    if (criteria.fromIban().isPresent()) {
-      spec = spec.and(fromAccountNumberLike(criteria.fromIban().get()));
+    if (criteria.sourceIban().isPresent()) {
+      spec = spec.and(sourceAccountNumberLike(criteria.sourceIban().get()));
     }
-    if (criteria.toIban().isPresent()) {
-      spec = spec.and(toAccountNumberLike(criteria.toIban().get()));
+    if (criteria.destinationIban().isPresent()) {
+      spec = spec.and(destinationAccountNumberLike(criteria.destinationIban().get()));
     }
     if (criteria.minAmount().isPresent()) {
       spec = spec.and(amountGe(criteria.minAmount().get()));
@@ -47,20 +46,19 @@ public interface MoneyTransferJpaRepository
   }
 
   @SuppressWarnings("unused")
-  private static Specification<MoneyTransfer> fromAccountNumberLike(Iban iban) {
-    return (root, query, cb) -> cb.equal(root.get(MoneyTransfer_.fromIban), iban);
+  private static Specification<MoneyTransfer> sourceAccountNumberLike(Iban iban) {
+    return (root, query, cb) -> cb.equal(root.get(MoneyTransfer_.sourceIban), iban);
   }
 
   @SuppressWarnings("unused")
-  private static Specification<MoneyTransfer> toAccountNumberLike(Iban iban) {
-    return (root, query, cb) -> cb.equal(root.get(MoneyTransfer_.toIban), iban);
+  private static Specification<MoneyTransfer> destinationAccountNumberLike(Iban iban) {
+    return (root, query, cb) -> cb.equal(root.get(MoneyTransfer_.destinationIban), iban);
   }
 
   @SuppressWarnings("unused")
   private static Specification<MoneyTransfer> currencyLike(String iso3) {
-    return (root, query, cb) -> cb.like(
-        root.get(MoneyTransfer_.amount).get(Amount_.currencyIso3),
-        iso3);
+    return (root, query, cb) -> cb
+        .like(root.get(MoneyTransfer_.amount).get(Amount_.currencyIso3), iso3);
   }
 
   @SuppressWarnings("unused")
@@ -75,9 +73,8 @@ public interface MoneyTransferJpaRepository
 
   @SuppressWarnings({"unused", "null"})
   private static Specification<MoneyTransfer> timestampAfter(Instant timestamp) {
-    return (root, query, cb) -> cb.greaterThanOrEqualTo(
-        root.get(MoneyTransfer_.timestamp),
-        timestamp);
+    return (root, query, cb) -> cb
+        .greaterThanOrEqualTo(root.get(MoneyTransfer_.timestamp), timestamp);
   }
 
   @SuppressWarnings({"unused", "null"})
@@ -87,9 +84,10 @@ public interface MoneyTransferJpaRepository
 
   @SuppressWarnings("unused")
   private static Specification<MoneyTransfer> labelLike(String labelPart) {
-    return (root, query, cb) -> cb.like(
-        cb.upper(root.get(MoneyTransfer_.label)),
-        "%%%s%%".formatted(labelPart.toUpperCase()));
+    return (root, query, cb) -> cb
+        .like(
+            cb.upper(root.get(MoneyTransfer_.label)),
+            "%%%s%%".formatted(labelPart.toUpperCase()));
   }
 
   private static Specification<MoneyTransfer> orderBytimestampDesc(

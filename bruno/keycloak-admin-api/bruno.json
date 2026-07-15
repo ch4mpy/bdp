@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "keycloak-admin-api",
+  "name": "bdp-labs keycloak-admin-api",
   "type": "collection",
   "ignore": [
     "node_modules",

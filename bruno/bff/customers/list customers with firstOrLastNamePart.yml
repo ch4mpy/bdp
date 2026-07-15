@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: https://host.docker.internal/bff/m2m/customers?firstOrLastNamePart=
+  url: https://host.docker.internal/gateway/m2m/customers?firstOrLastNamePart=e
   params:
     - name: firstOrLastNamePart
-      value: ""
+      value: e
       type: query
   auth: inherit
 

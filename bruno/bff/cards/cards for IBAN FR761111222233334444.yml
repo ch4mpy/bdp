@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: https://host.docker.internal/bff/m2m/cards?iban=FR761111222233334444
+  url: https://host.docker.internal/gateway/m2m/cards?iban=FR761111222233334444
   params:
     - name: iban
       value: FR761111222233334444

@@ -1,6 +1,8 @@
 cn: host.docker.internal
 reverse-proxy-uri: https://${cn}
 issuer: https://host.docker.internal/auth/realms/labs
+customer-service-client-id: customer-service
+customer-service-client-secret: secret
 
 server:
   port: 8083
@@ -18,6 +20,18 @@ spring:
   profiles:
     active:
       - postgresql
+  security:
+    oauth2:
+      client:
+        provider:
+          sso:
+            issuer-uri: ${issuer}
+        registration:
+          customer-service:
+            provider: sso
+            authorization-grant-type: client_credentials
+            client-id: ${customer-service-client-id}
+            client-secret: ${customer-service-client-secret}
   ssl:
     bundle:
       pem:
@@ -41,12 +55,21 @@ com:
               - path: $.realm_access.roles
         resourceserver:
           permit-all:
-            - /card-payments/**
             - /actuator/health/readiness
             - /actuator/health/liveness
             - /actuator/prometheus
             - /v3/api-docs/**
             - /swagger-ui/**
+      rest:
+        client:
+          user-service-client:
+            base-url: ${reverse-proxy-uri}/gateway/m2m
+            ssl-bundle: self-signed
+            headers:
+              Accept: application/problem+json
+            authorization:
+              oauth2:
+                oauth2-registration-id: customer-service
 management:
   endpoint:
     health:

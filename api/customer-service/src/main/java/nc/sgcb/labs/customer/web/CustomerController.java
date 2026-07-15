@@ -7,6 +7,7 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,11 +25,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nc.sgcb.labs.customer.domain.Customer;
 import nc.sgcb.labs.customer.jpa.CustomerJpaRepository;
+import nc.sgcb.labs.user.api.UsersApi;
+import nc.sgcb.labs.user.model.UserRequest;
 
 @Tag(name = "Customers")
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
 @RequiredArgsConstructor
+@Observed
 public class CustomerController {
   public static final String BASE_PATH = "/customers";
   public static final String CUSTOMER_ID_PLACEHOLDER = "customerId";
@@ -36,6 +41,9 @@ public class CustomerController {
   private final CustomerJpaRepository customerRepo;
   private final CustomerMapper customerMapper;
 
+  private final UsersApi usersApi;
+
+  @Transactional(readOnly = true)
   @GetMapping(path = BASE_PATH)
   public PagedModel<CustomerResponse> listCustomers(
       @RequestParam String firstOrLastNamePart,
@@ -46,6 +54,7 @@ public class CustomerController {
     return new PagedModel<>(customersPage.map(customerMapper::map));
   }
 
+  @Transactional
   @PostMapping(path = BASE_PATH)
   public ResponseEntity<Void> createCustomer(@RequestBody @Valid CustomerCreationRequest dto) {
     if (customerRepo
@@ -56,21 +65,25 @@ public class CustomerController {
             dto.birthLocation())) {
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
-          "User %s %s born on %s at %s already exists"
+          "Customer %s %s born on %s at %s already exists"
               .formatted(dto.firstName(), dto.lastName(), dto.birthDate(), dto.birthLocation()));
     }
-    final var customer = customerRepo.save(customerMapper.map(dto));
+    final var userCreationResponse = usersApi
+        .createUser(
+            new UserRequest()
+                .firstName(dto.firstName())
+                .lastName(dto.lastName())
+                .username("%s.%s".formatted(dto.firstName(), dto.lastName()))
+                .email(dto.email()));
+    final var pathParts = userCreationResponse.getHeaders().getLocation().getPath().split("/");
+    final var sub = pathParts[pathParts.length - 1];
+    customerRepo.save(customerMapper.map(dto, sub));
     return ResponseEntity
-        .created(
-            URI
-                .create(
-                    CUSTOMER_PATH
-                        .replace(
-                            "{%s}".formatted(CUSTOMER_ID_PLACEHOLDER),
-                            customer.getId().toString())))
+        .created(URI.create(CUSTOMER_PATH.replace("{%s}".formatted(CUSTOMER_ID_PLACEHOLDER), sub)))
         .build();
   }
 
+  @Transactional(readOnly = true)
   @GetMapping(path = CUSTOMER_PATH)
   public CustomerResponse getCustomer(
       @Parameter(schema = @Schema(type = "integer", format = "int64"))

@@ -1,0 +1,16 @@
+${AnsiColor.BLUE}  _____  ______  _____ _______   _                    
+${AnsiColor.BLUE} |  __ \|  ____|/ ____|__   __| | |                   
+${AnsiColor.BLUE} | |__) | |__  | (___    | |    | |__   ___ _ __ ___  
+${AnsiColor.BLUE} |  _  /|  __|  \___ \   | |    | '_ \ / _ \ '__/ _ \ 
+${AnsiColor.BLUE} | | \ \| |____ ____) |  | |    | | | |  __/ | | (_) |
+${AnsiColor.BLUE} |_|__\_\______|_____/   |_|    |_| |_|\___|_|  \___/ 
+${AnsiColor.BLUE}  / ____|     | |                                     
+${AnsiColor.BLUE} | |  __  __ _| |_ _____      ____ _ _   _            
+${AnsiColor.BLUE} | | |_ |/ _` | __/ _ \ \ /\ / / _` | | | |           
+${AnsiColor.BLUE} | |__| | (_| | ||  __/\ V  V / (_| | |_| |           
+${AnsiColor.BLUE}  \_____|\__,_|\__\___| \_/\_/ \__,_|\__, |           
+${AnsiColor.BLUE}                                      __/ |           
+${AnsiColor.BLUE}                                     |___/            
+${AnsiColor.RED}Spring Boot ${spring-boot.formatted-version}           
+${AnsiColor.RED}By Jérôme Wacongne ch4mp@c4-soft.com
+${AnsiColor.BLACK}

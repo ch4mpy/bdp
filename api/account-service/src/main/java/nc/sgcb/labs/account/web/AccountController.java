@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
+import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +32,7 @@ import nc.sgcb.labs.customer.api.CustomersApi;
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
 @RequiredArgsConstructor
+@Observed
 public class AccountController {
   public static final String BASE_PATH = "/accounts";
   public static final String ACCOUNT_PLACEHOLDER = "iban";
@@ -41,17 +43,18 @@ public class AccountController {
 
   private final CustomersApi customersApi;
 
-  @Transactional
+  @Transactional(readOnly = true)
   @GetMapping(BASE_PATH)
   public List<AccountResponse> listAccounts(@RequestParam Long customerId) {
     final var accounts = accountRepo.findByCustomerId(customerId);
     return accounts.stream().map(accountMapper::map).toList();
   }
 
-  @Transactional(readOnly = false)
+  @Transactional
   @PostMapping(BASE_PATH)
   public ResponseEntity<Void> createAccount(@RequestBody @Valid AccountCreationRequest dto)
       throws ResourceNotFoundException {
+    // FIXME: logs
     final var iban = Iban.parse(dto.iban());
 
     // Assert that no account with this IBAN is managed already
@@ -92,7 +95,7 @@ public class AccountController {
         .build();
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   @GetMapping(ACCOUNT_PATH)
   public AccountResponse getAccount(
       @Parameter(schema = @Schema(type = "string"))

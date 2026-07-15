@@ -20,9 +20,9 @@ request:
     flow: authorization_code
     authorizationUrl: https://host.docker.internal/auth/realms/labs/protocol/openid-connect/auth
     accessTokenUrl: https://host.docker.internal/auth/realms/labs/protocol/openid-connect/token
-    callbackUrl: https://host.docker.internal/bff/login/oauth2/code/bff
+    callbackUrl: https://host.docker.internal/gateway/login/oauth2/code/gateway
     credentials:
-      clientId: bff
+      clientId: gateway
       clientSecret: secret
       placement: body
     scope: openid

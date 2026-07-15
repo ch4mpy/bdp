@@ -64,8 +64,10 @@ com:
       rest:
         client:
           customer-service-client:
-            base-url: ${reverse-proxy-uri}/bff/m2m
+            base-url: ${reverse-proxy-uri}/gateway/m2m
             ssl-bundle: self-signed
+            headers:
+              Accept: application/problem+json
             authorization:
               oauth2:
                 oauth2-registration-id: account-service
