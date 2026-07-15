@@ -18,15 +18,15 @@ import nc.sgcb.labs.commons.domain.Iban.NotAnIbanException;
  */
 @Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.RECORD_COMPONENT})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = Iban.IbanConstraintValidator.class)
-public @interface Iban {
+@Constraint(validatedBy = IbanString.IbanConstraintValidator.class)
+public @interface IbanString {
   String message() default "Doesn't look like an IBAN";
 
   Class<?>[] groups() default {};
 
   Class<? extends Payload>[] payload() default {};
 
-  public static class IbanConstraintValidator implements ConstraintValidator<Iban, String> {
+  public static class IbanConstraintValidator implements ConstraintValidator<IbanString, String> {
 
     @Override
     public boolean isValid(@Nullable String value, @Nullable ConstraintValidatorContext context) {

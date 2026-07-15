@@ -14,7 +14,7 @@ import nc.sgcb.labs.customer.api.CustomersApi;
 public class RestConfiguration {
 
   @Bean
-  CustomersApi usersApi(RestClient customerServiceClient) throws Exception {
+  CustomersApi customersApi(RestClient customerServiceClient) throws Exception {
     return new RestClientHttpExchangeProxyFactoryBean<>(CustomersApi.class, customerServiceClient)
         .getObject();
   }

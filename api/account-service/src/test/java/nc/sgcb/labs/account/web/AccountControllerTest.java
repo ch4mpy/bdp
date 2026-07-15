@@ -1,5 +1,18 @@
 package nc.sgcb.labs.account.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 import com.c4_soft.springaddons.security.oauth2.test.annotations.WithMockAuthentication;
 import com.c4_soft.springaddons.security.oauth2.test.webmvc.AutoConfigureAddonsWebmvcResourceServerSecurity;
 import nc.sgcb.labs.account.SpringDataWebConvertersTestConfiguration;
@@ -8,23 +21,9 @@ import nc.sgcb.labs.account.jpa.AccountJpaRepository;
 import nc.sgcb.labs.account.jpa.MoneyTransferJpaRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import nc.sgcb.labs.customer.api.CustomersApi;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(properties = {"logging.level.org.springframework=DEBUG"})
 @Import({AccountMapperImpl.class, MoneyTransferMapperImpl.class,
@@ -37,6 +36,9 @@ class AccountControllerTest {
 
   @MockitoBean
   MoneyTransferJpaRepository transferRepo;
+
+  @MockitoBean
+  CustomersApi customersApi;
 
   @Autowired
   MockMvc mockMvc;
@@ -54,16 +56,18 @@ class AccountControllerTest {
         List.of(Account.builder().customerId(customerId).iban(iban).balance(balance).build());
     when(accountRepo.findByCustomerId(customerId)).thenReturn(accountList);
 
-    List<AccountResponse> actual = json.readValue(
-        mockMvc
-            .perform(get("https://localhost" + AccountController.BASE_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .queryParam("customerId", customerId.toString()))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString(), new TypeReference<>() {
-        });
+    List<AccountResponse> actual = json
+        .readValue(
+            mockMvc
+                .perform(
+                    get("https://localhost" + AccountController.BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .queryParam("customerId", customerId.toString()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(),
+            new TypeReference<>() {});
 
     assertThat(actual).hasSize(1);
     assertThat(actual.get(0).customerId()).isEqualTo(customerId);
@@ -73,8 +77,9 @@ class AccountControllerTest {
   @WithMockAuthentication
   void givenNoCustomerId_whenListAccounts_thenBadRequest() throws Exception {
     mockMvc
-        .perform(get("https://localhost"
-            + AccountController.BASE_PATH).contentType(MediaType.APPLICATION_JSON))
+        .perform(
+            get("https://localhost" + AccountController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().is4xxClientError());
   }
 
@@ -87,14 +92,18 @@ class AccountControllerTest {
     Account account = Account.builder().customerId(customerId).iban(iban).balance(balance).build();
     when(accountRepo.findById(iban)).thenReturn(Optional.of(account));
 
-    var actual = json.readValue(
-        mockMvc
-            .perform(get("https://localhost" + AccountController.ACCOUNT_PATH,
-                iban.toMachineReadableString()).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString(), AccountResponse.class);
+    var actual = json
+        .readValue(
+            mockMvc
+                .perform(
+                    get(
+                        "https://localhost" + AccountController.ACCOUNT_PATH,
+                        iban.toMachineReadableString()).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(),
+            AccountResponse.class);
 
     assertThat(actual.customerId()).isEqualTo(customerId);
   }
@@ -106,8 +115,10 @@ class AccountControllerTest {
     when(accountRepo.findById(iban)).thenReturn(Optional.empty());
 
     mockMvc
-        .perform(get("https://localhost" + AccountController.ACCOUNT_PATH,
-            iban.toMachineReadableString()).contentType(MediaType.APPLICATION_JSON))
+        .perform(
+            get(
+                "https://localhost" + AccountController.ACCOUNT_PATH,
+                iban.toMachineReadableString()).contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
   }
 

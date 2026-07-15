@@ -9,14 +9,22 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.web.client.RestClient;
 import com.c4_soft.springaddons.rest.RestClientHttpExchangeProxyFactoryBean;
 import nc.sgcb.labs.account.api.AccountsApi;
+import nc.sgcb.labs.account.api.MoneyTransfersApi;
 
 @Configuration
 public class RestConfiguration {
 
   @Bean
-  AccountsApi usersApi(RestClient accountServiceClient) throws Exception {
+  AccountsApi accountsApi(RestClient accountServiceClient) throws Exception {
     return new RestClientHttpExchangeProxyFactoryBean<>(AccountsApi.class, accountServiceClient)
         .getObject();
+  }
+
+  @Bean
+  MoneyTransfersApi moneyTransfersApi(RestClient accountServiceClient) throws Exception {
+    return new RestClientHttpExchangeProxyFactoryBean<>(
+        MoneyTransfersApi.class,
+        accountServiceClient).getObject();
   }
 
   @Bean
