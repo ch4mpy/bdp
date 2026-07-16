@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.account.api.AccountsApi;
 import nc.sgcb.labs.account.api.MoneyTransfersApi;
 import nc.sgcb.labs.account.model.MoneyTransferRequest;
@@ -48,6 +49,7 @@ import nc.sgcb.labs.commons.validation.ValidPeriod;
 @RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
 @RequiredArgsConstructor
 @Observed
+@Slf4j
 public class CardController {
   public static final String BASE_PATH = "/cards";
   public static final String CARD_NUMBER_PLACEHOLDER = "cardNumber";

@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.customer.domain.Customer;
 import nc.sgcb.labs.customer.jpa.CustomerJpaRepository;
 import nc.sgcb.labs.user.api.UsersApi;
@@ -33,6 +34,7 @@ import nc.sgcb.labs.user.model.UserRequest;
 @RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
 @RequiredArgsConstructor
 @Observed
+@Slf4j
 public class CustomerController {
   public static final String BASE_PATH = "/customers";
   public static final String CUSTOMER_ID_PLACEHOLDER = "customerId";

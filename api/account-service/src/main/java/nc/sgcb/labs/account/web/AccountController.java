@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +22,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.account.domain.Account;
 import nc.sgcb.labs.account.jpa.AccountJpaRepository;
 import nc.sgcb.labs.commons.domain.Amount;
@@ -33,6 +35,7 @@ import nc.sgcb.labs.customer.api.CustomersApi;
 @RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
 @RequiredArgsConstructor
 @Observed
+@Slf4j
 public class AccountController {
   public static final String BASE_PATH = "/accounts";
   public static final String ACCOUNT_PLACEHOLDER = "iban";
@@ -45,6 +48,7 @@ public class AccountController {
 
   @Transactional(readOnly = true)
   @GetMapping(BASE_PATH)
+  @PreAuthorize("hasAuthority('account.read_any') || #customerId == authentication.name")
   public List<AccountResponse> listAccounts(@RequestParam Long customerId) {
     final var accounts = accountRepo.findByCustomerId(customerId);
     return accounts.stream().map(accountMapper::map).toList();
@@ -52,6 +56,7 @@ public class AccountController {
 
   @Transactional
   @PostMapping(BASE_PATH)
+  @PreAuthorize("hasAuthority('account.create')")
   public ResponseEntity<Void> createAccount(@RequestBody @Valid AccountCreationRequest dto)
       throws ResourceNotFoundException {
     // FIXME: logs
@@ -59,6 +64,7 @@ public class AccountController {
 
     // Assert that no account with this IBAN is managed already
     if (accountRepo.existsById(iban)) {
+      log.warn("Rejecting duplicate account {} creation", iban);
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           "The account-service already manages account %s".formatted(iban.toHumanReadableString()));
@@ -69,8 +75,15 @@ public class AccountController {
       customersApi.getCustomer(dto.customerId());
     } catch (HttpClientErrorException e) {
       if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+        log.warn("Rejecting account {} creation for unknown customer {}", iban, dto.customerId());
         throw new ResourceNotFoundException(
             "Customer %s is not known by the customer-service".formatted(dto.iban()));
+      } else {
+        log
+            .error(
+                "Unexpected error while checking customer {} existence in customer-service",
+                dto.customerId(),
+                e);
       }
       throw e;
     }
@@ -84,6 +97,8 @@ public class AccountController {
                 .iban(iban)
                 .balance(Amount.builder().currencyIso3(dto.currency()).digits(0L).build())
                 .build());
+    log.info("Created new account {} for customer {}", account.getIban(), account.getCustomerId());
+
     return ResponseEntity
         .created(
             URI
@@ -97,6 +112,7 @@ public class AccountController {
 
   @Transactional(readOnly = true)
   @GetMapping(ACCOUNT_PATH)
+  @PreAuthorize("hasAuthority('account.read_any') || #account.customerId == authentication.name")
   public AccountResponse getAccount(
       @Parameter(schema = @Schema(type = "string"))
       @PathVariable(name = ACCOUNT_PLACEHOLDER) Account account) {

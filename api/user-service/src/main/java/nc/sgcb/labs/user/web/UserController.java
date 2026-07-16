@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Jerome Wacongne ch4mp&#64;c4-soft.com
@@ -31,6 +32,7 @@ import lombok.RequiredArgsConstructor;
     produces = {MediaType.APPLICATION_PROBLEM_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 @Observed
+@Slf4j
 public class UserController {
   public static final String BASE_PATH = "/users";
   public static final String ME_PATH = BASE_PATH + "/me";

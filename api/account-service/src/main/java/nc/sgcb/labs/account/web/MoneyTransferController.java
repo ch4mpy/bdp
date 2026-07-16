@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.account.domain.MoneyTransfer;
 import nc.sgcb.labs.account.jpa.AccountJpaRepository;
 import nc.sgcb.labs.account.jpa.MoneyTransferJpaRepository;
@@ -33,6 +35,7 @@ import nc.sgcb.labs.commons.domain.Iban;
 @RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
 @RequiredArgsConstructor
 @Observed
+@Slf4j
 public class MoneyTransferController {
   public static final String BASE_PATH = "/transfers";
   public static final String TRANSFER_ID_PLACEHOLDER = "transferId";
@@ -45,6 +48,7 @@ public class MoneyTransferController {
 
   @Transactional(readOnly = true)
   @GetMapping(BASE_PATH)
+  @PreAuthorize("hasAuthority('account.read_any')")
   public PagedModel<MoneyTransferResponse> listMoneyTransfers(
       @Valid @ParameterObject MoneyTransferFilterRequest dto,
       @ParameterObject Pageable pageable) {
@@ -59,6 +63,7 @@ public class MoneyTransferController {
   @Transactional
   @PostMapping(BASE_PATH)
   @ResponseStatus(code = HttpStatus.ACCEPTED)
+  @PreAuthorize("hasAuthority('account.transfer')")
   public void transferMoneyBetweenAccounts(@Valid MoneyTransferRequest dto) {
     final var sourceAccount = accountRepo
         .findById(Iban.parse(dto.sourceIban()))
@@ -103,6 +108,7 @@ public class MoneyTransferController {
 
   @Transactional(readOnly = true)
   @GetMapping(TRANSFER_PATH)
+  @PreAuthorize("hasAuthority('account.read_any')")
   public MoneyTransferResponse getMoneyTransfer(
       @Parameter(schema = @Schema(type = "integer"))
       @PathVariable(name = TRANSFER_ID_PLACEHOLDER) MoneyTransfer transfer) {
