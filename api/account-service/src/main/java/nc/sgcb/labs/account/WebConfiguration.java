@@ -11,13 +11,13 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import lombok.RequiredArgsConstructor;
 import nc.sgcb.labs.account.domain.Account;
-import nc.sgcb.labs.account.jpa.AccountJpaRepository;
+import nc.sgcb.labs.account.jpa.AccountRepository;
 import nc.sgcb.labs.commons.domain.IbanStringMapper;
 
 @Configuration
 public class WebConfiguration implements WebMvcConfigurer {
   @Autowired(required = false)
-  Optional<AccountJpaRepository> accountRepo;
+  Optional<AccountRepository> accountRepo;
 
   @Override
   public void addFormatters(FormatterRegistry registry) {
@@ -26,7 +26,7 @@ public class WebConfiguration implements WebMvcConfigurer {
 
   @RequiredArgsConstructor
   static class StringAccountConverter implements Converter<String, Account> {
-    private final Optional<AccountJpaRepository> accountRepo;
+    private final Optional<AccountRepository> accountRepo;
 
     @Override
     public @Nullable Account convert(@Nullable String source) {

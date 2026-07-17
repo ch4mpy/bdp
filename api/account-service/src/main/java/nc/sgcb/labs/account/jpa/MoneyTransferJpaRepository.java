@@ -10,10 +10,13 @@ import nc.sgcb.labs.account.domain.MoneyTransfer_;
 import nc.sgcb.labs.commons.domain.Amount_;
 import nc.sgcb.labs.commons.domain.Iban;
 
+/**
+ * 
+ * @author Jerome Wacongne ch4mp&#64;c4-soft.com
+ */
 public interface MoneyTransferJpaRepository
     extends JpaRepository<MoneyTransfer, Long>, JpaSpecificationExecutor<MoneyTransfer> {
 
-  @SuppressWarnings("null")
   static Specification<MoneyTransfer> searchSpec(MoneyTransferFilteringCriteria criteria) {
     var spec = Specification.<MoneyTransfer>unrestricted();
 
@@ -71,13 +74,13 @@ public interface MoneyTransferJpaRepository
     return (root, query, cb) -> cb.le(root.get(MoneyTransfer_.amount).get(Amount_.digits), digits);
   }
 
-  @SuppressWarnings({"unused", "null"})
+  @SuppressWarnings({"unused"})
   private static Specification<MoneyTransfer> timestampAfter(Instant timestamp) {
     return (root, query, cb) -> cb
         .greaterThanOrEqualTo(root.get(MoneyTransfer_.timestamp), timestamp);
   }
 
-  @SuppressWarnings({"unused", "null"})
+  @SuppressWarnings({"unused"})
   private static Specification<MoneyTransfer> timestampBefore(Instant timestamp) {
     return (root, query, cb) -> cb.lessThanOrEqualTo(root.get(MoneyTransfer_.timestamp), timestamp);
   }

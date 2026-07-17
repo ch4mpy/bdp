@@ -21,10 +21,11 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.account.domain.Account;
-import nc.sgcb.labs.account.jpa.AccountJpaRepository;
+import nc.sgcb.labs.account.jpa.AccountRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.exception.ResourceNotFoundException;
@@ -41,7 +42,7 @@ public class AccountController {
   public static final String ACCOUNT_PLACEHOLDER = "iban";
   public static final String ACCOUNT_PATH = BASE_PATH + "/{" + ACCOUNT_PLACEHOLDER + "}";
 
-  private final AccountJpaRepository accountRepo;
+  private final AccountRepository accountRepo;
   private final AccountMapper accountMapper;
 
   private final CustomersApi customersApi;
@@ -49,7 +50,7 @@ public class AccountController {
   @Transactional(readOnly = true)
   @GetMapping(BASE_PATH)
   @PreAuthorize("hasAuthority('account.read_any') || #customerId == authentication.name")
-  public List<AccountResponse> listAccounts(@RequestParam Long customerId) {
+  public List<AccountResponse> listAccounts(@RequestParam @NotEmpty String customerId) {
     final var accounts = accountRepo.findByCustomerId(customerId);
     return accounts.stream().map(accountMapper::map).toList();
   }
@@ -59,7 +60,6 @@ public class AccountController {
   @PreAuthorize("hasAuthority('account.create')")
   public ResponseEntity<Void> createAccount(@RequestBody @Valid AccountCreationRequest dto)
       throws ResourceNotFoundException {
-    // FIXME: logs
     final var iban = Iban.parse(dto.iban());
 
     // Assert that no account with this IBAN is managed already

@@ -1,0 +1,17 @@
+{
+  "iss": "https://host.docker.internal/auth/realms/labs",
+  "aud": "account-service",
+  "sub": "414a24d8-8e51-4407-b709-0f5f4dfe56a7",
+  "azp": "card-service",
+  "resource_access": {
+    "account-service": {
+      "roles": [
+        "transfer",
+        "read_any"
+      ]
+    }
+  },
+  "scope": "openid profile email",
+  "preferred_username": "service-account-card-service",
+  "client_id": "card-service"
+}

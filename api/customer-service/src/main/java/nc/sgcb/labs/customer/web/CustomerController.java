@@ -88,7 +88,7 @@ public class CustomerController {
   @Transactional(readOnly = true)
   @GetMapping(path = CUSTOMER_PATH)
   public CustomerResponse getCustomer(
-      @Parameter(schema = @Schema(type = "integer", format = "int64"))
+      @Parameter(schema = @Schema(type = "string"))
       @PathVariable(CUSTOMER_ID_PLACEHOLDER) Customer customer) {
     return customerMapper.map(customer);
   }

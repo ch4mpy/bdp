@@ -1,7 +1,7 @@
 opencollection: 1.0.0
 
 info:
-  name: bdp-labs BFF
+  name: bdp-labs as BFF
 config:
   proxy:
     inherit: true

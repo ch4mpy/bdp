@@ -6,7 +6,7 @@ import nc.sgcb.labs.commons.validation.IbanString;
 
 public record AccountCreationRequest(
     @NotNull @IbanString String iban,
-    @NotNull Long customerId,
+    @NotNull String customerId,
     @NotNull @Pattern(regexp = "[A-Z]{3}") String currency) {
 
 }

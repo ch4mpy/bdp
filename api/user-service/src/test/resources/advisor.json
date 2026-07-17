@@ -1,0 +1,38 @@
+{
+  "iss": "https://host.docker.internal/auth/realms/labs",
+  "aud": [
+    "customer-service",
+    "card-service",
+    "account-service"
+  ],
+  "sub": "d4863e12-6d2a-4d1b-a6a3-0e5eb86e0ac6",
+  "azp": "gateway",
+  "resource_access": {
+    "customer-service": {
+      "roles": [
+        "create",
+        "read_any"
+      ]
+    },
+    "card-service": {
+      "roles": [
+        "ceilings_edit",
+        "create_any",
+        "read_any"
+      ]
+    },
+    "account-service": {
+      "roles": [
+        "create",
+        "read_any"
+      ]
+    }
+  },
+  "scope": "openid profile email",
+  "email_verified": true,
+  "name": "Harry Cover",
+  "preferred_username": "advisor",
+  "given_name": "Harry",
+  "family_name": "Cover",
+  "email": "advisor@sgcb.nc"
+}

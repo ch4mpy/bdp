@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDate;
 import java.util.Objects;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ class CustomerJpaRepositoryTest {
         .save(
             Customer
                 .builder()
+                .id(UUID.randomUUID().toString())
                 .firstName("Jean")
                 .lastName("Bonot")
                 .birthDate(LocalDate.of(1978, 10, 31))
@@ -37,6 +39,7 @@ class CustomerJpaRepositoryTest {
         .save(
             Customer
                 .builder()
+                .id(UUID.randomUUID().toString())
                 .firstName("John")
                 .lastName("Deuf")
                 .birthDate(LocalDate.of(1980, 10, 29))
@@ -47,6 +50,7 @@ class CustomerJpaRepositoryTest {
         .save(
             Customer
                 .builder()
+                .id(UUID.randomUUID().toString())
                 .firstName("Jef")
                 .lastName("Hini")
                 .birthDate(LocalDate.of(1985, 11, 23))

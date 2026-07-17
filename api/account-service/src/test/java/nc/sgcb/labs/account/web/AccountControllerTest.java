@@ -1,8 +1,11 @@
 package nc.sgcb.labs.account.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import java.util.List;
 import java.util.Optional;
@@ -11,15 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import com.c4_soft.springaddons.security.oauth2.test.annotations.WithMockAuthentication;
+import com.c4_soft.springaddons.security.oauth2.test.annotations.WithJwt;
 import com.c4_soft.springaddons.security.oauth2.test.webmvc.AutoConfigureAddonsWebmvcResourceServerSecurity;
+import nc.sgcb.labs.account.Fixtures;
+import nc.sgcb.labs.account.SecurityConfig;
 import nc.sgcb.labs.account.SpringDataWebConvertersTestConfiguration;
 import nc.sgcb.labs.account.domain.Account;
-import nc.sgcb.labs.account.jpa.AccountJpaRepository;
+import nc.sgcb.labs.account.jpa.AccountRepository;
 import nc.sgcb.labs.account.jpa.MoneyTransferJpaRepository;
-import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.customer.api.CustomersApi;
 import tools.jackson.core.type.TypeReference;
@@ -27,12 +32,12 @@ import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(properties = {"logging.level.org.springframework=DEBUG"})
 @Import({AccountMapperImpl.class, MoneyTransferMapperImpl.class,
-    SpringDataWebConvertersTestConfiguration.class})
+    SpringDataWebConvertersTestConfiguration.class, SecurityConfig.class})
 @AutoConfigureAddonsWebmvcResourceServerSecurity
 class AccountControllerTest {
 
   @MockitoBean
-  AccountJpaRepository accountRepo;
+  AccountRepository accountRepo;
 
   @MockitoBean
   MoneyTransferJpaRepository transferRepo;
@@ -47,50 +52,96 @@ class AccountControllerTest {
   ObjectMapper json;
 
   @Test
-  @WithMockAuthentication
-  void givenKnownCustomerId_whenListAccounts_thenMatchingAccountsReturned() throws Exception {
-    final var iban = Iban.parse("FR761111222233334444");
-    final var customerId = Long.valueOf(1234L);
-    final var balance = Amount.builder().currencyIso3("XPF").digits(123456L).build();
-    List<Account> accountList =
-        List.of(Account.builder().customerId(customerId).iban(iban).balance(balance).build());
-    when(accountRepo.findByCustomerId(customerId)).thenReturn(accountList);
+  @WithAnonymousUser
+  void givenAnonymousUser_whenListAccounts_thenUnauthorized() throws Exception {
+    mockMvc
+        .perform(
+            get("https://localhost" + AccountController.BASE_PATH).queryParam("customerId", "1234"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithJwt("advisor.json")
+  void givenUserIsAdvisor_whenListAccountsForKnownCustomerId_thenMatchingAccountsReturned()
+      throws Exception {
+    List<Account> accountList = List
+        .of(
+            Fixtures.createCustomersXpfAccount(100000L),
+            Fixtures.createCustomersEurAccount(200000L));
+    when(accountRepo.findByCustomerId(Fixtures.CUSTOMER_SUBJECT)).thenReturn(accountList);
 
     List<AccountResponse> actual = json
         .readValue(
             mockMvc
                 .perform(
                     get("https://localhost" + AccountController.BASE_PATH)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .queryParam("customerId", customerId.toString()))
+                        .queryParam("customerId", Fixtures.CUSTOMER_SUBJECT))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString(),
             new TypeReference<>() {});
 
-    assertThat(actual).hasSize(1);
-    assertThat(actual.get(0).customerId()).isEqualTo(customerId);
+    assertThat(actual).hasSize(accountList.size());
+    assertTrue(actual.stream().allMatch(dto -> Fixtures.CUSTOMER_SUBJECT.equals(dto.customerId())));
   }
 
   @Test
-  @WithMockAuthentication
-  void givenNoCustomerId_whenListAccounts_thenBadRequest() throws Exception {
+  @WithJwt("customer.json")
+  void givenUserIsACustomer_whenListAccountsForHimself_thenMatchingAccountsReturned()
+      throws Exception {
+    List<Account> accountList = List
+        .of(
+            Fixtures.createCustomersXpfAccount(100000L),
+            Fixtures.createCustomersEurAccount(200000L));
+    when(accountRepo.findByCustomerId(Fixtures.CUSTOMER_SUBJECT)).thenReturn(accountList);
+
+    List<AccountResponse> actual = json
+        .readValue(
+            mockMvc
+                .perform(
+                    get("https://localhost" + AccountController.BASE_PATH)
+                        .queryParam("customerId", Fixtures.CUSTOMER_SUBJECT))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(),
+            new TypeReference<>() {});
+
+    assertThat(actual).hasSize(accountList.size());
+    assertTrue(actual.stream().allMatch(dto -> Fixtures.CUSTOMER_SUBJECT.equals(dto.customerId())));
+  }
+
+  @Test
+  @WithJwt("customer.json")
+  void givenUserIsACustomer_whenListSomeoneElseAccounts_thenForbidden() throws Exception {
+    List<Account> accountList = List.of(Fixtures.createSomeonesXpfAccount(200000L));
+    when(accountRepo.findByCustomerId(Fixtures.SOMEONE_SUBJECT)).thenReturn(accountList);
+
     mockMvc
         .perform(
             get("https://localhost" + AccountController.BASE_PATH)
-                .contentType(MediaType.APPLICATION_JSON))
+                .queryParam("customerId", Fixtures.SOMEONE_SUBJECT))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithJwt("advisor.json")
+  void whenListAccountsWithoutACustomerId_thenBadRequest() throws Exception {
+    mockMvc
+        .perform(get("https://localhost" + AccountController.BASE_PATH))
+        .andExpect(status().is4xxClientError());
+    mockMvc
+        .perform(
+            get("https://localhost" + AccountController.BASE_PATH).queryParam("customerId", ""))
         .andExpect(status().is4xxClientError());
   }
 
   @Test
-  @WithMockAuthentication
-  void givenKnownIban_whenGetAccount_thenOk() throws Exception {
-    final var iban = Iban.parse("FR761111222233334444");
-    final var customerId = Long.valueOf(1234L);
-    final var balance = Amount.builder().currencyIso3("XPF").digits(123456L).build();
-    Account account = Account.builder().customerId(customerId).iban(iban).balance(balance).build();
-    when(accountRepo.findById(iban)).thenReturn(Optional.of(account));
+  @WithJwt("advisor.json")
+  void givenUserIsAdvisor_whenGetAccountWithAKnownIban_thenOk() throws Exception {
+    var account = Fixtures.createCustomersXpfAccount(100000L);
+    when(accountRepo.findById(account.getIban())).thenReturn(Optional.of(account));
 
     var actual = json
         .readValue(
@@ -98,28 +149,180 @@ class AccountControllerTest {
                 .perform(
                     get(
                         "https://localhost" + AccountController.ACCOUNT_PATH,
-                        iban.toMachineReadableString()).contentType(MediaType.APPLICATION_JSON))
+                        account.getIban().toMachineReadableString()))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString(),
             AccountResponse.class);
 
-    assertThat(actual.customerId()).isEqualTo(customerId);
+    assertThat(actual.customerId()).isEqualTo(Fixtures.CUSTOMER_SUBJECT);
   }
 
   @Test
-  @WithMockAuthentication
-  void givenUnknownIban_whenGetAccount_thenNotFound() throws Exception {
-    final var iban = Iban.parse("FR761111222233334444");
-    when(accountRepo.findById(iban)).thenReturn(Optional.empty());
+  @WithJwt("customer.json")
+  void givenUserIsCustomer_whenGetAccountWithOneOfHisAccountsIban_thenOk() throws Exception {
+    var account = Fixtures.createCustomersXpfAccount(100000L);
+    when(accountRepo.findById(account.getIban())).thenReturn(Optional.of(account));
+
+    var actual = json
+        .readValue(
+            mockMvc
+                .perform(
+                    get(
+                        "https://localhost" + AccountController.ACCOUNT_PATH,
+                        account.getIban().toMachineReadableString()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(),
+            AccountResponse.class);
+
+    assertThat(Iban.parse(actual.iban())).isEqualTo(account.getIban());
+  }
+
+  @Test
+  @WithJwt("customer.json")
+  void givenUserIsCustomer_whenGetAccountWithSomeoneElsesAccountsIban_thenForbidden()
+      throws Exception {
+    var account = Fixtures.createSomeonesXpfAccount(100000L);
+    when(accountRepo.findById(account.getIban())).thenReturn(Optional.of(account));
 
     mockMvc
         .perform(
             get(
                 "https://localhost" + AccountController.ACCOUNT_PATH,
-                iban.toMachineReadableString()).contentType(MediaType.APPLICATION_JSON))
+                account.getIban().toMachineReadableString()))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithJwt("advisor.json")
+  void givenUserIsAdvisor_whenGetAccountWithAnUnknownIban_thenNotFound() throws Exception {
+    when(accountRepo.findById(any(Iban.class))).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            get(
+                "https://localhost" + AccountController.ACCOUNT_PATH,
+                Fixtures.createCustomersXpfAccount(100000L).getIban().toMachineReadableString())
+                .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @WithAnonymousUser
+  void givenAnonymousUser_whenCreateAccount_thenUnauthorized() throws Exception {
+    var dto = new AccountCreationRequest(
+        Fixtures.createCustomersXpfAccount(100000L).getIban().toMachineReadableString(),
+        Fixtures.CUSTOMER_SUBJECT,
+        "XPF");
+
+    mockMvc
+        .perform(
+            post("https://localhost" + AccountController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dto)))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithJwt("advisor.json")
+  void givenUserHasAccountCreateAuthority_whenCreateAccountWithValidBody_thenCreated()
+      throws Exception {
+    var iban = Fixtures.createCustomersXpfAccount(100000L).getIban();
+    var dto = new AccountCreationRequest(
+        iban.toMachineReadableString(),
+        Fixtures.CUSTOMER_SUBJECT,
+        "XPF");
+
+    when(accountRepo.existsById(any(Iban.class))).thenReturn(false);
+    when(customersApi.getCustomer(Fixtures.CUSTOMER_SUBJECT))
+        .thenReturn(org.springframework.http.ResponseEntity.ok(null));
+    when(accountRepo.save(any(Account.class))).thenAnswer(i -> i.getArgument(0));
+
+    var mvcResult = mockMvc
+        .perform(
+            post("https://localhost" + AccountController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dto)))
+        .andExpect(status().isCreated())
+        .andReturn();
+
+    var location = mvcResult.getResponse().getHeader("Location");
+    assertThat(location).isNotNull();
+  }
+
+  @Test
+  @WithJwt("customer.json")
+  void givenUserDoesNotHaveAccountCreateAuthority_whenCreateAccount_thenForbidden()
+      throws Exception {
+    var dto = new AccountCreationRequest(
+        Fixtures.createCustomersXpfAccount(100000L).getIban().toMachineReadableString(),
+        Fixtures.CUSTOMER_SUBJECT,
+        "XPF");
+
+    mockMvc
+        .perform(
+            post("https://localhost" + AccountController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dto)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithJwt("advisor.json")
+  void givenUserIsHasAccountCreateAuthority_whenCreateAccountWithInvalidPayload_thenBadRequest()
+      throws Exception {
+    // missing customerId -> pass null
+    var dtoMissingCustomer = new AccountCreationRequest(
+        Fixtures.createCustomersXpfAccount(100000L).getIban().toMachineReadableString(),
+        null,
+        "XPF");
+
+    mockMvc
+        .perform(
+            post("https://localhost" + AccountController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dtoMissingCustomer)))
+        .andExpect(status().is4xxClientError());
+
+    // invalid currency
+    var dtoInvalidCurrency = new AccountCreationRequest(
+        Fixtures.createCustomersXpfAccount(100000L).getIban().toMachineReadableString(),
+        Fixtures.CUSTOMER_SUBJECT,
+        "XX");
+
+    mockMvc
+        .perform(
+            post("https://localhost" + AccountController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dtoInvalidCurrency)))
+        .andExpect(status().is4xxClientError());
+
+    // invalid iban format
+    var dtoInvalidIban =
+        new AccountCreationRequest("not-an-iban", Fixtures.CUSTOMER_SUBJECT, "XPF");
+
+    mockMvc
+        .perform(
+            post("https://localhost" + AccountController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dtoInvalidIban)))
+        .andExpect(status().is4xxClientError());
+
+    // conflict when account already exists
+    var existingIban = Fixtures.createCustomersXpfAccount(100000L).getIban();
+    var dtoConflict = new AccountCreationRequest(
+        existingIban.toMachineReadableString(), Fixtures.CUSTOMER_SUBJECT, "XPF");
+    when(accountRepo.existsById(any(Iban.class))).thenReturn(true);
+
+    mockMvc
+        .perform(
+            post("https://localhost" + AccountController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dtoConflict)))
+        .andExpect(status().isConflict());
   }
 
 }
