@@ -1,6 +1,7 @@
 package nc.sgcb.labs.account.web;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.account.domain.MoneyTransfer;
 import nc.sgcb.labs.account.jpa.AccountRepository;
-import nc.sgcb.labs.account.jpa.MoneyTransferJpaRepository;
+import nc.sgcb.labs.account.jpa.MoneyTransferRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 
@@ -43,29 +45,44 @@ public class MoneyTransferController {
 
   private final AccountRepository accountRepo;
 
-  private final MoneyTransferJpaRepository transferRepo;
+  private final MoneyTransferRepository transferRepo;
   private final MoneyTransferMapper transferMapper;
 
+  /**
+   * Requires the `account.read_any` authority or that the authenticated user is the owner of the
+   * source or destination account.
+   *
+   * @param dto the filter criteria for money transfers
+   * @param pageable the pagination information
+   * @return a paginated list of money transfers matching the filter criteria
+   */
   @Transactional(readOnly = true)
   @GetMapping(BASE_PATH)
-  @PreAuthorize("hasAuthority('account.read_any') || @transferAccessControl.isAccountOwner(authentication.name, #dto.sourceIban) || @transferAccessControl.isAccountOwner(authentication.name, #dto.destinationIban)")
+  @PreAuthorize("hasAuthority('account.read_any') or @ac.ownsAccount(#dto.sourceIban) or @ac.ownsAccount(#dto.destinationIban)")
   public PagedModel<MoneyTransferResponse> listMoneyTransfers(
-      @Valid @ParameterObject MoneyTransferFilterRequest dto,
+      @Nullable @Valid @ParameterObject MoneyTransferFilterRequest dto,
       @ParameterObject Pageable pageable) {
-    var criteria = transferMapper.map(dto);
-    var transferPage =
-        transferRepo.findAll(MoneyTransferJpaRepository.searchSpec(criteria), pageable);
+    var criteria = transferMapper.map(dto == null ? MoneyTransferFilterRequest.ALL : dto);
+    var transferPage = transferRepo.findAll(MoneyTransferRepository.searchSpec(criteria), pageable);
     var content = transferPage.getContent().stream().map(transferMapper::map).toList();
     return new PagedModel<>(
         new PageImpl<>(content, transferPage.getPageable(), transferPage.getTotalElements()));
   }
 
+  /**
+   * Requires the `account.transfer` authority.
+   *
+   * @param dto the money transfer request
+   * @param auth the authentication object representing the current user
+   */
   @Transactional
   @PostMapping(BASE_PATH)
   @ResponseStatus(code = HttpStatus.ACCEPTED)
   @PreAuthorize("hasAuthority('account.transfer')")
-  public void transferMoneyBetweenAccounts(@Valid MoneyTransferRequest dto, Authentication auth) {
-    final var sourceAccount = accountRepo.findById(Iban.parse(dto.sourceIban())).orElseThrow(() -> {
+  public void transferMoneyBetweenAccounts(
+      @RequestBody @Valid MoneyTransferRequest dto,
+      Authentication auth) {
+    final var sourceAccount = accountRepo.findById(Iban.of(dto.sourceIban())).orElseThrow(() -> {
       log
           .warn(
               "{} attempting a transfer from unknown account {}",
@@ -76,7 +93,7 @@ public class MoneyTransferController {
           "Source account %s is not known".formatted(dto.sourceIban()));
     });
     final var destinationAccount =
-        accountRepo.findById(Iban.parse(dto.destinationIban())).orElseThrow(() -> {
+        accountRepo.findById(Iban.of(dto.destinationIban())).orElseThrow(() -> {
           log
               .warn(
                   "{} attempting a transfer to unknown account {}",
@@ -147,11 +164,19 @@ public class MoneyTransferController {
             dto.currency());
   }
 
+  /**
+   * Requires the `account.read_any` authority or that the authenticated user is the owner of the
+   * source or destination account.
+   *
+   * @param transfer
+   * @return the money transfer with the given ID
+   */
   @Transactional(readOnly = true)
   @GetMapping(TRANSFER_PATH)
-  @PreAuthorize("hasAuthority('account.read_any') || @transferAccessControl.isAccountOwner(authentication.name, #transfer.sourceIban) || @transferAccessControl.isAccountOwner(authentication.name, #transfer.destinationIban)")
+  @PreAuthorize("hasAuthority('account.read_any') or @ac.ownsAccount(#transfer.sourceIban) or @ac.ownsAccount(#transfer.destinationIban)")
   public MoneyTransferResponse getMoneyTransfer(
-      @Parameter(schema = @Schema(type = "integer"))
+      @Parameter(schema = @Schema(type = "integer"),
+          description = "The ID of the money transfer to retrieve")
       @PathVariable(name = TRANSFER_ID_PLACEHOLDER) MoneyTransfer transfer) {
     return transferMapper.map(transfer);
   }

@@ -11,7 +11,7 @@ public class IbanStringMapper {
   }
 
   public static @Nullable Iban mapStringToIban(@Nullable String ibanStr) {
-    return ibanStr == null ? null : Iban.parse(ibanStr);
+    return ibanStr == null ? null : Iban.of(ibanStr);
   }
 
 }

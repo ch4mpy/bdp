@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import nc.sgcb.labs.customer.domain.Customer;
 
-public interface CustomerJpaRepository extends JpaRepository<Customer, String> {
+public interface CustomerRepository extends JpaRepository<Customer, String> {
   Page<Customer> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
       String firstNamePart,
       String lastNamePart,

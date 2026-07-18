@@ -1,12 +1,14 @@
 package nc.sgcb.labs.customer.web;
 
 import java.net.URI;
+import org.jspecify.annotations.Nullable;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +27,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.customer.domain.Customer;
-import nc.sgcb.labs.customer.jpa.CustomerJpaRepository;
+import nc.sgcb.labs.customer.jpa.CustomerRepository;
 import nc.sgcb.labs.user.api.UsersApi;
 import nc.sgcb.labs.user.model.UserRequest;
 
@@ -40,24 +42,44 @@ public class CustomerController {
   public static final String CUSTOMER_ID_PLACEHOLDER = "customerId";
   public static final String CUSTOMER_PATH = BASE_PATH + "/{" + CUSTOMER_ID_PLACEHOLDER + "}";
 
-  private final CustomerJpaRepository customerRepo;
+  private final CustomerRepository customerRepo;
   private final CustomerMapper customerMapper;
 
   private final UsersApi usersApi;
 
+  /**
+   * Requires the `customer.read_any` authority
+   * 
+   * @param firstOrLastNamePart optional part of first or last name to filter by
+   * @param pageable
+   * @return
+   */
   @Transactional(readOnly = true)
   @GetMapping(path = BASE_PATH)
+  @PreAuthorize("hasAuthority('customer.read_any')")
   public PagedModel<CustomerResponse> listCustomers(
-      @RequestParam String firstOrLastNamePart,
+      @RequestParam(required = false) @Nullable String firstOrLastNamePart,
       @ParameterObject Pageable pageable) {
+    log
+        .debug(
+            "Listing customers with firstOrLastNamePart={} and pageable={}",
+            firstOrLastNamePart,
+            pageable);
     final var customersPage = StringUtils.hasText(firstOrLastNamePart)
         ? customerRepo.findByFirstOrLastNameContainingIgnoreCase(firstOrLastNamePart, pageable)
         : customerRepo.findAll(pageable);
     return new PagedModel<>(customersPage.map(customerMapper::map));
   }
 
+  /**
+   * Requires the `customer.create` authority
+   * 
+   * @param dto
+   * @return
+   */
   @Transactional
   @PostMapping(path = BASE_PATH)
+  @PreAuthorize("hasAuthority('customer.create')")
   public ResponseEntity<Void> createCustomer(@RequestBody @Valid CustomerCreationRequest dto) {
     if (customerRepo
         .existsByFirstNameAndLastNameAndBirthDateAndBirthLocationAllIgnoreCase(
@@ -65,30 +87,60 @@ public class CustomerController {
             dto.lastName(),
             dto.birthDate(),
             dto.birthLocation())) {
+      log
+          .warn(
+              "Customer {} {} born on {} at {} already exists. Rejecting creation.",
+              dto.firstName(),
+              dto.lastName(),
+              dto.birthDate(),
+              dto.birthLocation());
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
           "Customer %s %s born on %s at %s already exists"
               .formatted(dto.firstName(), dto.lastName(), dto.birthDate(), dto.birthLocation()));
     }
+
+    final var username = "%s.%s".formatted(dto.firstName(), dto.lastName()).toLowerCase();
+    log
+        .debug(
+            "Calling the users API to create {} {} {} {}",
+            dto.firstName(),
+            dto.lastName(),
+            username,
+            dto.email());
     final var userCreationResponse = usersApi
         .createUser(
             new UserRequest()
                 .firstName(dto.firstName())
                 .lastName(dto.lastName())
-                .username("%s.%s".formatted(dto.firstName(), dto.lastName()))
+                .username(username)
                 .email(dto.email()));
+    log
+        .debug(
+            "User created by the users API at {}",
+            userCreationResponse.getHeaders().getLocation());
     final var pathParts = userCreationResponse.getHeaders().getLocation().getPath().split("/");
     final var sub = pathParts[pathParts.length - 1];
+    log.info("Created user {}", sub);
     customerRepo.save(customerMapper.map(dto, sub));
+    log.debug("Customer created for user {}", sub);
     return ResponseEntity
         .created(URI.create(CUSTOMER_PATH.replace("{%s}".formatted(CUSTOMER_ID_PLACEHOLDER), sub)))
         .build();
   }
 
+  /**
+   * Requires the `customer.read_any` authority or the user to be the customer
+   * 
+   * @param customer
+   * @return
+   */
   @Transactional(readOnly = true)
   @GetMapping(path = CUSTOMER_PATH)
+  @PreAuthorize("hasAuthority('customer.read_any') or #customer.id == authentication.name")
   public CustomerResponse getCustomer(
-      @Parameter(schema = @Schema(type = "string"))
+      @Parameter(schema = @Schema(type = "string"),
+          description = "The ID of the customer to retrieve")
       @PathVariable(CUSTOMER_ID_PLACEHOLDER) Customer customer) {
     return customerMapper.map(customer);
   }

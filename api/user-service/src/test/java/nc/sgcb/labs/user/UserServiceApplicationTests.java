@@ -2,11 +2,11 @@ package nc.sgcb.labs.user;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.wiremock.spring.ConfigureWireMock;
-import org.wiremock.spring.EnableWireMock;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Import;
 
-@SpringBootTest(properties = {"issuer=http://localhost:8089/auth/realms/labs"})
-@EnableWireMock({@ConfigureWireMock(port = 8089)})
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@Import(MockedOAuth2ClientTestConfiguration.class)
 class CustomerServiceApplicationTests {
 
   @Test

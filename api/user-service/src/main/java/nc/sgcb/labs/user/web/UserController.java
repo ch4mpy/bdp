@@ -6,6 +6,7 @@ import org.keycloak.admin.api.UsersApi;
 import org.keycloak.admin.model.UserRepresentation;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
@@ -16,8 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import io.micrometer.observation.annotation.Observed;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +42,14 @@ public class UserController {
 
   private final UsersApi usersApi;
 
+  /**
+   * Returns information of the current user if authenticated, ANONYMOUS otherwise
+   * 
+   * @param auth
+   * @return
+   */
   @Transactional(readOnly = true)
   @GetMapping(path = ME_PATH)
-  @Operation(description = "Information of the current user if authenticated, ANONYMOUS otherwise")
   public UserResponse getMe(Authentication auth) {
     if (auth instanceof JwtAuthenticationToken jwtAuth) {
       return new UserResponse(
@@ -57,24 +63,36 @@ public class UserController {
     return UserResponse.ANONYMOUS;
   }
 
+  /**
+   * Requires the `user.create` authority
+   * 
+   * @param dto user to create in Keycloak
+   * @return
+   */
   @Transactional
   @PostMapping(BASE_PATH)
+  @PreAuthorize("hasAuthority('user.create')")
   public ResponseEntity<Void> createUser(@RequestBody @Valid UserRequest dto) {
-    var response = usersApi
-        .adminRealmsRealmUsersPost(
-            "labs",
-            Optional
-                .of(
-                    new UserRepresentation()
-                        .username(dto.username())
-                        .firstName(dto.firstName())
-                        .lastName(dto.lastName())
-                        .email(dto.email())
-                        .enabled(true)));
-    var pathParts = response.getHeaders().getLocation().getPath().split("/");
-    var sub = pathParts[pathParts.length - 1];
-    return ResponseEntity
-        .created(URI.create(USER_PATH.replace("{%s}".formatted(USER_PLACEHOLDER), sub)))
-        .build();
+    try {
+      var response = usersApi
+          .adminRealmsRealmUsersPost(
+              "labs",
+              Optional
+                  .of(
+                      new UserRepresentation()
+                          .username(dto.username())
+                          .firstName(dto.firstName())
+                          .lastName(dto.lastName())
+                          .email(dto.email())
+                          .enabled(true)));
+      var pathParts = response.getHeaders().getLocation().getPath().split("/");
+      var sub = pathParts[pathParts.length - 1];
+      return ResponseEntity
+          .created(URI.create(USER_PATH.replace("{%s}".formatted(USER_PLACEHOLDER), sub)))
+          .build();
+    } catch (HttpClientErrorException e) {
+      log.error("Failed to create user {}: {}", dto, e.getResponseBodyAsString(), e);
+      throw e;
+    }
   }
 }

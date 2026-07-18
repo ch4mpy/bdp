@@ -17,7 +17,9 @@
     "card-service": {
       "roles": [
         "ceilings_edit",
+        "create",
         "create_any",
+        "card-status_edit",
         "read_any"
       ]
     },

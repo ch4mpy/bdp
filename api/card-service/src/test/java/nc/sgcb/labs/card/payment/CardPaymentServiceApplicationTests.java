@@ -2,13 +2,13 @@ package nc.sgcb.labs.card.payment;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.wiremock.spring.ConfigureWireMock;
-import org.wiremock.spring.EnableWireMock;
 
-@SpringBootTest(properties = {"issuer=http://localhost:8089/auth/realms/labs"})
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("h2")
-@EnableWireMock({@ConfigureWireMock(port = 8089)})
+@Import({MockedOAuth2ClientTestConfiguration.class})
 class CardPaymentServiceApplicationTests {
 
   @Test

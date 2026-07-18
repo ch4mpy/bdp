@@ -7,6 +7,11 @@ import java.time.Instant;
  * @param currency in ISO_3 format
  */
 public record MoneyTransferResponse(
-    String fromIban, String toIban, Long amount, String currency, Instant timestamp, String label) {
+    String sourceIban,
+    String destinationIban,
+    Long amount,
+    String currency,
+    Instant timestamp,
+    String label) {
 
 }

@@ -4,7 +4,7 @@ import nc.sgcb.labs.account.domain.Account;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 
-public class Fixtures {
+public class AccountFixtures {
 
   public static String CUSTOMER_SUBJECT = "customer-subject";
 
@@ -15,7 +15,7 @@ public class Fixtures {
     return Account
         .builder()
         .customerId(CUSTOMER_SUBJECT)
-        .iban(Iban.parse("FR761111222233334441"))
+        .iban(Iban.of("FR761111222233334441"))
         .balance(balance)
         .build();
   }
@@ -25,7 +25,7 @@ public class Fixtures {
     return Account
         .builder()
         .customerId(CUSTOMER_SUBJECT)
-        .iban(Iban.parse("FR761111222233334442"))
+        .iban(Iban.of("FR761111222233334442"))
         .balance(balance)
         .build();
   }
@@ -35,7 +35,7 @@ public class Fixtures {
     return Account
         .builder()
         .customerId(SOMEONE_SUBJECT)
-        .iban(Iban.parse("FR761111222233334443"))
+        .iban(Iban.of("FR761111222233334443"))
         .balance(balance)
         .build();
   }

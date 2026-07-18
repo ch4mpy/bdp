@@ -14,7 +14,7 @@ import nc.sgcb.labs.commons.domain.Iban;
  * 
  * @author Jerome Wacongne ch4mp&#64;c4-soft.com
  */
-public interface MoneyTransferJpaRepository
+public interface MoneyTransferRepository
     extends JpaRepository<MoneyTransfer, Long>, JpaSpecificationExecutor<MoneyTransfer> {
 
   static Specification<MoneyTransfer> searchSpec(MoneyTransferFilteringCriteria criteria) {

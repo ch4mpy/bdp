@@ -13,6 +13,7 @@ import nc.sgcb.labs.customer.api.CustomersApi;
 @Configuration
 public class RestConfiguration {
 
+  @SuppressWarnings("null")
   @Bean
   CustomersApi customersApi(RestClient customerServiceClient) throws Exception {
     return new RestClientHttpExchangeProxyFactoryBean<>(CustomersApi.class, customerServiceClient)

@@ -1,13 +1,15 @@
 package nc.sgcb.labs.account.web;
 
-import nc.sgcb.labs.account.domain.MoneyTransfer;
-import nc.sgcb.labs.account.domain.MoneyTransferFilteringCriteria;
-import nc.sgcb.labs.commons.domain.IbanStringMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
+import org.mapstruct.ReportingPolicy;
+import nc.sgcb.labs.account.domain.MoneyTransfer;
+import nc.sgcb.labs.account.domain.MoneyTransferFilteringCriteria;
+import nc.sgcb.labs.commons.domain.IbanStringMapper;
 
-@Mapper(componentModel = ComponentModel.SPRING, uses = {IbanStringMapper.class})
+@Mapper(componentModel = ComponentModel.SPRING, uses = {IbanStringMapper.class},
+    unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface MoneyTransferMapper {
 
   MoneyTransferFilteringCriteria map(MoneyTransferFilterRequest dto);

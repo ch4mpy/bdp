@@ -23,7 +23,7 @@ public class Iban implements Serializable {
   }
 
   public Iban(String iban) {
-    this(Iban.parse(iban));
+    this(Iban.of(iban));
   }
 
   @SuppressWarnings("null")
@@ -51,7 +51,7 @@ public class Iban implements Serializable {
    * @throws NotAnIbanException if the ibanStr is null or doesn't look like an IBAN
    */
   @SuppressWarnings("null")
-  public static Iban parse(String ibanStr) throws NotAnIbanException {
+  public static Iban of(String ibanStr) throws NotAnIbanException {
     final var machineReable = toMachineReadableString(ibanStr);
     final var matcher = IBAN_PATTERN.matcher(machineReable);
     if (!matcher.matches()) {

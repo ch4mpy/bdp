@@ -1,5 +1,7 @@
 package nc.sgcb.labs.card.payment.web;
 
-public record CardStatusRequest(boolean isActive) {
+import jakarta.validation.constraints.NotNull;
+
+public record CardStatusRequest(@NotNull Boolean isActive) {
 
 }

@@ -3,50 +3,66 @@ package nc.sgcb.labs.card.payment.jpa;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.wiremock.spring.ConfigureWireMock;
-import org.wiremock.spring.EnableWireMock;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import nc.sgcb.labs.card.payment.CacheConfiguration;
 import nc.sgcb.labs.card.payment.domain.Card;
 import nc.sgcb.labs.commons.domain.Iban;
 
-@SpringBootTest(properties = {"issuer=http://localhost:8089/auth/realms/labs"})
+@SpringBootTest(classes = {CacheConfiguration.class, CardRepository.class})
 @ActiveProfiles("h2")
-@EnableWireMock({@ConfigureWireMock(port = 8089)})
-class CachingCardServiceTest {
+class CardRepositoryTest {
 
-  @MockitoSpyBean
-  @SuppressWarnings("null")
-  CardJpaRepository cardRepo;
+  @MockitoBean
+  JpaCardRepository jpaCardRepo;
 
   @Autowired
-  CachingCardService cardService;
+  CardRepository cardService;
 
   Map<String, Card> cardDatabase = new HashMap<>();
 
-  @SuppressWarnings("null")
   String cardNumber;
 
-  @SuppressWarnings("null")
   Iban accountIban;
 
-  @SuppressWarnings("null")
   Card.Ceilings ceilings;
 
   @BeforeEach
   void setUp() {
     cardNumber = "123456";
-    accountIban = Iban.parse("FR76 1111222233334444");
+    accountIban = Iban.of("FR76 1111222233334444");
     ceilings = Card.Ceilings.builder().transaction(50000L).rolling30(100000L).build();
 
-    cardRepo.save(Card.builder().number(cardNumber).iban(accountIban).ceilings(ceilings).build());
+    final var cards = new ConcurrentHashMap<String, Card>();
+    cards
+        .put(
+            cardNumber,
+            Card.builder().number(cardNumber).iban(accountIban).ceilings(ceilings).build());
+
+    when(jpaCardRepo.findById(cardNumber))
+        .thenAnswer(invocation -> Optional.ofNullable(cards.get(invocation.getArgument(0))));
+    when(jpaCardRepo.findByIban(accountIban))
+        .thenAnswer(
+            invocation -> cards
+                .values()
+                .stream()
+                .filter(c -> c.getIban().equals(accountIban))
+                .toList());
+    when(jpaCardRepo.save(org.mockito.ArgumentMatchers.any(Card.class))).thenAnswer(invocation -> {
+      Card card = invocation.getArgument(0);
+      cards.put(card.getNumber(), card);
+      return card;
+    });
   }
 
   @Test
@@ -78,7 +94,7 @@ class CachingCardServiceTest {
 
     // only the 1st call to cardService.findByNumber should delegate to cardRepo.findById
     // (save should @CachePut here, not @CacheEvict)
-    verify(cardRepo, times(1)).findById(cardNumber);
+    verify(jpaCardRepo, times(1)).findById(cardNumber);
   }
 
   @Test
@@ -110,7 +126,7 @@ class CachingCardServiceTest {
 
     // only the 1st and 3rd calls to cardService.findByNumber should delegate to cardRepo.findById
     // (save should @CacheEvict here, not @CachePut)
-    verify(cardRepo, times(2)).findByIban(accountIban);
+    verify(jpaCardRepo, times(2)).findByIban(accountIban);
   }
 
 }

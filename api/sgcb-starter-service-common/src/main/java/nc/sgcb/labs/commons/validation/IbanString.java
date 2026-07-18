@@ -12,7 +12,11 @@ import jakarta.validation.Payload;
 import nc.sgcb.labs.commons.domain.Iban.NotAnIbanException;
 
 /**
- * Custom validation annotation sample
+ * null is valid to allow optional IBAN parameters and properties. Use @NotNull to reject nulls:
+ * 
+ * <pre>
+ * &#64;NotNull @IbanString String iban
+ * </pre>
  *
  * @author Jérôme Wacongne &lt;ch4mp#64;c4-soft.com&gt;
  */
@@ -31,10 +35,10 @@ public @interface IbanString {
     @Override
     public boolean isValid(@Nullable String value, @Nullable ConstraintValidatorContext context) {
       if (value == null) {
-        return false;
+        return true;
       }
       try {
-        nc.sgcb.labs.commons.domain.Iban.parse(value);
+        nc.sgcb.labs.commons.domain.Iban.of(value);
         return true;
       } catch (NotAnIbanException e) {
         return false;

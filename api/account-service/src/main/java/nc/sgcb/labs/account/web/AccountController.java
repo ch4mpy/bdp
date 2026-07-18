@@ -47,6 +47,14 @@ public class AccountController {
 
   private final CustomersApi customersApi;
 
+  /**
+   * Requires the `account.read_any` authority or that the given customer ID matches the
+   * authenticated user.
+   * 
+   * @param customerId
+   * 
+   * @return all accounts with the given customer ID.
+   */
   @Transactional(readOnly = true)
   @GetMapping(BASE_PATH)
   @PreAuthorize("hasAuthority('account.read_any') || #customerId == authentication.name")
@@ -55,12 +63,20 @@ public class AccountController {
     return accounts.stream().map(accountMapper::map).toList();
   }
 
+  /**
+   * Requires the `account.create` authority.
+   * 
+   * @param dto
+   * @return a 201 Created response with the Location header set to the newly created account's URL.
+   * @throws ResourceNotFoundException if the customer ID in the request is not known by the
+   *         customer service.
+   */
   @Transactional
   @PostMapping(BASE_PATH)
   @PreAuthorize("hasAuthority('account.create')")
   public ResponseEntity<Void> createAccount(@RequestBody @Valid AccountCreationRequest dto)
       throws ResourceNotFoundException {
-    final var iban = Iban.parse(dto.iban());
+    final var iban = Iban.of(dto.iban());
 
     // Assert that no account with this IBAN is managed already
     if (accountRepo.existsById(iban)) {
@@ -110,11 +126,19 @@ public class AccountController {
         .build();
   }
 
+  /**
+   * Requires the `account.read_any` authority or that the given account's customer ID matches the
+   * authenticated user.
+   * 
+   * @param account
+   * @return the account with the given IBAN.
+   */
   @Transactional(readOnly = true)
   @GetMapping(ACCOUNT_PATH)
   @PreAuthorize("hasAuthority('account.read_any') || #account.customerId == authentication.name")
   public AccountResponse getAccount(
-      @Parameter(schema = @Schema(type = "string"))
+      @Parameter(schema = @Schema(type = "string"),
+          description = "The IBAN of the account to retrieve")
       @PathVariable(name = ACCOUNT_PLACEHOLDER) Account account) {
     return accountMapper.map(account);
   }

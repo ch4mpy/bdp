@@ -6,12 +6,11 @@ import nc.sgcb.labs.account.domain.Account;
 import nc.sgcb.labs.commons.domain.Iban;
 
 /**
- * Package-private Spring Data JPA repository for {@link Account} entities. Used by
- * {@link AccountRepository} to avoid hitting the database too often.
+ * Package-private JPA repository for {@link Account} entities, used by {@link AccountRepository}.
  * 
  * @author Jerome Wacongne ch4mp&#64;c4-soft.com
  */
-interface AccountJpaRepository extends JpaRepository<Account, Iban> {
+interface JpaAccountRepository extends JpaRepository<Account, Iban> {
 
   List<Account> findByCustomerId(String customerId);
 

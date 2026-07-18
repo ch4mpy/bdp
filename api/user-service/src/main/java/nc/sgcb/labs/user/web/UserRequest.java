@@ -3,11 +3,13 @@
  */
 package nc.sgcb.labs.user.web;
 
-import org.jspecify.annotations.Nullable;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 public record UserRequest(
-    @Nullable String email,
-    @Nullable String username,
-    @Nullable String firstName,
-    @Nullable String lastName) {
+    @NotNull @Email String email,
+    @NotEmpty String username,
+    @NotEmpty String firstName,
+    @NotEmpty String lastName) {
 }

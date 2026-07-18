@@ -13,7 +13,18 @@ import jakarta.validation.Payload;
 import nc.sgcb.labs.commons.domain.Period;
 
 /**
- * Custom validation annotation sample
+ * Specifies a {@link nc.sgcb.labs.commons.domain.Period} validity according to the following rules:
+ * <ul>
+ * <li>if fromRequired is true, the period must have a lower bound</li>
+ * <li>if toRequired is true, the period must have an upper bound</li>
+ * <li>if maxSeconds is greater than 0, the period duration must be less than or equal to
+ * maxSeconds</li>
+ * <li>if the period is null, it is considered valid (use @NotNull to reject nulls)</li>
+ * </ul>
+ * 
+ * <pre>
+ * &#64;NotNull &#64;ValidPeriod(maxSeconds = 3600 * 24 * 31) Period searchPeriod
+ * </pre>
  *
  * @author Jérôme Wacongne &lt;ch4mp#64;c4-soft.com&gt;
  */
@@ -39,10 +50,11 @@ public @interface ValidPeriod {
   public static class ValidPeriodConstraintValidator
       implements ConstraintValidator<ValidPeriod, Period> {
 
+    @SuppressWarnings("null")
     private ValidPeriod annotation;
 
     @Override
-    public void initialize(ValidPeriod constraintAnnotation) {
+    public void initialize(@SuppressWarnings("null") ValidPeriod constraintAnnotation) {
       this.annotation = constraintAnnotation;
     }
 

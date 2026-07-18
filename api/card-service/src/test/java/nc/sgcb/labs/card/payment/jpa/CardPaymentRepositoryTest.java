@@ -15,15 +15,15 @@ import nc.sgcb.labs.commons.domain.Iban;
 
 @DataJpaTest
 @ActiveProfiles("h2")
-class CardPaymentJpaRepositoryTest {
+class CardPaymentRepositoryTest {
 
   @Autowired
-  CardPaymentJpaRepository paymentRepo;
+  CardPaymentRepository paymentRepo;
 
   @Autowired
-  CardJpaRepository cardRepo;
+  JpaCardRepository cardRepo;
 
-  Iban iban = Iban.parse("FR761111222233334444");
+  Iban iban = Iban.of("FR761111222233334444");
 
   @SuppressWarnings("null")
   Card card1, card2;
@@ -57,7 +57,7 @@ class CardPaymentJpaRepositoryTest {
                 .builder()
                 .card(card1)
                 .amount(new Amount("XPF", 120000L))
-                .destinationIban(Iban.parse("FR7622222222222222222"))
+                .destinationIban(Iban.of("FR7622222222222222222"))
                 .isAccepted(false)
                 .timestamp(Instant.parse("2026-01-01T00:01:10Z"))
                 .build());
@@ -67,7 +67,7 @@ class CardPaymentJpaRepositoryTest {
                 .builder()
                 .card(card1)
                 .amount(new Amount("XPF", 120000L))
-                .destinationIban(Iban.parse("FR7622222222222222222"))
+                .destinationIban(Iban.of("FR7622222222222222222"))
                 .isAccepted(false)
                 .timestamp(Instant.parse("2026-01-01T00:01:30Z"))
                 .build());
@@ -77,7 +77,7 @@ class CardPaymentJpaRepositoryTest {
                 .builder()
                 .card(card2)
                 .amount(new Amount("XPF", 120000L))
-                .destinationIban(Iban.parse("FR7622222222222222222"))
+                .destinationIban(Iban.of("FR7622222222222222222"))
                 .timestamp(Instant.parse("2026-01-01T00:02:30Z"))
                 .isAccepted(true)
                 .build());

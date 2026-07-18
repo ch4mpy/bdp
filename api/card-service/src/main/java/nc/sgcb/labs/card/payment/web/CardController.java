@@ -9,6 +9,8 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,8 +38,8 @@ import nc.sgcb.labs.account.model.MoneyTransferRequest;
 import nc.sgcb.labs.card.payment.domain.Card;
 import nc.sgcb.labs.card.payment.domain.Card.Ceilings;
 import nc.sgcb.labs.card.payment.domain.CardPayment;
-import nc.sgcb.labs.card.payment.domain.CardService;
-import nc.sgcb.labs.card.payment.jpa.CardPaymentJpaRepository;
+import nc.sgcb.labs.card.payment.jpa.CardPaymentRepository;
+import nc.sgcb.labs.card.payment.jpa.CardRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.domain.Period;
@@ -60,39 +62,64 @@ public class CardController {
   public static final String PAYMENT_ID_PLACEHOLDER = "paymentId";
   public static final String PAYMENT_PATH = PAYMENT_LIST_PATH + "/{" + PAYMENT_ID_PLACEHOLDER + "}";
 
-  private final CardService cardService;
+  private final CardRepository cardRepo;
   private final CardMapper cardMapper;
-  private final CardPaymentJpaRepository paymentRepo;
+  private final CardPaymentRepository paymentRepo;
   private final CardPaymentMapper paymentMapper;
   private final AccountsApi accountsApi;
   private final MoneyTransfersApi transfersApi;
 
+  /**
+   * Requires the `card.read_any` authority or that the authenticated user is the owner of the
+   * account.
+   * 
+   * @param iban
+   * @return
+   */
   @Transactional(readOnly = true)
   @GetMapping(path = BASE_PATH)
+  @PreAuthorize("hasAuthority('card.read_any') or @ac.ownsAccount(#iban.toMachineReadableString())")
   public List<CardResponse> listCards(@RequestParam Iban iban) {
-    var cards = cardService.findByIban(iban);
+    var cards = cardRepo.findByIban(iban);
     return cards.stream().map(cardMapper::map).toList();
   }
 
+  /**
+   * Requires the `card.create` authority.
+   * 
+   * @param dto
+   * @param auth
+   * @return a response with a `Location` header pointing to the newly created card resource
+   * @throws ResourceNotFoundException if the account is not known by the account service
+   */
   @Transactional
   @PostMapping(path = BASE_PATH)
-  public ResponseEntity<Void> createCard(@RequestBody @Valid CardCreationRequest dto)
-      throws ResourceNotFoundException {
+  @PreAuthorize("hasAuthority('card.create')")
+  public ResponseEntity<Void> createCard(
+      @RequestBody @Valid CardCreationRequest dto,
+      Authentication auth) throws ResourceNotFoundException {
     // Assert that the account is known by the account service
     try {
       accountsApi.getAccount(dto.iban());
     } catch (HttpClientErrorException e) {
       if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+        log.warn("{} atempted to create a card for unknown account {}", auth.getName(), dto.iban());
         throw new ResourceNotFoundException(
             "%s account is not known to the account-service".formatted(dto.iban()));
       }
+      log
+          .error(
+              "Error while checking account {} existence for user {}",
+              dto.iban(),
+              auth.getName(),
+              e);
       throw e;
     }
-    var iban = Iban.parse(dto.iban());
-    var existingCards = cardService.findByIban(iban);
+    var iban = Iban.of(dto.iban());
+    var existingCards = cardRepo.findByIban(iban);
     var cardNumber = "4%s%d".formatted(iban.getBban(), existingCards.size());
 
-    var card = cardService
+    var card = cardRepo
         .save(
             Card
                 .builder()
@@ -106,6 +133,7 @@ public class CardController {
                         .build())
                 .active(true)
                 .build());
+    log.info("{} created card {} for account {}", auth.getName(), card.getNumber(), dto.iban());
 
     return ResponseEntity
         .created(
@@ -115,42 +143,100 @@ public class CardController {
         .build();
   }
 
+  /**
+   * Requires the `card.read_any` authority or that the authenticated user is the owner of the card
+   * 
+   * @param card
+   * @return
+   */
   @Transactional(readOnly = true)
   @GetMapping(path = CARD_PATH)
+  @PreAuthorize("hasAuthority('card.read_any') or @ac.ownsAccount(#card.getIban().toMachineReadableString())")
   public CardResponse getCard(
-      @Parameter(schema = @Schema(type = "string"))
+      @Parameter(schema = @Schema(type = "string"),
+          description = "The number of the card to change the status of")
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card) {
     return cardMapper.map(card);
   }
 
+  /**
+   * Requires the `card.card-status_edit` authority
+   * 
+   * @param card
+   * @param dto
+   * @param auth
+   */
   @Transactional
   @PutMapping(path = CARD_STATUS_PATH)
   @ResponseStatus(HttpStatus.ACCEPTED)
+  @PreAuthorize("hasAuthority('card.card-status_edit')")
   public void setCardStatus(
-      @Parameter(schema = @Schema(type = "string"))
+      @Parameter(schema = @Schema(type = "string"),
+          description = "The number of the card to change the status of")
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
-      @RequestBody CardStatusRequest dto) {
+      @RequestBody @Valid CardStatusRequest dto,
+      Authentication auth) {
+    log
+        .info(
+            "{} is changing status {} card status from {} to {}",
+            auth.getName(),
+            card.getNumber(),
+            card.isActive(),
+            dto.isActive());
     card.setActive(dto.isActive());
-    cardService.save(card);
+    cardRepo.save(card);
+    log.debug("{} changed card {} status to {}", auth.getName(), card.getNumber(), dto.isActive());
   }
 
+  /**
+   * Requires the `card.ceilings_edit` authority
+   * 
+   * @param card
+   * @param dto
+   * @param auth
+   */
   @Transactional
   @PutMapping(path = CARD_CEILINGS_PATH)
   @ResponseStatus(HttpStatus.ACCEPTED)
+  @PreAuthorize("hasAuthority('card.ceilings_edit')")
   public void setCardCeilings(
-      @Parameter(schema = @Schema(type = "string"))
+      @Parameter(schema = @Schema(type = "string"),
+          description = "The number of the card to change the ceilings of")
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
-      @RequestBody CardStatusRequest dto) {
-    card.setActive(dto.isActive());
-    cardService.save(card);
+      @RequestBody @Valid CardCeilingsRequest dto,
+      Authentication auth) {
+    var newCeilings = Ceilings
+        .builder()
+        .rolling30(dto.rolling30Ceiling())
+        .transaction(dto.transactionCeiling())
+        .build();
+    log
+        .info(
+            "{} is changing card {} ceilings from {} to {}",
+            auth.getName(),
+            card.getNumber(),
+            card.getCeilings(),
+            newCeilings);
+    card.setCeilings(newCeilings);
+    cardRepo.save(card);
+    log.debug("{} changed card {} ceilings to {}", auth.getName(), card.getNumber(), newCeilings);
   }
 
+  /**
+   * Requires the `card.read_any` authority or that the authenticated user is the owner of the card
+   * 
+   * @param card
+   * @param period must be at most 61 days long
+   * @return
+   */
   @Transactional(readOnly = true)
   @GetMapping(path = PAYMENT_LIST_PATH)
+  @PreAuthorize("hasAuthority('card.read_any') or @ac.ownsAccount(#card.getIban().toMachineReadableString())")
   public List<CardPaymentResponse> listCardPayments(
-      @Parameter(schema = @Schema(type = "string"))
+      @Parameter(schema = @Schema(type = "string"),
+          description = "The number of the card to retrieve the payments of")
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
-      @ParameterObject @NotNull @ValidPeriod(maxSeconds = 60 * 24 * 3600) Period period) {
+      @ParameterObject @NotNull @ValidPeriod(maxSeconds = 3600 * 24 * 61) Period period) {
     return paymentRepo
         .findByCardNumberAndTimestampBetween(card.getNumber(), period.from(), period.to())
         .stream()
@@ -158,24 +244,49 @@ public class CardController {
         .toList();
   }
 
+  /**
+   * Requires the authenticated user is the owner of the card
+   * 
+   * @param card
+   * @param dto
+   * @return
+   * @throws ResourceNotFoundException if the destination account is not known by the account
+   *         service
+   */
   @PostMapping(path = PAYMENT_LIST_PATH)
+  @PreAuthorize("@ac.ownsAccount(#card.getIban().toMachineReadableString())")
   public ResponseEntity<Void> createCardPayment(
-      @Parameter(schema = @Schema(type = "string"))
+      @Parameter(schema = @Schema(type = "string",
+          description = "The number of the card to create a payment with"))
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
       @RequestBody @Valid CardPaymentCreationRequest dto) throws ResourceNotFoundException {
     // Assert that the destination account is known by the account service
     try {
-      final var account = accountsApi.getAccount(dto.destIban()).getBody();
-      var payment = createPayemnt(card, dto);
+      log.debug("Retrieving account {} from the account service", dto.destIban());
+      final var destinationAccount = accountsApi.getAccount(dto.destIban()).getBody();
 
-      if (Objects.equals(account.getCurrency(), dto.currency())) {
+      if (!Objects.equals(destinationAccount.getCurrency(), dto.currency())) {
+        log
+            .warn(
+                "Card payment with card {} to account {} rejected because the account's currency {} does not match the payment's currency {}",
+                card.getNumber(),
+                destinationAccount.getIban(),
+                destinationAccount.getCurrency(),
+                dto.currency());
         throw new ResponseStatusException(
             HttpStatus.CONFLICT,
             "Card payments are currently accepted only in the %s account's currency: %s"
-                .formatted(account.getIban(), account.getCurrency()));
+                .formatted(destinationAccount.getIban(), destinationAccount.getCurrency()));
       }
 
       if (card.getCeilings().getTransaction().compareTo(dto.amount()) < 0) {
+        log
+            .warn(
+                "Card payment with card {} to account {} rejected because the transaction ceiling of %d does not allow this payment of %d",
+                card.getNumber(),
+                destinationAccount.getIban(),
+                card.getCeilings().getTransaction(),
+                dto.amount());
         throw new ResponseStatusException(
             HttpStatus.CONFLICT,
             "Card transaction ceiling set at %d does not allow this payment of %d"
@@ -184,13 +295,35 @@ public class CardController {
 
       final var cumulatedAmount = getAcceptedPaymentsCumulatedAmountOn30Days(card);
       if (card.getCeilings().getRolling30().compareTo(cumulatedAmount + dto.amount()) < 0) {
+        log
+            .warn(
+                "Card payment with card {} to account {} rejected because the rolling30 ceiling of %d does not allow this payment of %d because the cumulated amount of accepted payments is %d",
+                card.getNumber(),
+                destinationAccount.getIban(),
+                card.getCeilings().getRolling30(),
+                dto.amount(),
+                cumulatedAmount);
         throw new ResponseStatusException(
             HttpStatus.CONFLICT,
             "Card rolling30 ceiling set at %d does not allow this payment of %d because the cumulated amount of accepted payments is %d"
                 .formatted(card.getCeilings().getRolling30(), dto.amount(), cumulatedAmount));
       }
 
+      var payment = createPayemnt(card, dto);
+      log
+          .debug(
+              "Created card payment {} with card {} to account {}",
+              payment.getId(),
+              card.getNumber(),
+              destinationAccount.getIban());
+
       transferMoneyAndAccept(payment);
+      log
+          .debug(
+              "Sucessfully transferred money for card payment {} with card {} to account {}",
+              payment.getId(),
+              card.getNumber(),
+              destinationAccount.getIban());
 
       return ResponseEntity
           .created(
@@ -205,9 +338,20 @@ public class CardController {
 
     } catch (HttpClientErrorException e) {
       if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+        log
+            .warn(
+                "Card payment with card {} to account {} rejected because the destination account is not known to the account service",
+                card.getNumber(),
+                dto.destIban());
         throw new ResourceNotFoundException(
             "Destination account %s is not known to the account-service".formatted(dto.destIban()));
       }
+      log
+          .error(
+              "Error while checking destination account {} existence for card payment with card {}",
+              dto.destIban(),
+              card.getNumber(),
+              e);
       throw e;
     }
   }
@@ -233,27 +377,46 @@ public class CardController {
                 .builder()
                 .amount(Amount.builder().currencyIso3(dto.currency()).digits(dto.amount()).build())
                 .card(card)
-                .destinationIban(Iban.parse(dto.destIban()))
+                .destinationIban(Iban.of(dto.destIban()))
                 .isAccepted(false)
                 .build());
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
   CardPayment transferMoneyAndAccept(CardPayment payment) {
-    transfersApi
-        .transferMoneyBetweenAccounts(
-            new MoneyTransferRequest()
-                .amount(payment.getAmount().getDigits())
-                .currency(payment.getAmount().getCurrencyIso3())
-                .sourceIban(payment.getCard().getIban().toMachineReadableString())
-                .destinationIban(payment.getDestinationIban().toMachineReadableString())
-                .label(
-                    "Payment with card %s to %s"
-                        .formatted(
-                            payment.getCard().getNumber(),
-                            payment.getDestinationIban().toHumanReadableString())));
+    try {
+      transfersApi
+          .transferMoneyBetweenAccounts(
+              new MoneyTransferRequest()
+                  .amount(payment.getAmount().getDigits())
+                  .currency(payment.getAmount().getCurrencyIso3())
+                  .sourceIban(payment.getCard().getIban().toMachineReadableString())
+                  .destinationIban(payment.getDestinationIban().toMachineReadableString())
+                  .label(
+                      "Payment with card %s to %s"
+                          .formatted(
+                              payment.getCard().getNumber(),
+                              payment.getDestinationIban().toHumanReadableString())));
+    } catch (HttpClientErrorException e) {
+      log
+          .error(
+              "Error while transferring money for card payment {} with card {} to account {}",
+              payment.getId(),
+              payment.getCard().getNumber(),
+              payment.getDestinationIban(),
+              e);
+      throw e;
+    }
+    log
+        .debug(
+            "Sucessfully transferred money for card payment {} with card {} to account {}",
+            payment.getId(),
+            payment.getCard().getNumber(),
+            payment.getDestinationIban());
     payment.setIsAccepted(true);
-    return paymentRepo.save(payment);
+    final var acceptedPayment = paymentRepo.save(payment);
+    log.debug("Saved card payment {} as accepted", acceptedPayment.getId());
+    return acceptedPayment;
   }
 
 }

@@ -60,7 +60,8 @@ public class CommonExceptionsHandler {
                 Collectors
                     .toMap(
                         cv -> cv.getPropertyPath().toString(),
-                        ConstraintViolation::getMessage)));
+                        ConstraintViolation::getMessage,
+                        (msg1, msg2) -> msg1 + ", " + msg2)));
     return ResponseEntity.status(problem.getStatus()).body(problem);
   }
 

@@ -33,12 +33,12 @@ Principles (how the generator should behave)
    - Inspect jakarta.validation annotations on DTO record components / fields:
      - `@NotNull`, `@NotBlank`, `@Size`, `@Pattern`, `@Min`, `@Max`, etc.
    - For each constraint, generate at least one failing test that submits an invalid payload and asserts a 4xx response.
-   - Also generate a successful test using valid values taken from `Fixtures` where applicable (see Fixtures usage below).
+   - Also generate a successful test using valid values taken from test classes suffixed with `Fixtures` where applicable (see Fixtures usage below).
 4) Fixtures & test data:
-   - Prefer values from module `Fixtures` classes. If a required constant/method is missing, generator should pause and prompt the developer to either:
+   - Prefer values from module test classes suffixed with `Fixtures`. If a required constant/method is missing, generator should pause and prompt the developer to either:
      - add the required constant/method to `Fixtures`, or
      - supply a literal test value in a local helper file.
-   - Example: use `Fixtures.CUSTOMER_SUBJECT` for `customerId` values, `Fixtures.createCustomersXpfAccount(...)` to derive expected IBANs.
+   - Example: use `AccountFixtures.CUSTOMER_SUBJECT` for `customerId` values, `AccountFixtures.createCustomersXpfAccount(...)` to derive expected IBANs.
 5) Test naming convention
    - Tests are named using BDD (Behavior Driven Development) conventions (givenX_whenY_thenZ):
      - then "given" statement provides the security context and any other relevant context
@@ -46,7 +46,7 @@ Principles (how the generator should behave)
      - the "then" statement describes the expectations
 6) Test structure & helper annotations:
    - Tests must use:
-     - `@WebMvcTest(properties = {"logging.level.org.springframework=DEBUG"})`
+     - `@WebMvcTest(properties = {})`
      - `@Import({ <controller-specific mapper implementations>, SpringDataWebConvertersTestConfiguration.class, SecurityConfig.class })`
      - `@AutoConfigureAddonsWebmvcResourceServerSecurity`
    - Beans that the controller depends on (services, repositories, external clients) must be declared as `@MockitoBean`.
@@ -75,8 +75,8 @@ Notes about DTO conversion and invalid payloads
   - Example (AccountCreationRequest is a record):
 
       var dto = new AccountCreationRequest(
-          Fixtures.createCustomersXpfAccount(100000L).getIban().toMachineReadableString(),
-          Fixtures.CUSTOMER_SUBJECT,
+          AccountFixtures.createCustomersXpfAccount(100000L).getIban().toMachineReadableString(),
+          AccountFixtures.CUSTOMER_SUBJECT,
           "XPF"
       );
 
@@ -87,11 +87,11 @@ Notes about DTO conversion and invalid payloads
 
   - Implementation rules for the generator when instantiating DTOs:
     - For each record component / field choose a value using this precedence:
-      1. Module `Fixtures` constants or factory methods (preferred).
+      1. Module test classes suffixed with `Fixtures` constants or factory methods (preferred).
       2. Standard defaults based on the Java type (String -> "validString", long/int -> 1, enum -> first constant).
       3. Prompt developer when no reasonable default can be chosen (e.g. custom complex types without fixtures).
     - For fields with validation annotations (`@NotNull`, `@NotBlank`, `@Pattern`, `@Min`, etc.) the generator must create both a valid DTO instance and one or more invalid DTO instances exercising failing constraints.
-    - For custom validation annotations (e.g. `@IbanString`) prefer values supplied by `Fixtures` (e.g. a factory creating an Account with a valid IBAN). If none exist, prompt the developer to provide a suitable fixture or a literal example value.
+    - For custom validation annotations (e.g. `@IbanString`) prefer values supplied by test classes suffixed with `Fixtures` (e.g. a factory creating an Account with a valid IBAN). If none exist, prompt the developer to provide a suitable fixture or a literal example value.
 
 2) When generating JSON strings (fallback)
   - The generator may produce raw JSON strings only as a fallback if the DTO type cannot be resolved or instantiated safely (for example: DTO class not on source path, private constructors, or complex nested types without fixtures).
@@ -99,7 +99,7 @@ Notes about DTO conversion and invalid payloads
 
 3) Advantages of instantiating DTOs in tests
   - Compile-time safety: the test will not silently break when DTO fields are renamed.
-  - Easier reuse of `Fixtures` and factory methods.
+  - Easier reuse of test classes suffixed with `Fixtures` and factory methods.
   - Cleaner invalid-case generation: create an otherwise-valid DTO then tweak one field to an invalid value.
 
 

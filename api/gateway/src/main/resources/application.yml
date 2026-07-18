@@ -201,3 +201,31 @@ logging:
   level:
     "[org.springframework]": INFO
     "[com.c4soft.demo.multitenancy]": DEBUG
+---
+spring:
+  config:
+    activate:
+      on-profile: no-observability
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: false
+  health:
+    livenessstate:
+      enabled: false
+    readinessstate:
+      enabled: false
+  logging:
+    export:
+      otlp:
+        enabled: false
+  tracing:
+    export:
+      enabled: false
+  opentelemetry:
+    enabled: false
+  otlp:
+    metrics:
+      export:
+        enabled: false

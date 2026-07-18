@@ -16,10 +16,10 @@ import nc.sgcb.labs.commons.domain.Iban;
 
 @DataJpaTest
 @ActiveProfiles("h2")
-class MoneyTransferJpaRepositoryTest {
+class MoneyTransferRepositoryTest {
 
   @Autowired
-  MoneyTransferJpaRepository moneyTransferJpaRepository;
+  MoneyTransferRepository moneyTransferJpaRepository;
 
   MoneyTransfer transfer1, transfer2, transfer3;
 
@@ -29,8 +29,8 @@ class MoneyTransferJpaRepositoryTest {
         .save(
             MoneyTransfer
                 .builder()
-                .sourceIban(Iban.parse("FR76 111222333"))
-                .destinationIban(Iban.parse("FR76 444555666"))
+                .sourceIban(Iban.of("FR76 111222333"))
+                .destinationIban(Iban.of("FR76 444555666"))
                 .amount(new Amount("XPF", 1000L))
                 .label("Test transfer 1000 XPF")
                 .timestamp(Instant.parse("2025-12-30T12:34:56Z"))
@@ -39,8 +39,8 @@ class MoneyTransferJpaRepositoryTest {
         .save(
             MoneyTransfer
                 .builder()
-                .sourceIban(Iban.parse("FR76 123456789"))
-                .destinationIban(Iban.parse("FR76 987654321"))
+                .sourceIban(Iban.of("FR76 123456789"))
+                .destinationIban(Iban.of("FR76 987654321"))
                 .amount(new Amount("EUR", 2000L))
                 .label("Test transfer 20 EUR")
                 .timestamp(Instant.parse("2026-01-23T12:34:56Z"))
@@ -49,8 +49,8 @@ class MoneyTransferJpaRepositoryTest {
         .save(
             MoneyTransfer
                 .builder()
-                .sourceIban(Iban.parse("FR76 123456789"))
-                .destinationIban(Iban.parse("FR76 444555666"))
+                .sourceIban(Iban.of("FR76 123456789"))
+                .destinationIban(Iban.of("FR76 444555666"))
                 .amount(new Amount("KWD", 3000L))
                 .label("Test transfer 3 KWD")
                 .timestamp(Instant.parse("2026-06-01T12:34:56Z"))
@@ -61,10 +61,10 @@ class MoneyTransferJpaRepositoryTest {
   void whenCriteriaOnFromAccount_thenTransfersFiltered() {
     var actual = moneyTransferJpaRepository
         .findAll(
-            MoneyTransferJpaRepository
+            MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
-                        Optional.of(Iban.parse("FR76 123456789")),
+                        Optional.of(Iban.of("FR76 123456789")),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
@@ -76,17 +76,17 @@ class MoneyTransferJpaRepositoryTest {
     assertThat(
         actual
             .stream()
-            .allMatch(t -> Objects.equals(Iban.parse("FR76 123456789"), t.getSourceIban())))
+            .allMatch(t -> Objects.equals(Iban.of("FR76 123456789"), t.getSourceIban())))
         .isTrue();
     assertThat(
         actual
             .stream()
-            .anyMatch(t -> Objects.equals(Iban.parse("FR76 987654321"), t.getDestinationIban())))
+            .anyMatch(t -> Objects.equals(Iban.of("FR76 987654321"), t.getDestinationIban())))
         .isTrue();
     assertThat(
         actual
             .stream()
-            .anyMatch(t -> Objects.equals(Iban.parse("FR76 444555666"), t.getDestinationIban())))
+            .anyMatch(t -> Objects.equals(Iban.of("FR76 444555666"), t.getDestinationIban())))
         .isTrue();
   }
 
@@ -94,11 +94,11 @@ class MoneyTransferJpaRepositoryTest {
   void whenCriteriaOnToAccount_thenTransfersFiltered() {
     var actual = moneyTransferJpaRepository
         .findAll(
-            MoneyTransferJpaRepository
+            MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
                         Optional.empty(),
-                        Optional.of(Iban.parse("FR76 444555666")),
+                        Optional.of(Iban.of("FR76 444555666")),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
@@ -109,17 +109,17 @@ class MoneyTransferJpaRepositoryTest {
     assertThat(
         actual
             .stream()
-            .allMatch(t -> Objects.equals(Iban.parse("FR76 444555666"), t.getDestinationIban())))
+            .allMatch(t -> Objects.equals(Iban.of("FR76 444555666"), t.getDestinationIban())))
         .isTrue();
     assertThat(
         actual
             .stream()
-            .anyMatch(t -> Objects.equals(Iban.parse("FR76 111222333"), t.getSourceIban())))
+            .anyMatch(t -> Objects.equals(Iban.of("FR76 111222333"), t.getSourceIban())))
         .isTrue();
     assertThat(
         actual
             .stream()
-            .anyMatch(t -> Objects.equals(Iban.parse("FR76 123456789"), t.getSourceIban())))
+            .anyMatch(t -> Objects.equals(Iban.of("FR76 123456789"), t.getSourceIban())))
         .isTrue();
   }
 
@@ -127,7 +127,7 @@ class MoneyTransferJpaRepositoryTest {
   void whenCriteriaOnMinAmount_thenTransfersFiltered() {
     var actual = moneyTransferJpaRepository
         .findAll(
-            MoneyTransferJpaRepository
+            MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
                         Optional.empty(),
@@ -149,7 +149,7 @@ class MoneyTransferJpaRepositoryTest {
   void whenCriteriaOnMaxAmount_thenTransfersFiltered() {
     var actual = moneyTransferJpaRepository
         .findAll(
-            MoneyTransferJpaRepository
+            MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
                         Optional.empty(),
@@ -171,7 +171,7 @@ class MoneyTransferJpaRepositoryTest {
   void whenCriteriaOnCurrency_thenTransfersFiltered() {
     var actual = moneyTransferJpaRepository
         .findAll(
-            MoneyTransferJpaRepository
+            MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
                         Optional.empty(),
@@ -193,7 +193,7 @@ class MoneyTransferJpaRepositoryTest {
     final var from = Instant.parse("2026-01-01T00:00:00Z");
     var actual = moneyTransferJpaRepository
         .findAll(
-            MoneyTransferJpaRepository
+            MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
                         Optional.empty(),
@@ -213,7 +213,7 @@ class MoneyTransferJpaRepositoryTest {
     final var to = Instant.parse("2026-01-31T23:59:59Z");
     var actual = moneyTransferJpaRepository
         .findAll(
-            MoneyTransferJpaRepository
+            MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
                         Optional.empty(),
@@ -232,7 +232,7 @@ class MoneyTransferJpaRepositoryTest {
   void whenCriteriaOnLabel_thenTransfersFiltered() {
     var actual = moneyTransferJpaRepository
         .findAll(
-            MoneyTransferJpaRepository
+            MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
                         Optional.empty(),
@@ -252,11 +252,11 @@ class MoneyTransferJpaRepositoryTest {
     var instant = Instant.parse("2025-12-30T12:34:56Z");
     var actual = moneyTransferJpaRepository
         .findAll(
-            MoneyTransferJpaRepository
+            MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
-                        Optional.of(Iban.parse("FR76 111222333")),
-                        Optional.of(Iban.parse("FR76 444555666")),
+                        Optional.of(Iban.of("FR76 111222333")),
+                        Optional.of(Iban.of("FR76 444555666")),
                         Optional.of(1000L),
                         Optional.of(1000L),
                         Optional.of("XPF"),

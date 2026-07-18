@@ -31,7 +31,7 @@ class IbanStringAttributeConverterTest {
 
   @Test
   void givenValidIban_whenConvertToconvertToDatabaseColumn_thenProduceHumanReadableString() {
-    var iban = Iban.parse("FR761111222233334444");
+    var iban = Iban.of("FR761111222233334444");
     assertEquals("FR761111222233334444", converter.convertToDatabaseColumn(iban));
   }
 

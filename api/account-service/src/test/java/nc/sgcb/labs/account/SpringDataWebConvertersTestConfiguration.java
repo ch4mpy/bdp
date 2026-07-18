@@ -11,7 +11,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import nc.sgcb.labs.account.domain.Account;
 import nc.sgcb.labs.account.domain.MoneyTransfer;
 import nc.sgcb.labs.account.jpa.AccountRepository;
-import nc.sgcb.labs.account.jpa.MoneyTransferJpaRepository;
+import nc.sgcb.labs.account.jpa.MoneyTransferRepository;
 import nc.sgcb.labs.commons.domain.Iban;
 
 @TestConfiguration
@@ -20,7 +20,7 @@ public class SpringDataWebConvertersTestConfiguration {
   Optional<AccountRepository> accountRepo;
 
   @Autowired(required = false)
-  Optional<MoneyTransferJpaRepository> transferRepo;
+  Optional<MoneyTransferRepository> transferRepo;
 
   @Bean
   WebMvcConfigurer configurer() {

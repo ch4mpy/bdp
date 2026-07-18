@@ -13,21 +13,20 @@ import nc.sgcb.labs.account.domain.Account;
 import nc.sgcb.labs.commons.domain.Iban;
 
 /**
- * Caching decorator for {@link AccountJpaRepository} to avoid hitting the database too often.
+ * Caching decorator for {@link JpaAccountRepository} to avoid hitting the database too often.
  *
  * @author Jerome Wacongne ch4mp&#64;c4-soft.com
  */
 @Repository
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = {AccountRepository.ACCOUNT_EXISTS_BY_IBAN_CACHE,
-    AccountRepository.ACCOUNTS_BY_IBAN_CACHE,
-    AccountRepository.ACCOUNTS_BY_CUSTOMER_ID_CACHE})
+    AccountRepository.ACCOUNTS_BY_IBAN_CACHE, AccountRepository.ACCOUNTS_BY_CUSTOMER_ID_CACHE})
 public class AccountRepository {
   static final String ACCOUNT_EXISTS_BY_IBAN_CACHE = "accountExistsByIban";
   static final String ACCOUNTS_BY_IBAN_CACHE = "accountsByIban";
   static final String ACCOUNTS_BY_CUSTOMER_ID_CACHE = "accountsByCustomerId";
 
-  private final AccountJpaRepository jpaRepository;
+  private final JpaAccountRepository jpaRepository;
 
   @Cacheable(cacheNames = ACCOUNT_EXISTS_BY_IBAN_CACHE, key = "#iban")
   public boolean existsById(Iban iban) {

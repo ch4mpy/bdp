@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.Instant;
 import java.util.List;
 
-public interface CardPaymentJpaRepository extends JpaRepository<CardPayment, Long> {
+public interface CardPaymentRepository extends JpaRepository<CardPayment, Long> {
 
   Page<CardPayment> findByCardNumber(String cardNumber, Pageable pageable);
 
