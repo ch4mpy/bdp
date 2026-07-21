@@ -1,11 +1,23 @@
 package nc.sgcb.labs.account.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
+import java.time.Instant;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
-
-import java.time.Instant;
 
 @Entity
 @Table(name = "transfers")
@@ -22,7 +34,7 @@ public class MoneyTransfer {
   @SequenceGenerator(name = "transferSeq", sequenceName = "transfers_seq", allocationSize = 1)
   @EqualsAndHashCode.Include
   @ToString.Include
-  private Long number;
+  private Long id;
 
   @Column(nullable = false)
   @ToString.Include

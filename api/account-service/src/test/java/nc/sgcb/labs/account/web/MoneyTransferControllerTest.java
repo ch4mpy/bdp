@@ -116,7 +116,7 @@ class MoneyTransferControllerTest {
 
   @Test
   @WithJwt("card-service.json")
-  void givenServiceHasTransferAuthority_whenTransferMoney_thenAccepted() throws Exception {
+  void givenServiceHasTransferAuthority_whenTransferMoney_thenCreated() throws Exception {
     Account source = AccountFixtures.createCustomersXpfAccount(100000L);
     Account destination = AccountFixtures.createSomeonesXpfAccount(50000L);
 
@@ -129,42 +129,56 @@ class MoneyTransferControllerTest {
 
     when(accountRepo.findById(source.getIban())).thenReturn(Optional.of(source));
     when(accountRepo.findById(destination.getIban())).thenReturn(Optional.of(destination));
-    when(transferRepo.save(any(MoneyTransfer.class))).thenAnswer(i -> i.getArgument(0));
+    when(transferRepo.save(any(MoneyTransfer.class))).thenAnswer(invocation -> {
+      final var transfer = invocation.getArgument(0, MoneyTransfer.class);
+      if (transfer.getId() == null) {
+        transfer.setId(42L);
+      }
+      return transfer;
+    });
 
     mockMvc
         .perform(
             post("https://localhost" + MoneyTransferController.BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(dto)))
-        .andExpect(status().isAccepted());
+        .andExpect(status().isCreated());
   }
 
   @Test
   @WithJwt("card-service.json")
-  void givenUnknownSource_whenTransferMoney_thenNotFound() throws Exception {
-    Iban sourceIban = AccountFixtures.createCustomersXpfAccount(100000L).getIban();
-    Account destination2 = AccountFixtures.createSomeonesXpfAccount(50000L);
+  void givenUnknownSource_whenTransferMoney_thenCreated() throws Exception {
+    Account source = AccountFixtures.createCustomersXpfAccount(100000L);
+    Account destination = AccountFixtures.createSomeonesXpfAccount(50000L);
 
     var dto = new MoneyTransferRequest(
-        sourceIban.toMachineReadableString(),
-        destination2.getIban().toMachineReadableString(),
+        source.getIban().toMachineReadableString(),
+        destination.getIban().toMachineReadableString(),
         1000L,
         "XPF",
         "label");
 
-    when(accountRepo.findById(sourceIban)).thenReturn(Optional.empty());
+    when(accountRepo.findById(source.getIban())).thenReturn(Optional.empty());
+    when(accountRepo.findById(destination.getIban())).thenReturn(Optional.of(destination));
+    when(transferRepo.save(any(MoneyTransfer.class))).thenAnswer(invocation -> {
+      final var transfer = invocation.getArgument(0, MoneyTransfer.class);
+      if (transfer.getId() == null) {
+        transfer.setId(42L);
+      }
+      return transfer;
+    });
 
     mockMvc
         .perform(
             post("https://localhost" + MoneyTransferController.BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(dto)))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isCreated());
   }
 
   @Test
   @WithJwt("card-service.json")
-  void givenUnknownDestination_whenTransferMoney_thenNotFound() throws Exception {
+  void givenUnknownDestination_whenTransferMoney_thenCreated() throws Exception {
     Account source = AccountFixtures.createCustomersXpfAccount(100000L);
     Iban destinationIban = AccountFixtures.createSomeonesXpfAccount(50000L).getIban();
 
@@ -177,13 +191,20 @@ class MoneyTransferControllerTest {
 
     when(accountRepo.findById(source.getIban())).thenReturn(Optional.of(source));
     when(accountRepo.findById(destinationIban)).thenReturn(Optional.empty());
+    when(transferRepo.save(any(MoneyTransfer.class))).thenAnswer(invocation -> {
+      final var transfer = invocation.getArgument(0, MoneyTransfer.class);
+      if (transfer.getId() == null) {
+        transfer.setId(42L);
+      }
+      return transfer;
+    });
 
     mockMvc
         .perform(
             post("https://localhost" + MoneyTransferController.BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(dto)))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isCreated());
   }
 
   @Test
@@ -202,6 +223,13 @@ class MoneyTransferControllerTest {
 
     when(accountRepo.findById(source.getIban())).thenReturn(Optional.of(source));
     when(accountRepo.findById(destination.getIban())).thenReturn(Optional.of(destination));
+    when(transferRepo.save(any(MoneyTransfer.class))).thenAnswer(invocation -> {
+      final var transfer = invocation.getArgument(0, MoneyTransfer.class);
+      if (transfer.getId() == null) {
+        transfer.setId(42L);
+      }
+      return transfer;
+    });
 
     mockMvc
         .perform(

@@ -18,4 +18,11 @@ public interface MoneyTransferMapper {
   @Mapping(target = "currency", source = "amount.currencyIso3")
   MoneyTransferResponse map(MoneyTransfer domain);
 
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "timestamp", ignore = true)
+  @Mapping(target = "amount.digits", source = "amount")
+  @Mapping(target = "amount.currencyIso3", source = "currency")
+  MoneyTransfer map(MoneyTransferRequest dto);
+
 }
