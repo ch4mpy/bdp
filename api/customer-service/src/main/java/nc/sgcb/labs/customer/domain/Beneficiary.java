@@ -1,10 +1,9 @@
-package nc.sgcb.labs.card.payment.domain;
+package nc.sgcb.labs.customer.domain;
 
-import java.time.Instant;
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -17,39 +16,35 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 
 @Entity
-@Table(name = "payments")
+@Table(name = "benficiaries")
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class CardPayment {
+public class Beneficiary {
 
   @Id
-  @GeneratedValue(generator = "cardPaymentSeq")
-  @SequenceGenerator(name = "cardPaymentSeq", sequenceName = "payment_seq", allocationSize = 1)
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "beneficiarySeq")
+  @SequenceGenerator(name = "beneficiarySeq", sequenceName = "benficiaries_seq", allocationSize = 1)
+  @EqualsAndHashCode.Include
+  @ToString.Include
   private Long id;
 
   @Column(nullable = false)
-  @Builder.Default
-  private Instant timestamp = Instant.now();
+  @ToString.Include
+  private String label;
 
-  @Embedded()
-  private Amount amount;
+  @Column(nullable = false)
+  @ToString.Include
+  private Iban iban;
 
   @ManyToOne
-  @JoinColumn(name = "card_number", nullable = false, updatable = false)
-  private Card card;
+  @JoinColumn(name = "customer_id", nullable = false)
+  private Customer customer;
 
-  @Column(nullable = false)
-  private Iban destinationIban;
-
-  @Column(nullable = false)
-  @Builder.Default
-  private boolean accepted = false;
 }

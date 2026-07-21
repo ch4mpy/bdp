@@ -10,7 +10,7 @@
   "resource_access": {
     "customer-service": {
       "roles": [
-        "create",
+        "edit",
         "read_any"
       ]
     },

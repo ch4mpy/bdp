@@ -12,6 +12,6 @@ public record MoneyTransferRequest(
     @NotNull @IbanString String destinationIban,
     @NotNull @Min(1) Long amount,
     @NotNull @CurrencyIso3 String currency,
-    @NotEmpty @Size(min = 3) String label) {
+    @NotEmpty @Size(min = 3, max = 256) String label) {
 
 }

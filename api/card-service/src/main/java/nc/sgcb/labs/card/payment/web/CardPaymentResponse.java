@@ -9,6 +9,6 @@ public record CardPaymentResponse(
     @NotNull String currency,
     @NotNull Long amount,
     @NotNull String cardNumber,
-    @NotNull String destIban,
+    @NotNull String destinationIban,
     boolean isAccepted) {
 }

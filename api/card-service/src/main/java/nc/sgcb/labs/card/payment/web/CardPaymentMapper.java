@@ -12,6 +12,7 @@ public interface CardPaymentMapper {
   @Mapping(target = "amount", source = "amount.digits")
   @Mapping(target = "currency", source = "amount.currencyIso3")
   @Mapping(target = "cardNumber", source = "card.number")
+  @Mapping(target = "isAccepted", source = "accepted")
   CardPaymentResponse map(CardPayment entiyy);
 
 }

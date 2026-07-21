@@ -248,8 +248,8 @@
         "attributes" : { }
       } ],
       "customer-service" : [ {
-        "id" : "7ac487d1-e4cc-4c01-9722-c546534ab993",
-        "name" : "create",
+        "id" : "4fe24839-ec56-4ad1-8ab0-8e1c9cd1a383",
+        "name" : "edit",
         "description" : "",
         "composite" : false,
         "clientRole" : true,
@@ -270,6 +270,14 @@
       "card-service" : [ {
         "id" : "ed6f7932-307b-47aa-9b5a-37479652af2a",
         "name" : "read_any",
+        "description" : "",
+        "composite" : false,
+        "clientRole" : true,
+        "containerId" : "f13c2dc6-7d3b-46f1-a2b4-9e7aa9965fa3",
+        "attributes" : { }
+      }, {
+        "id" : "aa704671-51e7-4c33-ac70-ed162b85bcca",
+        "name" : "card-status_edit",
         "description" : "",
         "composite" : false,
         "clientRole" : true,
@@ -310,7 +318,7 @@
         "attributes" : { }
       } ],
       "account-service" : [ {
-        "id" : "5e06f716-c684-4e84-a4e5-63e838071b5e",
+        "id" : "f9ac5bd4-364a-4c24-8d7c-b3e6fd0259be",
         "name" : "create",
         "description" : "",
         "composite" : false,
@@ -484,10 +492,48 @@
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-labs" ],
     "clientRoles" : {
-      "customer-service" : [ "create", "read_any" ],
-      "card-service" : [ "read_any", "ceilings_edit", "create_any" ],
+      "customer-service" : [ "edit", "read_any" ],
+      "card-service" : [ "read_any", "card-status_edit", "ceilings_edit", "create_any" ],
       "account-service" : [ "create", "read_any" ]
     },
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "8dece841-b9c1-49d0-a90b-2a95b08211cd",
+    "username" : "jean.bonnot",
+    "firstName" : "Jean",
+    "lastName" : "Bonnot",
+    "email" : "jean.bonnot@mail.pf",
+    "emailVerified" : true,
+    "enabled" : true,
+    "createdTimestamp" : 1784145186690,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "b8222707-12bd-4d1e-9281-3c2ed92c52da",
+      "type" : "password",
+      "createdDate" : 1784145363344,
+      "secretData" : "{\"value\":\"eNz5uHbHVUV1McVuVf7pPIofW5Z2jUBAOStiW/Rj+Pw=\",\"salt\":\"0altvwf6bEph34E9LdkLTg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-labs" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "c1b1150d-98e7-4671-b0d1-11a09cb0840b",
+    "username" : "john.deuf",
+    "firstName" : "John",
+    "lastName" : "Deuf",
+    "email" : "john.deuf@mail.pf",
+    "emailVerified" : false,
+    "enabled" : true,
+    "createdTimestamp" : 1784145181494,
+    "totp" : false,
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-labs" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -1662,7 +1708,7 @@
     "envelopeFrom" : "",
     "ssl" : "false",
     "timeout" : "10000",
-    "password" : "a156997ab8866b46bb604f5e705233ed",
+    "password" : "b6e21580c8f9cfec222300353c0dd1fc",
     "port" : "1025",
     "host" : "host.docker.internal",
     "replyTo" : "",
@@ -1719,7 +1765,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-property-mapper", "oidc-full-name-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper", "oidc-usermodel-property-mapper", "oidc-address-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-address-mapper", "oidc-usermodel-attribute-mapper", "saml-role-list-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper", "oidc-full-name-mapper", "oidc-usermodel-property-mapper" ]
       }
     }, {
       "id" : "cc76b359-0abd-4215-b519-6f78fadb3aad",
@@ -1752,7 +1798,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-usermodel-property-mapper", "oidc-full-name-mapper", "saml-user-property-mapper", "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-attribute-mapper", "oidc-address-mapper", "saml-role-list-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-usermodel-property-mapper", "saml-user-property-mapper", "oidc-usermodel-attribute-mapper", "oidc-address-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-role-list-mapper", "oidc-full-name-mapper", "saml-user-attribute-mapper" ]
       }
     }, {
       "id" : "a248030f-eee3-4d01-9031-4ad41c81ddb6",

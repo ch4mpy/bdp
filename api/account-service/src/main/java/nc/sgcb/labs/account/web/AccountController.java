@@ -21,7 +21,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.account.domain.Account;
@@ -58,7 +58,8 @@ public class AccountController {
   @Transactional(readOnly = true)
   @GetMapping(BASE_PATH)
   @PreAuthorize("hasAuthority('account.read_any') || #customerId == authentication.name")
-  public List<AccountResponse> listAccounts(@RequestParam @NotEmpty String customerId) {
+  public List<AccountResponse> listAccounts(
+      @RequestParam @Size(min = 1, max = 36) String customerId) {
     final var accounts = accountRepo.findByCustomerId(customerId);
     return accounts.stream().map(accountMapper::map).toList();
   }

@@ -1,9 +1,13 @@
 package nc.sgcb.labs.customer.domain;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -44,5 +48,9 @@ public class Customer {
 
   @Column(nullable = false)
   private String email;
+
+  @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<Beneficiary> beneficiaries = new ArrayList<>();
 
 }

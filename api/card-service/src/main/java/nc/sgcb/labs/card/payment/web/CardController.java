@@ -43,6 +43,7 @@ import nc.sgcb.labs.card.payment.jpa.CardRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.domain.Period;
+import nc.sgcb.labs.commons.exception.InternalServerErrorException;
 import nc.sgcb.labs.commons.exception.ResourceNotFoundException;
 import nc.sgcb.labs.commons.validation.ValidPeriod;
 
@@ -96,7 +97,7 @@ public class CardController {
   @PostMapping(path = BASE_PATH)
   @PreAuthorize("hasAuthority('card.create')")
   public ResponseEntity<Void> createCard(
-      @RequestBody @Valid CardCreationRequest dto,
+      @RequestBody @Valid CardRequest dto,
       Authentication auth) throws ResourceNotFoundException {
     // Assert that the account is known by the account service
     try {
@@ -252,6 +253,7 @@ public class CardController {
    * @return
    * @throws ResourceNotFoundException if the destination account is not known by the account
    *         service
+   * @throws InternalServerErrorException
    */
   @PostMapping(path = PAYMENT_LIST_PATH)
   @PreAuthorize("@ac.ownsAccount(#card.getIban().toMachineReadableString())")
@@ -259,11 +261,12 @@ public class CardController {
       @Parameter(schema = @Schema(type = "string",
           description = "The number of the card to create a payment with"))
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
-      @RequestBody @Valid CardPaymentCreationRequest dto) throws ResourceNotFoundException {
+      @RequestBody @Valid CardPaymentCreationRequest dto)
+      throws ResourceNotFoundException, InternalServerErrorException {
     // Assert that the destination account is known by the account service
     try {
-      log.debug("Retrieving account {} from the account service", dto.destIban());
-      final var destinationAccount = accountsApi.getAccount(dto.destIban()).getBody();
+      log.debug("Retrieving account {} from the account service", dto.destinationIban());
+      final var destinationAccount = accountsApi.getAccount(dto.destinationIban()).getBody();
 
       if (!Objects.equals(destinationAccount.getCurrency(), dto.currency())) {
         log
@@ -342,14 +345,15 @@ public class CardController {
             .warn(
                 "Card payment with card {} to account {} rejected because the destination account is not known to the account service",
                 card.getNumber(),
-                dto.destIban());
+                dto.destinationIban());
         throw new ResourceNotFoundException(
-            "Destination account %s is not known to the account-service".formatted(dto.destIban()));
+            "Destination account %s is not known to the account-service"
+                .formatted(dto.destinationIban()));
       }
       log
           .error(
               "Error while checking destination account {} existence for card payment with card {}",
-              dto.destIban(),
+              dto.destinationIban(),
               card.getNumber(),
               e);
       throw e;
@@ -363,7 +367,7 @@ public class CardController {
         .findByCardNumberAndTimestampBetween(card.getNumber(), now.minus(30, ChronoUnit.DAYS), now);
     return last30DaysPayments
         .stream()
-        .filter(CardPayment::getIsAccepted)
+        .filter(CardPayment::isAccepted)
         .mapToLong(p -> p.getAmount().getDigits())
         .sum();
 
@@ -377,13 +381,13 @@ public class CardController {
                 .builder()
                 .amount(Amount.builder().currencyIso3(dto.currency()).digits(dto.amount()).build())
                 .card(card)
-                .destinationIban(Iban.of(dto.destIban()))
-                .isAccepted(false)
+                .destinationIban(Iban.of(dto.destinationIban()))
+                .accepted(false)
                 .build());
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
-  CardPayment transferMoneyAndAccept(CardPayment payment) {
+  CardPayment transferMoneyAndAccept(CardPayment payment) throws InternalServerErrorException {
     try {
       transfersApi
           .transferMoneyBetweenAccounts(
@@ -400,12 +404,13 @@ public class CardController {
     } catch (HttpClientErrorException e) {
       log
           .error(
-              "Error while transferring money for card payment {} with card {} to account {}",
+              "Error while transferring money for card payment {} with card {} to account {}: {}",
               payment.getId(),
               payment.getCard().getNumber(),
               payment.getDestinationIban(),
-              e);
-      throw e;
+              e.getMessage());
+      throw new InternalServerErrorException(
+          "Error while transferring money: %s".formatted(e.getMessage()));
     }
     log
         .debug(
@@ -413,7 +418,7 @@ public class CardController {
             payment.getId(),
             payment.getCard().getNumber(),
             payment.getDestinationIban());
-    payment.setIsAccepted(true);
+    payment.setAccepted(true);
     final var acceptedPayment = paymentRepo.save(payment);
     log.debug("Saved card payment {} as accepted", acceptedPayment.getId());
     return acceptedPayment;

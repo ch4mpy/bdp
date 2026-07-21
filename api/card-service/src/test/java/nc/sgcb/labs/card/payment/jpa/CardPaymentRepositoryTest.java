@@ -58,7 +58,7 @@ class CardPaymentRepositoryTest {
                 .card(card1)
                 .amount(new Amount("XPF", 120000L))
                 .destinationIban(Iban.of("FR7622222222222222222"))
-                .isAccepted(false)
+                .accepted(false)
                 .timestamp(Instant.parse("2026-01-01T00:01:10Z"))
                 .build());
     payment2 = paymentRepo
@@ -68,7 +68,7 @@ class CardPaymentRepositoryTest {
                 .card(card1)
                 .amount(new Amount("XPF", 120000L))
                 .destinationIban(Iban.of("FR7622222222222222222"))
-                .isAccepted(false)
+                .accepted(false)
                 .timestamp(Instant.parse("2026-01-01T00:01:30Z"))
                 .build());
     payment3 = paymentRepo
@@ -79,7 +79,7 @@ class CardPaymentRepositoryTest {
                 .amount(new Amount("XPF", 120000L))
                 .destinationIban(Iban.of("FR7622222222222222222"))
                 .timestamp(Instant.parse("2026-01-01T00:02:30Z"))
-                .isAccepted(true)
+                .accepted(true)
                 .build());
   }
 

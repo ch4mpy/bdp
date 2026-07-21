@@ -155,7 +155,7 @@ class CardControllerTest {
   @Test
   @WithAnonymousUser
   void givenAnonymousUser_whenCreateCard_thenUnauthorized() throws Exception {
-    var dto = new CardCreationRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
+    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
 
     mockMvc
         .perform(
@@ -168,7 +168,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUserHasCreateAuthority_whenCreateCardWithKnownAccount_thenCreated() throws Exception {
-    var dto = new CardCreationRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
+    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
 
     when(accountsApi.getAccount(CardFixtures.CUSTOMER_IBAN))
         .thenReturn(
@@ -195,7 +195,7 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenUserDoesNotHaveCreateAuthority_whenCreateCard_thenForbidden() throws Exception {
-    var dto = new CardCreationRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
+    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
 
     mockMvc
         .perform(
@@ -208,7 +208,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUnknownAccount_whenCreateCard_thenNotFound() throws Exception {
-    var dto = new CardCreationRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
+    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
 
     when(accountsApi.getAccount(CardFixtures.CUSTOMER_IBAN))
         .thenThrow(
@@ -231,7 +231,7 @@ class CardControllerTest {
         .perform(
             post("https://localhost" + CardController.BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new CardCreationRequest(null, 1000L, 5000L))))
+                .content(json.writeValueAsString(new CardRequest(null, 1000L, 5000L))))
         .andExpect(status().is4xxClientError());
 
     // invalid iban
@@ -240,7 +240,7 @@ class CardControllerTest {
             post("https://localhost" + CardController.BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    json.writeValueAsString(new CardCreationRequest("not-an-iban", 1000L, 5000L))))
+                    json.writeValueAsString(new CardRequest("not-an-iban", 1000L, 5000L))))
         .andExpect(status().is4xxClientError());
 
     // non positive ceilings
@@ -251,7 +251,7 @@ class CardControllerTest {
                 .content(
                     json
                         .writeValueAsString(
-                            new CardCreationRequest(CardFixtures.CUSTOMER_IBAN, 0L, 5000L))))
+                            new CardRequest(CardFixtures.CUSTOMER_IBAN, 0L, 5000L))))
         .andExpect(status().is4xxClientError());
   }
 
@@ -789,7 +789,7 @@ class CardControllerTest {
         .amount(Amount.builder().currencyIso3("XPF").digits(400L).build())
         .card(card)
         .destinationIban(Iban.of(CardFixtures.SOMEONE_IBAN))
-        .isAccepted(true)
+        .accepted(true)
         .build();
     when(
         paymentRepo
