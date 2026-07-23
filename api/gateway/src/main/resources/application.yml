@@ -53,7 +53,7 @@ spring:
             - id: accounts-bff
               uri: ${accounts-service}
               predicates:
-                - Path=/bff/accounts/**
+                - Path=/bff/accounts/**,/bff/transfers/**
               filters:
                 # replace the session cookie with the access token in session
                 - TokenRelay=
@@ -63,7 +63,7 @@ spring:
             - id: accounts-m2m
               uri: ${accounts-service}
               predicates:
-                - Path=/m2m/accounts/**
+                - Path=/m2m/accounts/**,/m2m/transfers/**
               filters:
                 # remove the /gateway/m2m prefix
                 - StripPrefix=2
@@ -93,19 +93,6 @@ spring:
                 - Path=/m2m/customers/**
               filters:
                 - StripPrefix=2
-            - id: users-bff
-              uri: ${users-service}
-              predicates:
-                - Path=/bff/users/**
-              filters:
-                - TokenRelay=
-                - StripPrefix=2
-            - id: users-m2m
-              uri: ${users-service}
-              predicates:
-                - Path=/m2m/users/**
-              filters:
-                - StripPrefix=2
     refresh:
       enabled: false
   web:
@@ -129,23 +116,25 @@ com:
           client-uri: ${reverse-proxy-uri}
           pkce-forced: true
           post-login-allowed-uri-patterns:
-            - ${reverse-proxy-uri}/bdp-labs(/.*)?
+            - ${reverse-proxy-uri}/ui(/.*)?
           post-login-redirect-host: ${reverse-proxy-uri}
-          post-login-redirect-path: /bdp-labs/
+          post-login-redirect-path: /ui/
           post-logout-allowed-uri-patterns:
-            - ${reverse-proxy-uri}/bdp-labs(/.*)?
+            - ${reverse-proxy-uri}/ui(/.*)?
           post-logout-redirect-host: ${reverse-proxy-uri}
-          post-logout-redirect-path: /bdp-labs/
+          post-logout-redirect-path: /ui/
           security-matchers:
             - /login/**
             - /oauth2/**
             - /logout/**
             - /bff/**
+            - /me
           permit-all:
             - /login/**
             - /oauth2/**
             - /logout/connect/back-channel/bff
             - /bff/**
+            - /me
           csrf: cookie-accessible-from-js
           # the CSRF cookie must be accessible to both the BFF and the SPA code
           # while not colliding with other apps CSRF cookies

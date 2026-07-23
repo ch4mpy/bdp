@@ -6,6 +6,7 @@ card-service-client-secret: secret
 
 server:
   port: 8082
+  shutdown: immediate
   ssl:
     enabled: true
     bundle: self-signed

@@ -276,14 +276,6 @@
         "containerId" : "f13c2dc6-7d3b-46f1-a2b4-9e7aa9965fa3",
         "attributes" : { }
       }, {
-        "id" : "aa704671-51e7-4c33-ac70-ed162b85bcca",
-        "name" : "card-status_edit",
-        "description" : "",
-        "composite" : false,
-        "clientRole" : true,
-        "containerId" : "f13c2dc6-7d3b-46f1-a2b4-9e7aa9965fa3",
-        "attributes" : { }
-      }, {
         "id" : "6d32b29d-7c7f-41a9-a4c9-3497f8c481c1",
         "name" : "ceilings_edit",
         "description" : "",
@@ -292,29 +284,20 @@
         "containerId" : "f13c2dc6-7d3b-46f1-a2b4-9e7aa9965fa3",
         "attributes" : { }
       }, {
-        "id" : "8afff3de-495d-4f05-8104-dc6f75af38ba",
-        "name" : "create_any",
+        "id" : "a20fe319-ff67-4971-bd6c-993c44a32d46",
+        "name" : "create",
         "description" : "",
         "composite" : false,
         "clientRole" : true,
         "containerId" : "f13c2dc6-7d3b-46f1-a2b4-9e7aa9965fa3",
         "attributes" : { }
-      } ],
-      "user-service" : [ {
-        "id" : "65c64d3f-c3f1-4cb9-914b-49b8284577de",
-        "name" : "create",
-        "description" : "",
-        "composite" : false,
-        "clientRole" : true,
-        "containerId" : "659e4bfc-d56f-47a8-a1e2-2550bb0b4c81",
-        "attributes" : { }
       }, {
-        "id" : "1bf575bf-a762-4aa5-839a-756c6d475d5d",
-        "name" : "read_any",
+        "id" : "f568dc9b-db0c-4adb-ad00-e1c18a8026a3",
+        "name" : "status_edit",
         "description" : "",
         "composite" : false,
         "clientRole" : true,
-        "containerId" : "659e4bfc-d56f-47a8-a1e2-2550bb0b4c81",
+        "containerId" : "f13c2dc6-7d3b-46f1-a2b4-9e7aa9965fa3",
         "attributes" : { }
       } ],
       "account-service" : [ {
@@ -429,7 +412,20 @@
       "gateway" : [ ]
     }
   },
-  "groups" : [ ],
+  "groups" : [ {
+    "id" : "ba048cbd-53b7-4eed-966b-3e850a5d046d",
+    "name" : "advisor",
+    "description" : "",
+    "path" : "/advisor",
+    "subGroups" : [ ],
+    "attributes" : { },
+    "realmRoles" : [ ],
+    "clientRoles" : {
+      "customer-service" : [ "edit", "read_any" ],
+      "card-service" : [ "read_any", "ceilings_edit", "status_edit" ],
+      "account-service" : [ "create", "read_any" ]
+    }
+  } ],
   "defaultRole" : {
     "id" : "9b2d9be4-43a4-4365-b6d9-32d49d6b3580",
     "name" : "default-roles-labs",
@@ -493,47 +489,9 @@
     "realmRoles" : [ "default-roles-labs" ],
     "clientRoles" : {
       "customer-service" : [ "edit", "read_any" ],
-      "card-service" : [ "read_any", "card-status_edit", "ceilings_edit", "create_any" ],
+      "card-service" : [ "read_any", "ceilings_edit", "create" ],
       "account-service" : [ "create", "read_any" ]
     },
-    "notBefore" : 0,
-    "groups" : [ ]
-  }, {
-    "id" : "8dece841-b9c1-49d0-a90b-2a95b08211cd",
-    "username" : "jean.bonnot",
-    "firstName" : "Jean",
-    "lastName" : "Bonnot",
-    "email" : "jean.bonnot@mail.pf",
-    "emailVerified" : true,
-    "enabled" : true,
-    "createdTimestamp" : 1784145186690,
-    "totp" : false,
-    "credentials" : [ {
-      "id" : "b8222707-12bd-4d1e-9281-3c2ed92c52da",
-      "type" : "password",
-      "createdDate" : 1784145363344,
-      "secretData" : "{\"value\":\"eNz5uHbHVUV1McVuVf7pPIofW5Z2jUBAOStiW/Rj+Pw=\",\"salt\":\"0altvwf6bEph34E9LdkLTg==\",\"additionalParameters\":{}}",
-      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
-    } ],
-    "disableableCredentialTypes" : [ ],
-    "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-labs" ],
-    "notBefore" : 0,
-    "groups" : [ ]
-  }, {
-    "id" : "c1b1150d-98e7-4671-b0d1-11a09cb0840b",
-    "username" : "john.deuf",
-    "firstName" : "John",
-    "lastName" : "Deuf",
-    "email" : "john.deuf@mail.pf",
-    "emailVerified" : false,
-    "enabled" : true,
-    "createdTimestamp" : 1784145181494,
-    "totp" : false,
-    "credentials" : [ ],
-    "disableableCredentialTypes" : [ ],
-    "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-labs" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -548,6 +506,9 @@
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-labs" ],
+    "clientRoles" : {
+      "customer-service" : [ "read_any" ]
+    },
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -575,23 +536,6 @@
     "createdTimestamp" : 1783967751492,
     "totp" : false,
     "serviceAccountClientId" : "customer-service",
-    "credentials" : [ ],
-    "disableableCredentialTypes" : [ ],
-    "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-labs" ],
-    "clientRoles" : {
-      "user-service" : [ "create", "read_any" ]
-    },
-    "notBefore" : 0,
-    "groups" : [ ]
-  }, {
-    "id" : "1e7e494d-878f-4966-840a-dbb1d943f113",
-    "username" : "service-account-user-service",
-    "emailVerified" : false,
-    "enabled" : true,
-    "createdTimestamp" : 1784132132577,
-    "totp" : false,
-    "serviceAccountClientId" : "user-service",
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
@@ -897,8 +841,8 @@
     "name" : "",
     "description" : "",
     "rootUrl" : "https://host.docker.internal/gateway",
-    "adminUrl" : "https://host.docker.internal/bff",
-    "baseUrl" : "https://host.docker.internal/frontend",
+    "adminUrl" : "https://host.docker.internal/gateway",
+    "baseUrl" : "https://host.docker.internal/ui/",
     "surrogateAuthRequired" : false,
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
@@ -922,13 +866,13 @@
       "oauth2.jwt.authorization.grant.enabled" : "false",
       "standard.token.exchange.enabled" : "false",
       "frontchannel.logout.session.required" : "true",
-      "post.logout.redirect.uris" : "https://host.docker.internal/frontend/*",
+      "post.logout.redirect.uris" : "https://host.docker.internal/ui/*",
       "oauth2.device.authorization.grant.enabled" : "false",
       "backchannel.logout.revoke.offline.tokens" : "false",
       "realm_client" : "false",
       "oidc.ciba.grant.enabled" : "false",
       "backchannel.logout.session.required" : "true",
-      "backchannel.logout.url" : "https://host.docker.internal/bff/logout/connect/back-channel/gateway",
+      "backchannel.logout.url" : "https://host.docker.internal/gateway/logout/connect/back-channel/gateway",
       "display.on.consent.screen" : "false",
       "pkce.code.challenge.method" : "S256",
       "dpop.bound.access.tokens" : "false"
@@ -1015,51 +959,6 @@
       }
     } ],
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "basic", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
-  }, {
-    "id" : "659e4bfc-d56f-47a8-a1e2-2550bb0b4c81",
-    "clientId" : "user-service",
-    "name" : "",
-    "description" : "",
-    "rootUrl" : "",
-    "adminUrl" : "",
-    "baseUrl" : "",
-    "surrogateAuthRequired" : false,
-    "enabled" : true,
-    "alwaysDisplayInConsole" : false,
-    "clientAuthenticatorType" : "client-secret",
-    "secret" : "secret",
-    "redirectUris" : [ "/*" ],
-    "webOrigins" : [ "/*" ],
-    "notBefore" : 0,
-    "bearerOnly" : false,
-    "consentRequired" : false,
-    "standardFlowEnabled" : false,
-    "implicitFlowEnabled" : false,
-    "directAccessGrantsEnabled" : false,
-    "serviceAccountsEnabled" : true,
-    "publicClient" : false,
-    "frontchannelLogout" : true,
-    "protocol" : "openid-connect",
-    "attributes" : {
-      "logout.confirmation.enabled" : "false",
-      "client.secret.creation.time" : "1784132132",
-      "oauth2.jwt.authorization.grant.enabled" : "false",
-      "standard.token.exchange.enabled" : "false",
-      "frontchannel.logout.session.required" : "true",
-      "post.logout.redirect.uris" : "+",
-      "oauth2.device.authorization.grant.enabled" : "false",
-      "backchannel.logout.revoke.offline.tokens" : "false",
-      "realm_client" : "false",
-      "oidc.ciba.grant.enabled" : "false",
-      "backchannel.logout.session.required" : "true",
-      "display.on.consent.screen" : "false",
-      "dpop.bound.access.tokens" : "false"
-    },
-    "authenticationFlowBindingOverrides" : { },
-    "fullScopeAllowed" : true,
-    "nodeReRegistrationTimeout" : -1,
-    "defaultClientScopes" : [ "web-origins", "service_account", "acr", "profile", "roles", "basic", "email" ],
     "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
   } ],
   "clientScopes" : [ {
@@ -1635,12 +1534,15 @@
       "protocolMapper" : "oidc-usermodel-client-role-mapper",
       "consentRequired" : false,
       "config" : {
-        "user.attribute" : "foo",
         "introspection.token.claim" : "true",
+        "multivalued" : "true",
+        "userinfo.token.claim" : "true",
+        "user.attribute" : "foo",
+        "id.token.claim" : "true",
+        "lightweight.claim" : "true",
         "access.token.claim" : "true",
         "claim.name" : "resource_access.${client_id}.roles",
-        "jsonType.label" : "String",
-        "multivalued" : "true"
+        "jsonType.label" : "String"
       }
     }, {
       "id" : "17d7cb38-88a4-40c9-a1cd-87e8031949bf",

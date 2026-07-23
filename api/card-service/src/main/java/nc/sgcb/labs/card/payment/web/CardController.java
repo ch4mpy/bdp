@@ -161,7 +161,7 @@ public class CardController {
   }
 
   /**
-   * Requires the `card.card-status_edit` authority
+   * Requires the `card.status_edit` authority
    * 
    * @param card
    * @param dto
@@ -170,7 +170,7 @@ public class CardController {
   @Transactional
   @PutMapping(path = CARD_STATUS_PATH)
   @ResponseStatus(HttpStatus.ACCEPTED)
-  @PreAuthorize("hasAuthority('card.card-status_edit')")
+  @PreAuthorize("hasAuthority('card.status_edit')")
   public void setCardStatus(
       @Parameter(schema = @Schema(type = "string"),
           description = "The number of the card to change the status of")

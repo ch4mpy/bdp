@@ -1,11 +1,16 @@
 cn: host.docker.internal
 reverse-proxy-uri: https://${cn}
-issuer: https://host.docker.internal/auth/realms/labs
+issuer: ${reverse-proxy-uri}/auth/realms/labs
 customer-service-client-id: customer-service
 customer-service-client-secret: secret
 
+keycloak-admin-api:
+  base-uri: ${reverse-proxy-uri}/auth
+  realm-name: labs
+
 server:
   port: 8083
+  shutdown: immediate
   ssl:
     enabled: true
     bundle: self-signed
@@ -62,8 +67,8 @@ com:
             - /swagger-ui/**
       rest:
         client:
-          user-service-client:
-            base-url: ${reverse-proxy-uri}/gateway/m2m
+          keycloak-admin-api-client:
+            base-url: ${reverse-proxy-uri}/auth
             ssl-bundle: self-signed
             headers:
               Accept: application/problem+json

@@ -170,7 +170,7 @@
                         </goals>
                         <configuration>
                             <inputSpec>
-                                ${project.basedir}/../../openapi/customer-service.openapi.json
+                                ${project.basedir}/../../frontend/openapi/customer-service.openapi.json
                             </inputSpec>
                             <apiPackage>nc.sgcb.labs.customer.api</apiPackage>
                             <modelPackage>nc.sgcb.labs.customer.model</modelPackage>

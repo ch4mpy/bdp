@@ -1,7 +1,7 @@
 /**
  *
  */
-package nc.sgcb.labs.user;
+package com.c4soft.bdp.labs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

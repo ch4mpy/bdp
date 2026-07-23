@@ -13,14 +13,15 @@ public interface CustomerMapper {
 
   CustomerResponse map(Customer entity);
 
-  @Mapping(target = "beneficiaries", ignore = true)
-  Customer map(CustomerCreationRequest dto, String id);
+  @Mapping(target = "id", ignore = true)
+  Customer map(CustomerCreationRequest dto);
 
   BeneficiaryResponse map(Beneficiary entity);
 
   @Mapping(target = "id", ignore = true)
-  Beneficiary map(BeneficiaryRequest dto, Customer customer);
+  Beneficiary map(BeneficiaryRequest dto, String customerId);
 
   @Mapping(target = "id", ignore = true)
-  Beneficiary map(@MappingTarget Beneficiary entity, BeneficiaryRequest dto, Customer customer);
+  @Mapping(target = "customerId", ignore = true)
+  Beneficiary map(@MappingTarget Beneficiary entity, BeneficiaryRequest dto);
 }

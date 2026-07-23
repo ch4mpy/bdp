@@ -9,9 +9,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import java.net.URI;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -20,23 +17,23 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 import com.c4_soft.springaddons.security.oauth2.test.annotations.WithJwt;
 import com.c4_soft.springaddons.security.oauth2.test.webmvc.AutoConfigureAddonsWebmvcResourceServerSecurity;
-import nc.sgcb.labs.commons.exception.CommonExceptionsHandler;
-import nc.sgcb.labs.customer.domain.Beneficiary;
 import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.exception.CommonExceptionsHandler;
 import nc.sgcb.labs.customer.CustomerFixtures;
 import nc.sgcb.labs.customer.SecurityConfig;
 import nc.sgcb.labs.customer.SpringDataWebConvertersTestConfiguration;
+import nc.sgcb.labs.customer.domain.Beneficiary;
+import nc.sgcb.labs.customer.domain.Customer;
 import nc.sgcb.labs.customer.jpa.BeneficiaryRepository;
-import nc.sgcb.labs.customer.jpa.CustomerRepository;
-import nc.sgcb.labs.user.api.UsersApi;
+import nc.sgcb.labs.customer.keycloak.CustomerRepository;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = CustomerController.class, properties = {})
@@ -52,17 +49,24 @@ class CustomerControllerTest {
   @MockitoBean
   BeneficiaryRepository beneficiaryRepo;
 
-  @MockitoBean
-  UsersApi usersApi;
-
   @Autowired
   MockMvc mockMvc;
 
   @Autowired
   ObjectMapper json;
 
-  private static Beneficiary beneficiary(Long id, String label, String iban, nc.sgcb.labs.customer.domain.Customer customer) {
-    return Beneficiary.builder().id(id).label(label).iban(Iban.of(iban)).customer(customer).build();
+  private static Beneficiary beneficiary(
+      Long id,
+      String label,
+      String iban,
+      nc.sgcb.labs.customer.domain.Customer customer) {
+    return Beneficiary
+        .builder()
+        .id(id)
+        .label(label)
+        .iban(Iban.of(iban))
+        .customerId(customer.getId())
+        .build();
   }
 
   // ===================== listCustomers =====================
@@ -71,9 +75,7 @@ class CustomerControllerTest {
   @WithAnonymousUser
   void givenAnonymousUser_whenListCustomers_thenUnauthorized() throws Exception {
     mockMvc
-        .perform(
-            get("https://localhost" + CustomerController.BASE_PATH)
-                .queryParam("firstOrLastNamePart", "e"))
+        .perform(get("https://localhost" + CustomerController.BASE_PATH).queryParam("search", "e"))
         .andExpect(status().isUnauthorized());
   }
 
@@ -81,36 +83,16 @@ class CustomerControllerTest {
   @WithJwt("advisor.json")
   void givenUserIsGrantedWithReadAny_whenListCustomersWithNamePart_thenOk() throws Exception {
     var customer = CustomerFixtures.createJeanBonot();
-    when(customerRepo.findByFirstOrLastNameContainingIgnoreCase("bonot", PageRequest.of(0, 20)))
+    when(customerRepo.listUsers("bonot", PageRequest.of(0, 20)))
         .thenReturn(new PageImpl<>(List.of(customer), PageRequest.of(0, 20), 1));
 
     var mvcResult = mockMvc
         .perform(
-            get("https://localhost" + CustomerController.BASE_PATH)
-                .queryParam("firstOrLastNamePart", "bonot"))
+            get("https://localhost" + CustomerController.BASE_PATH).queryParam("search", "bonot"))
         .andExpect(status().isOk())
         .andReturn();
 
     assertThat(mvcResult.getResponse().getContentAsString()).contains(customer.getId());
-  }
-
-  @Test
-  @WithJwt("advisor.json")
-  void givenUserIsGrantedWithReadAny_whenListCustomersWithBlankNamePart_thenFindAllIsUsed()
-      throws Exception {
-    var customer = CustomerFixtures.createJefHini();
-    when(customerRepo.findAll(any(org.springframework.data.domain.Pageable.class)))
-        .thenReturn(new PageImpl<>(List.of(customer)));
-
-    mockMvc
-        .perform(
-            get("https://localhost" + CustomerController.BASE_PATH)
-                .queryParam("firstOrLastNamePart", ""))
-        .andExpect(status().isOk());
-
-    mockMvc
-        .perform(get("https://localhost" + CustomerController.BASE_PATH))
-        .andExpect(status().isOk());
   }
 
   // ===================== createCustomer =====================
@@ -118,12 +100,7 @@ class CustomerControllerTest {
   @Test
   @WithAnonymousUser
   void givenAnonymousUser_whenCreateCustomer_thenUnauthorized() throws Exception {
-    var dto = new CustomerCreationRequest(
-        "Jean",
-        "Bonot",
-        LocalDate.of(1978, 10, 31),
-        "Longjumeau (91)",
-        "jean.bonot@test.pf");
+    var dto = new CustomerCreationRequest("Jean", "Bonot", "jean.bonot@test.pf");
 
     mockMvc
         .perform(
@@ -136,29 +113,15 @@ class CustomerControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenNewCustomer_whenCreateCustomer_thenCreated() throws Exception {
-    var dto = new CustomerCreationRequest(
-        "Jean",
-        "Bonot",
-        LocalDate.of(1978, 10, 31),
-        "Longjumeau (91)",
-        "jean.bonot@test.pf");
-
-    when(
-        customerRepo
-            .existsByFirstNameAndLastNameAndBirthDateAndBirthLocationAllIgnoreCase(
-                dto.firstName(),
-                dto.lastName(),
-                dto.birthDate(),
-                dto.birthLocation()))
-        .thenReturn(false);
+    var dto = new CustomerCreationRequest("Jean", "Bonot", "jean.bonot@test.pf");
 
     var newUserId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-    var headers = new HttpHeaders();
-    headers.setLocation(URI.create("/users/%s".formatted(newUserId)));
-    when(usersApi.createUser(any()))
-        .thenReturn(new ResponseEntity<>(headers, org.springframework.http.HttpStatus.CREATED));
 
-    when(customerRepo.save(any())).thenAnswer(i -> i.getArgument(0));
+    when(customerRepo.save(any())).thenAnswer(i -> {
+      final var customer = i.getArgument(0, Customer.class);
+      customer.setId(newUserId);
+      return customer;
+    });
 
     var mvcResult = mockMvc
         .perform(
@@ -174,21 +137,10 @@ class CustomerControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenExistingCustomer_whenCreateCustomer_thenConflict() throws Exception {
-    var dto = new CustomerCreationRequest(
-        "Jean",
-        "Bonot",
-        LocalDate.of(1978, 10, 31),
-        "Longjumeau (91)",
-        "jean.bonot@test.pf");
+    var dto = new CustomerCreationRequest("Jean", "Bonot", "jean.bonot@test.pf");
 
-    when(
-        customerRepo
-            .existsByFirstNameAndLastNameAndBirthDateAndBirthLocationAllIgnoreCase(
-                dto.firstName(),
-                dto.lastName(),
-                dto.birthDate(),
-                dto.birthLocation()))
-        .thenReturn(true);
+    when(customerRepo.save(any()))
+        .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Customer already exists"));
 
     mockMvc
         .perform(
@@ -209,12 +161,18 @@ class CustomerControllerTest {
                 .content(
                     json
                         .writeValueAsString(
-                            new CustomerCreationRequest(
-                                "",
-                                "Bonot",
-                                LocalDate.of(1978, 10, 31),
-                                "Longjumeau (91)",
-                                "jean.bonot@test.pf"))))
+                            new CustomerCreationRequest("", "Bonot", "bonot@test.pf"))))
+        .andExpect(status().is4xxClientError());
+
+    // missing last name
+    mockMvc
+        .perform(
+            post("https://localhost" + CustomerController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    json
+                        .writeValueAsString(
+                            new CustomerCreationRequest("Jean", "", "jean@test.pf"))))
         .andExpect(status().is4xxClientError());
 
     // invalid email
@@ -225,28 +183,7 @@ class CustomerControllerTest {
                 .content(
                     json
                         .writeValueAsString(
-                            new CustomerCreationRequest(
-                                "Jean",
-                                "Bonot",
-                                LocalDate.of(1978, 10, 31),
-                                "Longjumeau (91)",
-                                "not-an-email"))))
-        .andExpect(status().is4xxClientError());
-
-    // missing birth date
-    mockMvc
-        .perform(
-            post("https://localhost" + CustomerController.BASE_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(
-                    json
-                        .writeValueAsString(
-                            new CustomerCreationRequest(
-                                "Jean",
-                                "Bonot",
-                                null,
-                                "Longjumeau (91)",
-                                "jean.bonot@test.pf"))))
+                            new CustomerCreationRequest("Jean", "Bonot", "not-an-email"))))
         .andExpect(status().is4xxClientError());
   }
 
@@ -322,8 +259,7 @@ class CustomerControllerTest {
   void givenUserIsGrantedWithReadAny_whenListBeneficiaries_thenOk() throws Exception {
     var customer = CustomerFixtures.createJeanBonot();
     var beneficiary = beneficiary(1L, "Electricity", "FR761111222233334443", customer);
-    customer.setBeneficiaries(List.of(beneficiary));
-    when(customerRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
+    when(beneficiaryRepo.findByCustomerId(customer.getId())).thenReturn(List.of(beneficiary));
 
     var mvcResult = mockMvc
         .perform(get("https://localhost" + CustomerController.BENEFICIARIES_PATH, customer.getId()))
@@ -339,8 +275,7 @@ class CustomerControllerTest {
   void givenUserIsCustomer_whenListOwnBeneficiaries_thenOk() throws Exception {
     var customer = CustomerFixtures.createJohnDeuf();
     var beneficiary = beneficiary(2L, "Landlord", "FR761111222233334441", customer);
-    customer.setBeneficiaries(List.of(beneficiary));
-    when(customerRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
+    when(beneficiaryRepo.findByCustomerId(customer.getId())).thenReturn(List.of(beneficiary));
 
     mockMvc
         .perform(get("https://localhost" + CustomerController.BENEFICIARIES_PATH, customer.getId()))
@@ -357,7 +292,10 @@ class CustomerControllerTest {
         .perform(
             post("https://localhost" + CustomerController.BENEFICIARIES_PATH, customer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new BeneficiaryRequest("FR761111222233334443", "Savings"))))
+                .content(
+                    json
+                        .writeValueAsString(
+                            new BeneficiaryRequest("FR761111222233334443", "Savings"))))
         .andExpect(status().isUnauthorized());
   }
 
@@ -365,7 +303,6 @@ class CustomerControllerTest {
   @WithJwt("john-deuf.json")
   void givenUserIsCustomer_whenAddBeneficiary_thenCreated() throws Exception {
     var customer = CustomerFixtures.createJohnDeuf();
-    customer.setBeneficiaries(new ArrayList<>());
     when(customerRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
     when(beneficiaryRepo.save(any(Beneficiary.class))).thenAnswer(invocation -> {
       var saved = invocation.getArgument(0, Beneficiary.class);
@@ -377,7 +314,10 @@ class CustomerControllerTest {
         .perform(
             post("https://localhost" + CustomerController.BENEFICIARIES_PATH, customer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new BeneficiaryRequest("FR761111222233334443", "Savings"))))
+                .content(
+                    json
+                        .writeValueAsString(
+                            new BeneficiaryRequest("FR761111222233334443", "Savings"))))
         .andExpect(status().isCreated())
         .andReturn();
 
@@ -389,14 +329,18 @@ class CustomerControllerTest {
   @WithJwt("john-deuf.json")
   void givenDuplicateBeneficiaryIban_whenAddBeneficiary_thenConflict() throws Exception {
     var customer = CustomerFixtures.createJohnDeuf();
-    customer.setBeneficiaries(new ArrayList<>(List.of(beneficiary(1L, "Existing", "FR761111222233334443", customer))));
+    var beneficiary = beneficiary(1L, "Existing", "FR761111222233334443", customer);
     when(customerRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
+    when(beneficiaryRepo.findByCustomerId(customer.getId())).thenReturn(List.of(beneficiary));
 
     mockMvc
         .perform(
             post("https://localhost" + CustomerController.BENEFICIARIES_PATH, customer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new BeneficiaryRequest("FR761111222233334443", "Other label"))))
+                .content(
+                    json
+                        .writeValueAsString(
+                            new BeneficiaryRequest("FR761111222233334443", "Other label"))))
         .andExpect(status().isConflict());
   }
 
@@ -405,8 +349,8 @@ class CustomerControllerTest {
   void givenKnownCustomerAndBeneficiary_whenGetBeneficiary_thenOk() throws Exception {
     var customer = CustomerFixtures.createJeanBonot();
     var beneficiary = beneficiary(3L, "Internet", "FR761111222233334443", customer);
-    customer.setBeneficiaries(List.of(beneficiary));
     when(customerRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
+    when(beneficiaryRepo.findByCustomerId(customer.getId())).thenReturn(List.of(beneficiary));
     when(beneficiaryRepo.findById(beneficiary.getId())).thenReturn(Optional.of(beneficiary));
 
     var mvcResult = mockMvc
@@ -418,7 +362,8 @@ class CustomerControllerTest {
         .andExpect(status().isOk())
         .andReturn();
 
-    var actual = json.readValue(mvcResult.getResponse().getContentAsString(), BeneficiaryResponse.class);
+    var actual =
+        json.readValue(mvcResult.getResponse().getContentAsString(), BeneficiaryResponse.class);
     assertThat(actual.id()).isEqualTo(beneficiary.getId());
     assertThat(actual.label()).isEqualTo(beneficiary.getLabel());
     assertThat(actual.iban()).isEqualTo("FR761111222233334443");
@@ -430,10 +375,12 @@ class CustomerControllerTest {
     var customer = CustomerFixtures.createJohnDeuf();
     var beneficiary = beneficiary(4L, "Rent", "FR761111222233334441", customer);
     var other = beneficiary(5L, "Power", "FR761111222233334443", customer);
-    customer.setBeneficiaries(List.of(beneficiary, other));
     when(customerRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
+    when(beneficiaryRepo.findByCustomerId(customer.getId()))
+        .thenReturn(List.of(beneficiary, other));
     when(beneficiaryRepo.findById(beneficiary.getId())).thenReturn(Optional.of(beneficiary));
-    when(beneficiaryRepo.save(any(Beneficiary.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(beneficiaryRepo.save(any(Beneficiary.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
 
     mockMvc
         .perform(
@@ -442,7 +389,10 @@ class CustomerControllerTest {
                 customer.getId(),
                 beneficiary.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new BeneficiaryRequest("FR761111222233334444", "Taxes"))))
+                .content(
+                    json
+                        .writeValueAsString(
+                            new BeneficiaryRequest("FR761111222233334444", "Taxes"))))
         .andExpect(status().isAccepted());
 
     assertThat(beneficiary.getLabel()).isEqualTo("Taxes");
@@ -455,8 +405,9 @@ class CustomerControllerTest {
     var customer = CustomerFixtures.createJohnDeuf();
     var beneficiary = beneficiary(4L, "Rent", "FR761111222233334441", customer);
     var other = beneficiary(5L, "Power", "FR761111222233334443", customer);
-    customer.setBeneficiaries(List.of(beneficiary, other));
     when(customerRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
+    when(beneficiaryRepo.findByCustomerId(customer.getId()))
+        .thenReturn(List.of(beneficiary, other));
     when(beneficiaryRepo.findById(beneficiary.getId())).thenReturn(Optional.of(beneficiary));
 
     mockMvc
@@ -466,7 +417,10 @@ class CustomerControllerTest {
                 customer.getId(),
                 beneficiary.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new BeneficiaryRequest("FR761111222233334444", "Power"))))
+                .content(
+                    json
+                        .writeValueAsString(
+                            new BeneficiaryRequest("FR761111222233334444", "Power"))))
         .andExpect(status().isConflict());
   }
 
@@ -475,8 +429,8 @@ class CustomerControllerTest {
   void givenKnownCustomerAndBeneficiary_whenDeleteBeneficiary_thenAccepted() throws Exception {
     var customer = CustomerFixtures.createJeanBonot();
     var beneficiary = beneficiary(9L, "School", "FR761111222233334443", customer);
-    customer.setBeneficiaries(new ArrayList<>(List.of(beneficiary)));
     when(customerRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
+    when(beneficiaryRepo.findByCustomerId(customer.getId())).thenReturn(List.of(beneficiary));
     when(beneficiaryRepo.findById(beneficiary.getId())).thenReturn(Optional.of(beneficiary));
     when(customerRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -488,7 +442,6 @@ class CustomerControllerTest {
                 beneficiary.getId()))
         .andExpect(status().isAccepted());
 
-    assertThat(customer.getBeneficiaries()).isEmpty();
     verify(beneficiaryRepo).delete(beneficiary);
   }
 

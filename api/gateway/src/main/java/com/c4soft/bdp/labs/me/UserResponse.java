@@ -1,7 +1,4 @@
-/**
- *
- */
-package nc.sgcb.labs.user.web;
+package com.c4soft.bdp.labs.me;
 
 import java.util.List;
 import org.jspecify.annotations.Nullable;

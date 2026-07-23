@@ -1,11 +1,12 @@
 cn: host.docker.internal
 reverse-proxy-uri: https://${cn}
-issuer: https://host.docker.internal/auth/realms/labs
+issuer: ${reverse-proxy-uri}/auth/realms/labs
 account-service-client-id: account-service
 account-service-client-secret: secret
 
 server:
   port: 8081
+  shutdown: immediate
   ssl:
     enabled: true
     bundle: self-signed
