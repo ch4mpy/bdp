@@ -26,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.c4_soft.springaddons.security.oauth2.test.annotations.WithJwt;
 import com.c4_soft.springaddons.security.oauth2.test.webmvc.AutoConfigureAddonsWebmvcResourceServerSecurity;
 import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.domain.IbanStringMapper;
 import nc.sgcb.labs.commons.exception.CommonExceptionsHandler;
 import nc.sgcb.labs.customer.CustomerFixtures;
 import nc.sgcb.labs.customer.SecurityConfig;
@@ -37,7 +38,7 @@ import nc.sgcb.labs.customer.keycloak.CustomerRepository;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = CustomerController.class, properties = {})
-@Import({CustomerMapperImpl.class, CommonExceptionsHandler.class,
+@Import({IbanStringMapper.class, CustomerMapperImpl.class, CommonExceptionsHandler.class,
     SpringDataWebConvertersTestConfiguration.class, SecurityConfig.class})
 @AutoConfigureAddonsWebmvcResourceServerSecurity
 @SuppressWarnings("null")

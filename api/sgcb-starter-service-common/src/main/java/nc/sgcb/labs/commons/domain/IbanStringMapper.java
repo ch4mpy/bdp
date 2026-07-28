@@ -1,16 +1,16 @@
 package nc.sgcb.labs.commons.domain;
 
 import org.jspecify.annotations.Nullable;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
 
-@Component
+@Mapper(componentModel = "spring")
 public class IbanStringMapper {
 
-  public static @Nullable String mapIbanToString(@Nullable Iban iban) {
+  public @Nullable String map(@Nullable Iban iban) {
     return iban == null ? null : iban.toMachineReadableString();
   }
 
-  public static @Nullable Iban mapStringToIban(@Nullable String ibanStr) {
+  public @Nullable Iban map(@Nullable String ibanStr) {
     return ibanStr == null ? null : Iban.of(ibanStr);
   }
 

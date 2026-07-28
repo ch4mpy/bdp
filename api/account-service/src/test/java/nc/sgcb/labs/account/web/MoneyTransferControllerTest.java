@@ -30,12 +30,13 @@ import nc.sgcb.labs.account.domain.MoneyTransfer;
 import nc.sgcb.labs.account.jpa.AccountRepository;
 import nc.sgcb.labs.account.jpa.MoneyTransferRepository;
 import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.domain.IbanStringMapper;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = MoneyTransferController.class,
     properties = {"logging.level.org.springframework=DEBUG"})
-@Import({MoneyTransferMapperImpl.class, SpringDataWebConvertersTestConfiguration.class,
-    SecurityConfig.class})
+@Import({IbanStringMapper.class, MoneyTransferMapperImpl.class,
+    SpringDataWebConvertersTestConfiguration.class, SecurityConfig.class})
 @AutoConfigureAddonsWebmvcResourceServerSecurity
 class MoneyTransferControllerTest {
 

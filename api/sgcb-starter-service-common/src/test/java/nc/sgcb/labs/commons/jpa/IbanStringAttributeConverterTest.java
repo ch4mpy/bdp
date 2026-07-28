@@ -1,13 +1,13 @@
 package nc.sgcb.labs.commons.jpa;
 
-import nc.sgcb.labs.commons.domain.Iban;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.domain.IbanStringMapper;
 
 class IbanStringAttributeConverterTest {
 
-  IbanStringAttributeConverter converter = new IbanStringAttributeConverter();
+  IbanStringAttributeConverter converter = new IbanStringAttributeConverter(new IbanStringMapper());
 
   @Test
   @SuppressWarnings("null")

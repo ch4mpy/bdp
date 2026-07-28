@@ -37,12 +37,14 @@ import nc.sgcb.labs.card.payment.jpa.CardPaymentRepository;
 import nc.sgcb.labs.card.payment.jpa.CardRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.domain.IbanStringMapper;
 import nc.sgcb.labs.commons.exception.CommonExceptionsHandler;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = CardController.class, properties = {})
-@Import({CardMapperImpl.class, CardPaymentMapperImpl.class, CommonExceptionsHandler.class,
-    SpringDataWebConvertersTestConfiguration.class, SecurityConfig.class})
+@Import({IbanStringMapper.class, CardMapperImpl.class, CardPaymentMapperImpl.class,
+    CommonExceptionsHandler.class, SpringDataWebConvertersTestConfiguration.class,
+    SecurityConfig.class})
 @AutoConfigureAddonsWebmvcResourceServerSecurity
 class CardControllerTest {
 
