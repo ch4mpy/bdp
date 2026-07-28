@@ -658,7 +658,7 @@ En considérant que `MyEntity` a un `@Id Long id` et qu'il existe un `JpaReposit
 
 ```java
 @GetMapping(/resources/{resourceId})
-Resource getE(@PathVariable("resourceId") MyEntity entity));
+Resource getResource(@PathVariable("resourceId") MyEntity entity);
 ```
 
 Il est possible d'ajouter des converters dans le registry en fournissant une `@Configuration` qui implémente `WebMvcConfigurer`. Par exemple, pour ajouter une conversion automatique d'un compte depuis son `Iban` (`AccountRepository extends JpaRepository<Account, Iban>`):
