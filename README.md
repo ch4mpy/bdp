@@ -43,6 +43,8 @@ nvm install --lts
 nvm use
 # Déploiement dans Docker de l'infra (bases de données, Keycloak, reverse-proxy, Loki, Grafana, Tempo, Mimir)
 bash ./deploy-dev.sh
+# Génération des specs OpenAPI des services
+cd api && mvn install -Popenapi,h2 && cd ..
 # Récupération des sources du front
 git submodule init && git submodule update
 # Installation des dépendances du front et génération du code client de l'API
