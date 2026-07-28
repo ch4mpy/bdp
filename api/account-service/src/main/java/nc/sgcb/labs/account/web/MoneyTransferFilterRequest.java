@@ -3,9 +3,9 @@ package nc.sgcb.labs.account.web;
 import java.time.Instant;
 import org.jspecify.annotations.Nullable;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import nc.sgcb.labs.commons.validation.CurrencyIso3;
-import nc.sgcb.labs.commons.validation.IbanString;
 
 /**
  * @param sourceIban a valid IBAN for the source account (optional)
@@ -19,8 +19,8 @@ import nc.sgcb.labs.commons.validation.IbanString;
  *        transfer label (optional)
  */
 public record MoneyTransferFilterRequest(
-    @Nullable @IbanString String sourceIban,
-    @Nullable @IbanString String destinationIban,
+    @NotEmpty String sourceIban,
+    @NotEmpty String destinationIban,
     @Nullable @Min(0) Long minAmount,
     @Nullable @Min(0) Long maxAmount,
     @Nullable @CurrencyIso3 String currencyIso3,

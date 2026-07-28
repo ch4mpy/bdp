@@ -87,7 +87,7 @@ public class MoneyTransferController {
   // transfer money to it...
   @PreAuthorize("hasAuthority('account.transfer') or @ac.ownsAccount(#dto.sourceIban) or @ac.ownsAccount(#dto.destinationIban)")
   public ResponseEntity<Void> transferMoneyBetweenAccounts(
-      @RequestBody @Valid MoneyTransferRequest dto,
+      @RequestBody MoneyTransferRequest dto,
       Authentication auth) {
     final var sourceAccount = accountRepo.findById(Iban.of(dto.sourceIban()));
     final var destinationAccount = accountRepo.findById(Iban.of(dto.destinationIban()));
