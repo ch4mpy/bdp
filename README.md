@@ -1,4 +1,30 @@
-# BdP-labs : TPs de création d'APIs REST avec Spring Boot
+# REST-hero : TPs de création d'APIs REST avec Spring Boot
+
+Le support de TP est une banque en ligne simplifiée permettant de :
+- gérer bénéficiaires d'un client
+- effectuer des virements. Il n'y a pas de connexion à des services bancaires externes. Ces services nes sont même pas simulés. Les opérations de crédit / débit de ces comptes sont simplement ignorées.
+- gérer des cartes de paiement pour chaque compte: créer, activer, désactiver
+- effectuer des paiement par carte.
+
+Elle est composée de :
+- une interface graphique React
+- une API REST composée de :
+  * une `gateway`. Les requêtes (du frontend) préfixées avec `/gateway/bff` sont autorisées avec des cookies de session (`http-only=true`) et protégées contre le CSRF (cookie `XSRF-TOKEN` avec `http-only=false` et header `X-XSRF-TOKEN` requis pour pour les requêtes `POST`, `PUT` `PATCH` et `DELETE`). Les requêtes de clients OAuth2 (appels inter-services, Bruno, Postman, ...) préfixées avec `/gateway/m2m` sont autorisées avec un `Bearer` token dans le header `Authorization`. 
+  * `sgcb-starter-service-common` est un starter Spring Boot qui contenant des classes et de l'auto-configuration partagée.
+  * `customer-service` responsable des clients et de leurs bénéficiaires. Ce service ne stocke que les bénéficiaires dans sa base de données. Les clients sont des utilisateurs de Keycloak (lecture / écriture via l'API Keycloak).
+  * `account-service` responsable des comptes bancaires et des transferts entre comptes.
+  * `card-service`responsable des cartes et des paiements par carte.
+
+Principales caractéristiques techniques de l'API REST:
+- **Observable** : emmet des logs collectées dans Loki, les métriques des métriques dans Mimir et les traces dans Tempo, le tout visualisé dans Grafana.
+- **Documentée** avec OpenAPI : permet aux clients de générer le code pour les consommer et aux développeurs de la visualiser dans une Swagger-UI.
+- **Communicante** : Appels REST inter-service:
+  * le `customer-service` utilise Keycloak pour accéder aux utilisateurs
+  * l'`account-service` vérifie auprès du `customer-service` qu'un client existe avant de créer un compte à son nom
+  * le `card-service` vérifie auprès de l'`account-service` qu'un compte existe avant de lui attacher une carte et lui déclare un transfert d'argent lors d'un paiement par carte.
+- **Sécurisée** : chaque endpoint d'API vérifie l'identité attachée à la requête et ses relations éventuelles avec les ressources qu'elle cherche à manipuler pour prendre autoriser l'accès.
+- **Persistante** : les objets métier sont sauvegardés dans PostgreSQL avec JPA. Les requêtes les plus complexes (filtres sur les paiements par carte et les mouvements entre comptes) sont construites avec des spécifications JPA.
+- **Performante** : utilisation de caches (lorsque c'est pertinent).
 
 #### Pré-requis
 
@@ -7,15 +33,30 @@
 - [SDKMan](https://sdkman.io/install/)
 - Docker ou [Docker Desktop](https://docs.docker.com/desktop/)
 - une entrée `127.0.0.1 host.docker.internal` dans `/etc/hosts` (`C:\windows\system32\drivers\etc\hosts` sous Windows)
+- un IDE (Eclipse STS, Visual Studio Code, IntelliJ Ultimate)
 
 ```bash
+# Installation du bon JDK par SDKMan
 sdk env install
+# Installation de la bonne version de Node avec NVM
 nvm install --lts
 nvm use
+# Déploiement dans Docker de l'infra (bases de données, Keycloak, reverse-proxy, Loki, Grafana, Tempo, Mimir)
 bash ./deploy-dev.sh
+# Récupération des sources du front
+git submodule init && git submodule update
+# Installation des dépendances du front et génération du code client de l'API
+cd frontend && npm i && npm run api && cd ..
 ```
 
-Editer le mot de passe SMTP avec la valeur de `secrets/mail/password.txt` dans [Keycloak](https://host.docker.internal/auth/admin/master/console/#/labs/realm-settings/email)
+Dans [Keycloak](https://host.docker.internal/auth/admin/master/console/#/labs/realm-settings/email), éditer le mot de passe SMTP avec la valeur de `secrets/mail/password.txt`.
+
+Pour démarrer le front depuis le répertoire `frontend`:
+```bash
+npm run dev
+```
+
+Pour démarrer les services de l'API depuis un IDE, surcharger le propriété `spring.datasource.password` avec la valeur du fichier `/secrets/rest-api/postgres_password.txt` dans une run config.
 
 ## 1. Build avec Maven
 
@@ -31,7 +72,6 @@ api/
 |─ customer-service
 |─ gateway
 |─ sgcb-starter-service-common
-|─ user-service
 ```
 
 Ce qui est défini dans le pom parent sert de valeur par défaut pour les modules (group-id, version, dépendances, etc.).
@@ -149,20 +189,13 @@ Mapstruct utilise les accesseurs générés par Lombok).
 Swagger peut générer des specs OpenAPI à partir de code Java. Il expose cette spec au runtime. Par défaut, la spec
 elle-même est disponible sur `/v3/api-docs`.
 
-Spring ayant de nombreuses conventions qui lui sont propres et qui induise un comportement qui lui est propre, il faut
-ajouter des métadonnées. Une partie est générée automatiquement par `springdoc-openapi`, mais il faut souvent completer
-avec des annotations Swagger.
+Spring ayant de nombreuses conventions qui lui sont propres, il faut ajouter des métadonnées. Une partie est générée automatiquement par `springdoc-openapi`, mais il faut souvent completer avec des annotations Swagger, notamment pour les request parameters convertis automatiquement par Spring Web.
 
-Pour éviter tou impact au runtime, la dépendances à `springdoc-openapi-starter-webmvc-api` et l'exécution du
-`springdoc-openapi-maven-plugin` sont isolées dans un `profile` Maven.
+Pour éviter tou impact au runtime, la dépendances à `springdoc-openapi-starter-webmvc-api` et l'exécution du `springdoc-openapi-maven-plugin` sont isolées dans un `profile` Maven.
 
-Le `springdoc-openapi-maven-plugin` s'exécute pendant la phase `verify` en récupérant la spec OpenAPI sur
-`/v3/api-docs`. Il faut donc préalablement démarrer l'application (utilisation du `spring-boot-maven-plugin`). Les
-clients OIDC ayant besoin de récupérer la configuration OpenID du provider, nous utiliserons le `wiremock-maven-plugin`
-pour en exposer une.
+Le `springdoc-openapi-maven-plugin` s'exécute pendant la phase `verify` en récupérant la spec OpenAPI sur `/v3/api-docs`. Il faut donc préalablement démarrer l'application (utilisation du `spring-boot-maven-plugin`). Les clients OIDC ayant besoin de récupérer la configuration OpenID du provider, nous utiliserons le `wiremock-maven-plugin` pour en exposer une.
 
 ```xml
-
 <profile>
     <id>openapi</id>
     <properties>
@@ -263,13 +296,11 @@ pour en exposer une.
 
 ### 1.5. Génération de code client à partir de spec OpenAPI
 
-Le `openapi-generator-maven-plugin` permet de générer beaucoup de code à partir d'un spec OpenAPI. Ici nous nous
-intéressons aux interfaces `@HttpExchange` dont Spring sait générer des implémentations.
+Le `openapi-generator-maven-plugin` permet de générer beaucoup de code à partir d'un spec OpenAPI. Ici nous nous intéressons aux interfaces `@HttpExchange` dont Spring sait générer des implémentations.
 
 Voici son management dans le POM parent :
 
 ```xml
-
 <plugin>
     <groupId>org.openapitools</groupId>
     <artifactId>openapi-generator-maven-plugin</artifactId>
@@ -302,7 +333,6 @@ Voici son management dans le POM parent :
 Il faut ensuite l'exécuter dans chaque module avec :
 
 ```xml
-
 <plugin>
     <groupId>org.openapitools</groupId>
     <artifactId>openapi-generator-maven-plugin</artifactId>
@@ -332,7 +362,6 @@ La spec exposée par Keycloak étant imparfaite et le code généré comprenant 
 problèmes de compilation, on applique le `fmt-maven-plugin`:
 
 ```xml
-
 <plugin>
     <groupId>com.spotify.fmt</groupId>
     <artifactId>fmt-maven-plugin</artifactId>
@@ -363,7 +392,6 @@ Par défaut, Maven utilise les ressources de `src/main/resources` et `src/test/r
 de modifier ce comportement dans le `buils`. Par exemple :
 
 ```xml
-
 <resources>
     <resource>
         <directory>src/main/resources</directory>
@@ -378,15 +406,15 @@ de modifier ce comportement dans le `buils`. Par exemple :
 
 Les bases de données relationnelles sont modélisées avec des entités (tables) et des relations (clefs étrangères).
 
-Le code Java comprend des relations qui ne sont pas modélisables directement avec une représentation entité-relation (
+Le Modèle object de Java n'est pas modélisables directement avec une représentation entité-relation (
 héritage, relations bi-directionnelles, ...)
 
 La JPA (Java Persistence API) permet de faire le pont entre les deux représentations (classes VS entité-relation). Il
 permet l'ORM (Object-Relational Mapping).
 
-### 2.1. `@Entity`
-
 **La Javadoc JPA est excellente et contient de très nombreux exemples.** Il faut la consulter sans retenue.
+
+### 2.1. `@Entity`
 
 Une entité est une classe mappée sur une table en base de donnée.
 
@@ -397,7 +425,6 @@ Elle doit avoir un constructeur par défaut (sans paramètre) dont la visibilit�
 Il est possible (et souvent recommandé) de limiter les méthodes `equals` et `hasCode` à la (ou aux) propriété(s) `@Id`.
 
 ```java
-
 @Entity
 @Table(name = "cards")
 @Data
@@ -441,15 +468,14 @@ private Long id;
 
 ### 2.3. Relations
 
-Une propriété ayant pour type une autre entité doit être décorées avec `OneToOne` ou `@ManyToOne`.
+Une propriété ayant pour type une autre entité doit être décorées avec `@OneToOne` ou `@ManyToOne`.
 
-Une propriété ayant pour type une collection d'entités doit être décorées avec `OneToMany` ou `@ManyToMany`.
+Une propriété ayant pour type une collection d'entités doit être décorées avec `@OneToMany` ou `@ManyToMany`.
 
-En cas de relation bidirectionnelle, il faut indiquer un `mappedBy` du côté _"faible"_ (`OneToMany` ou un des deux
-`OneToOne`).
+En cas de relation bidirectionnelle, il faut indiquer un `mappedBy` du côté _"faible"_ (`@OneToMany` ou un des deux
+`@OneToOne`).
 
-`@Embeddable` indique qu'une classe n'est pas mappée sur une table.
-A la place, ses propriétés sont ajoutées aux colonnes de la table des entités dans lesquelles elle est `@Embedded`.
+`@Embeddable` indique qu'une classe n'est pas mappée sur une table. Ses propriétés sont ajoutées aux colonnes de la table des entités dans lesquelles elle est `@Embedded`.
 
 ### 2.4. Conversion de types
 
@@ -457,7 +483,6 @@ Lorsqu'un objet est mappé sur un type simple en base, il possible définir un `
 implémente `AttributeConverter<E, C>`.
 
 ```java
-
 @Converter(autoApply = true)
 public class InstantStringAttributeConverter implements AttributeConverter<Instant, String> {
 
@@ -501,12 +526,6 @@ public interface CardPaymentJpaRepository extends JpaRepository<CardPayment, Str
 }
 ```
 
-Cet exemple fonctionne dans les deux cas suivants:
-
-- `CardPayment` a une propriété `cardNumber` de type `String`
-- `CardPayment` a une propriété `card` d'un type complexe (par exemple `Card`) qui a lui même une propriété `number` de
-  type `String`
-
 ### 2.7. Spécifications JPA
 
 Lorsque la logique de filtrage devient trop complexe (notamment lors de l'application de critères optionnels), les _"
@@ -525,10 +544,10 @@ Les opérations d'accès aux données en base se font à l'intérieur d'une tran
 
 On utilise `@Transactionnal` pour déclarer qu'une méthode doit être exécutée à l'intérieur d'une transaction.
 
-Les relations (`OneToMany`, `OneToOne`, etc.) étant _lazy_ par défaut, il faut parcourrir le graph d'objet à l'intérieur
+Les relations (`@OneToMany`, `@OneToOne`, etc.) étant _lazy_ par défaut, il faut parcourir le graph d'objet à l'intérieur
 de la transaction dans laquelle la racine a été récupérée.
 
-Le plus simple est généralement de décorer les méthodes de `@Controller` avec `@Transactionnal`.
+Le plus simple est généralement de décorer les méthodes de `@Controller` avec `@Transactionnal`, mais la logique métier demande parfois plus de finesse (différentes méthode exécutées dans des transactions différentes pour que certaines soient `commit` alors que d'autre sont `rollback`).
 
 ### 2.9. Mise en cache
 
@@ -538,15 +557,12 @@ cache lors d'accès en écriture, ce qui implique :
 - avoir la maîtrise totale de ces écritures
 - utiliser un cache distribué (Redis ?) en environnement distribué
 
-Je conseille de créer un cache par type de donnée à mettre en cache et par index. 
-Par exemple, si on souhaite accéder à des instances de `Bidule` 
-soit par la valeur de leur propriété `truc`, soit par celle de lor propriété `machin`, 
-on créera deux caches: `bidulesParTruc` et `bidulesParMachin`.
+Je conseille de créer un cache par type de donnée et par index. 
+Par exemple, si on souhaite accéder à des instances de `Bidule` soit par la valeur de leur propriété `truc`, soit par celle de lor propriété `machin`, on créera deux caches: `bidulesParTruc` et `bidulesParMachin`.
 
 Pour activer la mise en cache dans l'application :
 
 ```java
-
 @Configuration
 @EnableCaching
 public class CacheConfiguration {
@@ -578,21 +594,292 @@ Pour indiquer qu'une opération en écriture nécessite des opérations de mise 
         evict = @CacheEvict(cacheNames = "bidulesParMachin", key = "#bidule.machin"))
 ```
 
-Lorsqu'une classe expose une interface publique plus importante que nécessaire celà peut grandement compliquer la
-gestion des caches. Je recommande dans ce cas de faire un proxy n'exposant que le strict nécessaire et gérer les caches
-à
-ce niveau.
+Lorsqu'une classe expose une interface publique plus importante que nécessaire cela peut grandement compliquer la gestion des caches. Je recommande dans ce cas de faire un proxy n'exposant que le strict nécessaire et gérer les caches à ce niveau.
 
-## 3. Web avec Spring Boot
+## 3. Services REST WebMvc avec Spring Boot
 
-### 3.1. injection de dépendances
+Nous nous intéressons ici aux `@RestController` qui forment la façade visible d'une API REST.
 
-### 3.2. convertisseurs automatiques de Spring
+### 3.1. Injection de dépendances
 
-### 3.3. validation des entrées
+Un `@RestController` est un singleton managé par Spring. On peut donc lui faire injecter tout autre `@Component` (`@Repository`, `@Service`, ...). Je recommande de faire l'injection par le biais du constructeur. Par exemple, pour l'`AccountController` qui a besoin de collaborer avec les `AccountRepository` pour manipuler les comptes en base de donnée, `AccountMapper` pour faire des conversions entre DTOs et objets métier et `CustomersApi` pour dialoguer avec le `customer-service` :
 
-### 3.4. gestion des exceptions
+```java
+@RestController
+public class AccountController {
+  private final AccountRepository accountRepo;
+  private final AccountMapper accountMapper;
+  private final CustomersApi customersApi;
 
-### 3.5. génération de la documentation OpenAPI
+  // Peut être remplacé par @RequiredArgsContructor de Lombok
+  public AccountController(AccountRepository accountRepo, AccountMapper accountMapper, CustomersApi customersApi) {
+    this.accountRepo = accountRepo;
+    this.accountMapper = accountMapper;
+    this.customersApi = customersApi;
+  }
+}
+```
 
-### 3.6. appels de services REST externes
+Spring s'occupe d'instancier les `@Bean` et `@Component` nécessaires dans le bon ordre.
+
+Les composants fournis par le biais de l'injection de dépendances peuvent être facilement remplacés pendant les tests (`@MockitoBean`).
+
+### 3.2. `@RequestMapping`
+
+Avec les signatures et types de retour de méthode, `@RequestMapping` participe  à la définition d'un endpoint. On utilise préférentiellement `@RequestMapping` au niveau de la classe pour les définitions communes à toutes les méthodes et ses spécialisation `@GetMapping`, `@PostMapping`, `@PutMapping`, `@DeleteMapping` et `@PatchMapping` sur chaque méthode.
+
+La signature et le type de retour de la méthode donne les informations sur les entrées / sortie et le `@RequestMapping` le reste, notamment :
+- le verbe HTTP à employer
+- le path du endpoint (attention, si le `@RequestMapping` au niveau de classe et un spécialisation au niveau de la méthode portent tous deux un path, c'est la concaténation qui est appliquée)
+- les `MediaType` acceptés en entrée et ceux supportés en retour
+
+Le bon emploi des verbes HTTP est important pour la sécurité Web : `GET` ne doit être employé que pour des opérations qui ne changent pas l'état du système.
+
+Pour rappel :
+- `GET` est attendu pour les opérations en lecture et ne doit pas porter de _body_. Par exemple, les critères de filtre devraient être portés par des _request parameters_. Il est attendu que la réponse à un `GET` soit en status `200 Ok` et ait un _body_.
+- `POST` est attendu pour une création de ressource et devrait porter un _body_ avec les informations sur la ressource à créer. La réponse devrait être en status `201 Created`, ne pas avoir de _body_ et porter un header `Location` pointant vers la ressource créée.
+- `PUT` est attendu pour une modification de ressource existante et devrait porter un _body_ avec les informations de mise à jour. Il attendu une réponse dans le champ `2xx` sans _body_ (par exemple `202 Accepted` ou `204 No-content`).
+- `DELETE` est attendu pour supprimer une ressource et ne doit pas porter de _body_ (l'URL doit suffire à identifier la ressource à supprimer).. Il attendu une réponse dans le champ `2xx` sans _body_ (par exemple `202 Accepted` ou `204 No-content`).
+- `PATCH` est attendu pour la mise à jour partielle d'un ressource (le propriétés manquantes du _body_ sont ignorées). Elle est peu usitée et parfois mal supportée par les clients, donc à éviter. 
+
+Une différence notable entre `POST` et `PUT` est que lors de la répétition d'une requête `PUT` sur la même resource et avec le même _body_, seule la première requête devrait avoir un effet, alors que la répétition d'un `POST` doit créer autant de ressources (ou tenter de le faire).
+
+### 3.3. Convertisseurs automatiques de Spring
+
+Au niveau du protocole HTTP, toutes les valeurs sont des `String`. 
+
+Spring Web comporte de nombreux mécanismes de (dé)sérialisation, notamment :
+- JSON (avec Jackson) : convertie les `@RequestBody` et `@ResponseBody`
+- le `FormatterRegistry` : enregistre des convertisseurs à appliquer sur les `@PathVariable` et `@RequestParam`.
+
+Les `JpaRepository<E, ID>` pour les `@Entity` ayant `Integer`, `Long` ou `String` comme type sont enregistrés dans le `FormatterRegistry`. 
+
+En considérant que `MyEntity` a un `@Id Long id` et qu'il existe un `JpaRepository<MyEntity, Long>`, alors un requête `GET /resources/42` est routée sur la fonction suivante où `entity` est l'entité avec l'identifiant `42` : 
+
+```java
+@GetMapping(/resources/{resourceId})
+Resource getE(@PathVariable("resourceId") MyEntity entity));
+```
+
+Il est possible d'ajouter des converters dans le registry en fournissant une `@Configuration` qui implémente `WebMvcConfigurer`. Par exemple, pour ajouter une conversion automatique d'un compte depuis son `Iban` (`AccountRepository extends JpaRepository<Account, Iban>`):
+
+```java
+@Configuration
+public class WebConfiguration implements WebMvcConfigurer {
+  @Autowired(required = false)
+  AccountRepository accountRepo;
+
+  @Override
+  public void addFormatters(FormatterRegistry registry) {
+    registry.addConverter(new StringAccountConverter(accountRepo));
+  }
+
+  @RequiredArgsConstructor
+  static class StringAccountConverter implements Converter<String, Account> {
+    private final AccountRepository accountRepo;
+
+    @Override
+    public @Nullable Account convert(@Nullable String source) {
+      return source == null ? null
+          : accountRepo.findById(Iban.of(source))
+              .orElseThrow(
+                  () -> new ResponseStatusException(
+                      HttpStatus.NOT_FOUND,
+                      "Account %s is not known by the account-service".formatted(source)));
+    }
+  }
+}
+```
+
+### 3.4. Validation des entrées
+
+L'utilisation de `jakarta.validation` permet de détecter au plus tôt les requêtes avec des données invalides. Lorsqu'un paramètre ou attribut ne respecte pas les contraintes de validation, une `MethodArgumentNotValidException` ou `ConstraintViolationException` est levée.
+
+```java
+public record MoneyTransferRequest(
+    @NotNull @IbanString String sourceIban,
+    @NotNull @IbanString String destinationIban,
+    @NotNull @Min(1) Long amount,
+    @NotNull @CurrencyIso3 String currency,
+    @NotEmpty @Size(min = 3, max = 256) String label) {
+}
+```
+```java
+@PostMapping(BASE_PATH)
+public ResponseEntity<Void> transferMoneyBetweenAccounts(@RequestBody @Valid MoneyTransferRequest dto);
+```
+
+Il est possible de créer ses propres annotations de validation. De telles annotations doivent faire référence à un `ConstraintValidator` :
+
+```java
+@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.RECORD_COMPONENT})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = CurrencyIso3.IbanConstraintValidator.class)
+public @interface CurrencyIso3 {
+  String message() default "Doesn't look like an ISO 4217 currency code";
+
+  Class<?>[] groups() default {};
+
+  Class<? extends Payload>[] payload() default {};
+
+  public static class IbanConstraintValidator implements ConstraintValidator<CurrencyIso3, String> {
+    @SuppressWarnings("null")
+    private static final Pattern ISO_4217 = Pattern.compile("^[A-Z]{3}$");
+
+    @Override
+    public boolean isValid(@Nullable String value, @Nullable ConstraintValidatorContext context) {
+      if (value == null) {
+        return true;
+      }
+      return ISO_4217.matcher(value).matches();
+    }
+
+  }
+}
+```
+
+Je recommande de laisser passer `null` et de combiner les annotations avec `@NotNull` pour rendre un paramètre / attribut obligatoire.
+
+### 3.5. Gestion des exceptions
+
+Lorsqu'une erreur est détectée (technique ou métier), une exception est levée. 
+
+Les exceptions sont interceptées dans deux cas principaux :
+- on souhaite la contourner (il y a un _plan B_ pour continuer le traitement)
+- on souhaite la mapper vers un autre type d'exception (exception technique traduite en exception métier)
+
+Les `@ExceptionHandler` déclarés dans un `@RestControllerAdvice` servent intercepter des exceptions et à définir la réponse à envoyer :
+```java
+@RestControllerAdvice
+public class CommonExceptionsHandler {
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+    final var detail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    return ResponseEntity.status(detail.getStatus()).body(detail);
+  }
+}
+```
+
+Un raccourci lorsque créer et intercepter une exception métier n'a pas d'intérêt intrinsèque est de soulever une `ErrorResponseException` pour laquelle Spring fournit déjà un `@ExceptionHandler`.
+
+### 3.6. Génération de la documentation OpenAPI
+
+OpenAPI est un standard largement adopté issu de Swagger. Il permet notamment :
+- aux développeurs de visualiser les caractéristiques d'une API REST
+- aux clients de générer du code pour consommer l'API
+
+`springdoc-openapi` permet de générer le plus gros de la spec à partir du code source en se basant sur les `@RequestMapping` et les signatures de méthodes. Il a quelques limitations auxquelles il faut pallier avec les annotation Swagger:
+- il ne prend pas en compte le `FormatterRegistry`. Lorsqu'une `@PathVariable` ou un `@RequestParam` utilise une conversion implicite. Il faut utiliser `@Parameter` pour indiquer le format attendu dans la requête HTTP.
+```java
+@GetMapping(TRANSFER_PATH)
+public MoneyTransferResponse getMoneyTransfer(
+    @Parameter(schema = @Schema(type = "integer"), description = "The ID of the money transfer to retrieve")
+    @PathVariable(name = TRANSFER_ID_PLACEHOLDER) MoneyTransfer transfer);
+```
+
+- il ne prend pas en compte nativement les `@RequestParam` implicites (plusieurs request-params encapsulés dans un pseudo DTO). Il faut utiliser `@ParameterObject`.
+```java
+@GetMapping(BASE_PATH)
+public PagedModel<MoneyTransferResponse> listMoneyTransfers(
+    // les propriétés de MoneyTransferFilterRequest et de Pageable sont attendues en tant que request-param individuels dans l'URL
+    @Nullable @Valid @ParameterObject MoneyTransferFilterRequest dto,
+    @ParameterObject Pageable pageable);
+```
+
+### 3.7. Appels de services REST externes
+
+Le client REST actuellement recommandé pour les servlets est `RestClient`. `RestTemplate` est en mode maintenance et `WebClient` est plus adapté aux application réactives.
+
+Il est possible de l'utiliser directement, mais Spring sait générer un client à partir d'une interface `@HttpExchange` et d'un `RestClient`. Spring Cloud proposait `@FeignClient` dans le même sprit, mais le projet est passé en mode maintenance depuis l'apparition des proxy d'`HttpExchange` générés.
+
+Dans ce projet, nous générons les interfaces `@HttpExchange` à partir de specs OpenAPI (en utilisant l'`openapi-generator-maven-plugin`). Il est toutefois possible de déclarer ces interfaces manuellement, ce qui peut être utile lorsque l'API à consommer n'expose pas de spec OpenAPI.
+
+Nous utilisons aussi [`spring-addons-starter-rest`](https://github.com/ch4mpy/spring-addons/tree/master/spring-addons-starter-rest) pour auto-configurer des instances de `RestClient` avec l'`application.yml`.
+
+```java
+@Configuration
+public class RestConfiguration {
+
+  @Bean
+  // CustomersApi est une interface `@HttpExchange` générée à partir de la spec OpenAPI du customer-service
+  // customerServiceClient est instancié par spring-addons à partir des propriétés customer-service-client ci-dessous
+  CustomersApi customersApi(RestClient customerServiceClient) throws Exception {
+    return new RestClientHttpExchangeProxyFactoryBean<>(CustomersApi.class, customerServiceClient)
+        .getObject();
+  }
+}
+```
+```yml
+com:
+  c4-soft:
+    springaddons:
+      rest:
+        client:
+          customer-service-client:
+            base-url: ${reverse-proxy-uri}/gateway/m2m
+            ssl-bundle: self-signed
+            headers:
+              Accept: 
+                - application/json
+                - application/problem+json
+            authorization:
+              oauth2:
+                oauth2-registration-id: account-service
+```
+
+Lors d'une erreur pendant l'appel REST, `RestClient` soulève une `HttpClientErrorException`. Il est fortement recommandé d'intercepter de telles erreurs et de les translater vers quelque chose ajoutant des logs et du contexte métier.
+
+```java
+try {
+    customersApi.getCustomer(dto.customerId());
+} catch (HttpClientErrorException e) {
+    if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+    log.warn("Rejecting account {} creation for unknown customer {}", iban, dto.customerId());
+    throw new ResourceNotFoundException(
+        "Customer %s is not known by the customer-service".formatted(dto.iban()));
+    } else {
+    log
+        .error(
+            "Unexpected error while checking customer {} existence in customer-service",
+            dto.customerId(),
+            e);
+    }
+    throw new ResponseStatusException(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "Unexpected error while checking customer existence",
+        e);
+}
+```
+
+### 3.8. Logs
+
+Les logs sont la première source d'audit de l'application. Il est important de loguer suffisamment et au bon niveau: `error`, `warn`, `info`, `debug` ou `trace`.
+
+`@Slf4j` de Lombok permet de disposer d'un logger nommé `log`.
+
+Avec Spring Boot 4, `spring-boot-starter-opentelemetry` et `opentelemetry-logback-appender-1.0` permettent de pousser les logs vers Loki avec relativement peut de conf :
+- `/src/main/resources/logback-spring.xml`
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="OTEL"/>
+    </root>
+</configuration>
+```
+- `/src/main/resources/application.yml`
+```yml
+management:
+  opentelemetry:
+    logging:
+      export:
+        otlp:
+          endpoint: http://host.docker.internal:4318/v1/logs
+```

@@ -19,7 +19,7 @@
         "ceilings_edit",
         "create",
         "create_any",
-        "card-status_edit",
+        "status_edit",
         "read_any"
       ]
     },

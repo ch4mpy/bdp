@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>nc.sgcb.labs</groupId>
@@ -16,7 +16,7 @@
         to downstream resource server(s) with the TokenRelay filter
     </description>
     <packaging>jar</packaging>
-    <url/>
+    <url />
 
     <licenses>
         <license>
@@ -35,10 +35,10 @@
     </developers>
 
     <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
+        <connection />
+        <developerConnection />
+        <tag />
+        <url />
     </scm>
 
     <properties>
@@ -72,6 +72,12 @@
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>nc.sgcb.labs</groupId>
+            <artifactId>sgcb-starter-service-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -235,7 +241,7 @@
                         <artifactId>springdoc-openapi-maven-plugin</artifactId>
                         <configuration>
                             <apiDocsUrl>
-                                ${integration-tests.scheme}://${integration-tests.hostname}:${integration-tests.port}/tenant1/bff/v3/api-docs
+                                ${integration-tests.scheme}://${integration-tests.hostname}:${integration-tests.port}/gateway/v3/api-docs
                             </apiDocsUrl>
                         </configuration>
                         <executions>

@@ -11,7 +11,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import nc.sgcb.labs.customer.domain.Beneficiary;
 import nc.sgcb.labs.customer.domain.Customer;
 import nc.sgcb.labs.customer.jpa.BeneficiaryRepository;
-import nc.sgcb.labs.customer.jpa.CustomerRepository;
+import nc.sgcb.labs.customer.keycloak.CustomerRepository;
 
 @TestConfiguration
 public class SpringDataWebConvertersTestConfiguration {

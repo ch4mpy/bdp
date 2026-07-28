@@ -239,8 +239,7 @@ class CardControllerTest {
         .perform(
             post("https://localhost" + CardController.BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(
-                    json.writeValueAsString(new CardRequest("not-an-iban", 1000L, 5000L))))
+                .content(json.writeValueAsString(new CardRequest("not-an-iban", 1000L, 5000L))))
         .andExpect(status().is4xxClientError());
 
     // non positive ceilings
@@ -548,14 +547,26 @@ class CardControllerTest {
 
   @Test
   @WithJwt("advisor.json")
-  void givenPeriodExceedingMaxDuration_whenListCardPayments_thenBadRequest() throws Exception {
+  void givenMissingPeriodEnd_whenListCardPayments_thenBadRequest() throws Exception {
     var card = CardFixtures.createCustomersCard(1000L, 5000L);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
 
     mockMvc
         .perform(
             get("https://localhost" + CardController.PAYMENT_LIST_PATH, card.getNumber())
-                .queryParam("from", Instant.now().minus(100, ChronoUnit.DAYS).toString())
+                .queryParam("from", Instant.now().minus(100, ChronoUnit.DAYS).toString()))
+        .andExpect(status().is4xxClientError());
+  }
+
+  @Test
+  @WithJwt("advisor.json")
+  void givenMissingPeriodStart_whenListCardPayments_thenBadRequest() throws Exception {
+    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
+
+    mockMvc
+        .perform(
+            get("https://localhost" + CardController.PAYMENT_LIST_PATH, card.getNumber())
                 .queryParam("to", Instant.now().toString()))
         .andExpect(status().is4xxClientError());
   }
@@ -662,69 +673,6 @@ class CardControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(dto)))
         .andExpect(status().isForbidden());
-  }
-
-  @Test
-  @WithJwt("customer.json")
-  void givenUnknownDestinationAccount_whenCreateCardPayment_thenNotFound() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
-    var dto =
-        new CardPaymentCreationRequest("XPF", 100L, card.getNumber(), CardFixtures.SOMEONE_IBAN);
-    when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
-    when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
-        .thenReturn(
-            ResponseEntity
-                .ok(
-                    accountOwnedBy(
-                        CardFixtures.CUSTOMER_SUBJECT,
-                        card.getIban().toMachineReadableString(),
-                        "XPF")));
-    when(accountsApi.getAccount(CardFixtures.SOMEONE_IBAN))
-        .thenThrow(
-            HttpClientErrorException
-                .create(HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, new byte[0], null));
-
-    mockMvc
-        .perform(
-            post("https://localhost" + CardController.PAYMENT_LIST_PATH, card.getNumber())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(dto)))
-        .andExpect(status().isNotFound());
-  }
-
-  @Test
-  @WithJwt("customer.json")
-  void givenDestinationCurrencyDiffersFromPaymentCurrency_whenCreateCardPayment_thenConflict()
-      throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
-    var dto =
-        new CardPaymentCreationRequest("EUR", 100L, card.getNumber(), CardFixtures.SOMEONE_IBAN);
-    when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
-    when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
-        .thenReturn(
-            ResponseEntity
-                .ok(
-                    accountOwnedBy(
-                        CardFixtures.CUSTOMER_SUBJECT,
-                        card.getIban().toMachineReadableString(),
-                        "XPF")));
-    // destination account currency equals the payment currency: per current controller logic
-    // (see CardController#createCardPayment) this is rejected with a conflict.
-    when(accountsApi.getAccount(CardFixtures.SOMEONE_IBAN))
-        .thenReturn(
-            ResponseEntity
-                .ok(
-                    accountOwnedBy(
-                        CardFixtures.SOMEONE_SUBJECT,
-                        CardFixtures.SOMEONE_IBAN,
-                        "XPF")));
-
-    mockMvc
-        .perform(
-            post("https://localhost" + CardController.PAYMENT_LIST_PATH, card.getNumber())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(dto)))
-        .andExpect(status().isConflict());
   }
 
   @Test

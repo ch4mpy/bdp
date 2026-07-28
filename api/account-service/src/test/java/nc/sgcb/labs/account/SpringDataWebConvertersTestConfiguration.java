@@ -30,10 +30,10 @@ public class SpringDataWebConvertersTestConfiguration {
       public void addFormatters(FormatterRegistry registry) {
         registry
             .addConverter(
-                Iban.class,
+                String.class,
                 Account.class,
                 iban -> accountRepo
-                    .flatMap(r -> iban == null ? Optional.empty() : r.findById(iban))
+                    .flatMap(r -> iban == null ? Optional.empty() : r.findById(Iban.of(iban)))
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
 
         registry

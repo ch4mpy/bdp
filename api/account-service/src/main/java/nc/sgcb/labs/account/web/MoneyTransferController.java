@@ -34,7 +34,8 @@ import nc.sgcb.labs.commons.domain.Iban;
 
 @Tag(name = "MoneyTransfers")
 @RestController
-@RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+@RequestMapping(
+    produces = {MediaType.APPLICATION_PROBLEM_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 @Observed
 @Slf4j
@@ -82,7 +83,9 @@ public class MoneyTransferController {
    */
   @Transactional
   @PostMapping(BASE_PATH)
-  @PreAuthorize("hasAuthority('account.transfer')")
+  // Off course, in a real world being the owner of the destination account would be enough to
+  // transfer money to it...
+  @PreAuthorize("hasAuthority('account.transfer') or @ac.ownsAccount(#dto.sourceIban) or @ac.ownsAccount(#dto.destinationIban)")
   public ResponseEntity<Void> transferMoneyBetweenAccounts(
       @RequestBody @Valid MoneyTransferRequest dto,
       Authentication auth) {

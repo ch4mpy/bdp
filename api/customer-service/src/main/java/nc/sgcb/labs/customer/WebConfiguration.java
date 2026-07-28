@@ -1,4 +1,4 @@
-package nc.sgcb.labs.account;
+package nc.sgcb.labs.customer;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,29 +9,28 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import lombok.RequiredArgsConstructor;
-import nc.sgcb.labs.account.domain.Account;
-import nc.sgcb.labs.account.jpa.AccountRepository;
-import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.customer.domain.Customer;
+import nc.sgcb.labs.customer.keycloak.CustomerRepository;
 
 @Configuration
 public class WebConfiguration implements WebMvcConfigurer {
   @Autowired(required = false)
-  AccountRepository accountRepo;
+  CustomerRepository customerRepo;
 
   @Override
   public void addFormatters(FormatterRegistry registry) {
-    registry.addConverter(new StringAccountConverter(accountRepo));
+    registry.addConverter(new StringCustomerConverter(customerRepo));
   }
 
   @RequiredArgsConstructor
-  static class StringAccountConverter implements Converter<String, Account> {
-    private final AccountRepository accountRepo;
+  static class StringCustomerConverter implements Converter<String, Customer> {
+    private final CustomerRepository customerRepo;
 
     @Override
-    public @Nullable Account convert(@Nullable String source) {
+    public @Nullable Customer convert(@Nullable String source) {
       return source == null ? null
-          : accountRepo
-              .findById(Iban.of(source))
+          : customerRepo
+              .findById(source)
               .orElseThrow(
                   () -> new ResponseStatusException(
                       HttpStatus.NOT_FOUND,

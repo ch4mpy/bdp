@@ -6,6 +6,7 @@ card-service-client-secret: secret
 
 server:
   port: 8082
+  shutdown: immediate
   ssl:
     enabled: true
     bundle: self-signed
@@ -67,7 +68,9 @@ com:
             base-url: ${reverse-proxy-uri}/gateway/m2m
             ssl-bundle: self-signed
             headers:
-              Accept: application/problem+json
+              Accept: 
+                - application/json
+                - application/problem+json
             authorization:
               oauth2:
                 oauth2-registration-id: card-service

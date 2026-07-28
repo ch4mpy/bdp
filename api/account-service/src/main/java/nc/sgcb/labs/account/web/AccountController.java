@@ -33,7 +33,8 @@ import nc.sgcb.labs.customer.api.CustomersApi;
 
 @Tag(name = "Accounts")
 @RestController
-@RequestMapping(produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+@RequestMapping(
+    produces = {MediaType.APPLICATION_PROBLEM_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 @Observed
 @Slf4j
@@ -102,7 +103,10 @@ public class AccountController {
                 dto.customerId(),
                 e);
       }
-      throw e;
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Unexpected error while checking customer existence",
+          e);
     }
 
     // Create the new account

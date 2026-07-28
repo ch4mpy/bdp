@@ -1,6 +1,5 @@
 package nc.sgcb.labs.card.payment;
 
-import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +21,7 @@ import nc.sgcb.labs.card.payment.jpa.CardRepository;
 @Configuration
 public class WebConfiguration implements WebMvcConfigurer {
   @Autowired(required = false)
-  Optional<CardRepository> cardRepo;
+  CardRepository cardRepo;
 
   @Override
   public void addFormatters(FormatterRegistry registry) {
@@ -31,13 +30,13 @@ public class WebConfiguration implements WebMvcConfigurer {
 
   @RequiredArgsConstructor
   static class StringCardConverter implements Converter<String, Card> {
-    private final Optional<CardRepository> cardRepo;
+    private final CardRepository cardRepo;
 
     @Override
     public @Nullable Card convert(@Nullable String source) {
       return source == null ? null
           : cardRepo
-              .flatMap(r -> r.findByNumber(source))
+              .findByNumber(source)
               .orElseThrow(
                   () -> new ResponseStatusException(
                       HttpStatus.NOT_FOUND,

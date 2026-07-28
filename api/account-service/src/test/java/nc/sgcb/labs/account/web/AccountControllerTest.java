@@ -200,7 +200,7 @@ class AccountControllerTest {
 
   @Test
   @WithJwt("advisor.json")
-  void givenUserIsAdvisor_whenGetAccountWithAnUnknownIban_thenNotFound() throws Exception {
+  void givenAnExternalIban_whenGetAccount_thenNotFound() throws Exception {
     when(accountRepo.findById(any(Iban.class))).thenReturn(Optional.empty());
 
     mockMvc

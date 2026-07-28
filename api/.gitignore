@@ -31,6 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### duplicate .sdkmanrc due to https://github.com/sdkman/sdkman-cli-native/issues/398
-.sdkmanrc
