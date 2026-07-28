@@ -85,7 +85,7 @@ public class CommonExceptionsHandler {
     return ResponseEntity.status(problem.getStatus()).body(problem);
   }
 
-  @ExceptionHandler({InternalServerErrorException.class, HttpClientErrorException.class})
+  @ExceptionHandler({HttpClientErrorException.class})
   @ApiResponse(responseCode = "500",
       content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
           schema = @Schema(implementation = ProblemDetail.class))})

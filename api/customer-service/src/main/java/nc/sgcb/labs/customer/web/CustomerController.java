@@ -33,7 +33,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.commons.domain.Iban;
-import nc.sgcb.labs.commons.exception.InternalServerErrorException;
 import nc.sgcb.labs.commons.exception.ResourceNotFoundException;
 import nc.sgcb.labs.customer.domain.Beneficiary;
 import nc.sgcb.labs.customer.domain.Customer;
@@ -42,7 +41,8 @@ import nc.sgcb.labs.customer.keycloak.CustomerRepository;
 
 @Tag(name = "Customers")
 @RestController
-@RequestMapping(produces = {MediaType.APPLICATION_PROBLEM_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE})
+@RequestMapping(
+    produces = {MediaType.APPLICATION_PROBLEM_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 @Observed
 @Slf4j
@@ -136,7 +136,6 @@ public class CustomerController {
    * @param customer
    * @param dto Neither IBAN nor label can be used for this customer
    * @return a response with a Location header pointing to the created beneficiary
-   * @throws InternalServerErrorException
    */
   @Transactional(readOnly = false)
   @PostMapping(path = BENEFICIARIES_PATH)
@@ -146,7 +145,7 @@ public class CustomerController {
           description = "The ID of the customer to retrieve")
       @PathVariable(CUSTOMER_ID_PLACEHOLDER) Customer customer,
       @RequestBody @Valid BeneficiaryRequest dto,
-      Authentication auth) throws InternalServerErrorException {
+      Authentication auth) {
     final var iban = Iban.of(dto.iban());
     final var label = dto.label().trim();
     final var existingBeneficiaries = beneficiaryRepo.findByCustomerId(customer.getId());

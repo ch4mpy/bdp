@@ -42,7 +42,6 @@ import nc.sgcb.labs.card.payment.jpa.CardRepository;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.domain.Period;
-import nc.sgcb.labs.commons.exception.InternalServerErrorException;
 import nc.sgcb.labs.commons.exception.ResourceNotFoundException;
 import nc.sgcb.labs.commons.validation.ValidPeriod;
 
@@ -257,7 +256,6 @@ public class CardController {
    * @return
    * @throws ResourceNotFoundException if the destination account is not known by the account
    *         service
-   * @throws InternalServerErrorException
    */
   @PostMapping(path = PAYMENT_LIST_PATH)
   @PreAuthorize("#card.isActive() && @ac.ownsAccount(#card.getIban().toMachineReadableString())")
@@ -265,8 +263,7 @@ public class CardController {
       @Parameter(schema = @Schema(type = "string",
           description = "The number of the card to create a payment with"))
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
-      @RequestBody @Valid CardPaymentCreationRequest dto)
-      throws ResourceNotFoundException, InternalServerErrorException {
+      @RequestBody @Valid CardPaymentCreationRequest dto) throws ResourceNotFoundException {
     // Assert that the destination account is known by the account service
     try {
       log.debug("Retrieving account {} from the account service", dto.destinationIban());
@@ -376,7 +373,7 @@ public class CardController {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
-  CardPayment transferMoneyAndAccept(CardPayment payment) throws InternalServerErrorException {
+  CardPayment transferMoneyAndAccept(CardPayment payment) {
     try {
       var body = new MoneyTransferRequest()
           .amount(payment.getAmount().getDigits())
@@ -397,8 +394,10 @@ public class CardController {
               payment.getCard().getNumber(),
               payment.getDestinationIban(),
               e.getMessage());
-      throw new InternalServerErrorException(
-          "Error while transferring money: %s".formatted(e.getMessage()));
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Error while transferring money: %s".formatted(e.getMessage()),
+          e);
     }
     log
         .debug(
