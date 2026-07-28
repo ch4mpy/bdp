@@ -49,6 +49,12 @@ git submodule init && git submodule update
 cd frontend && npm i && npm run api && cd ..
 ```
 
+Les services Docker :
+- https://host.docker.internal/ui/ le frontend React (`advisor`/`secret`)
+- https://host.docker.internal/auth/admin/master/console/#/labs Keycloak (`admin`/`secret`)
+- https://host.docker.internal/grafana
+- https://host.docker.internal/mailpit
+
 Dans [Keycloak](https://host.docker.internal/auth/admin/master/console/#/labs/realm-settings/email), éditer le mot de passe SMTP avec la valeur de `secrets/mail/password.txt`.
 
 Pour démarrer le front depuis le répertoire `frontend`:
