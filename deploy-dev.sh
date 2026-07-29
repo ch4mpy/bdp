@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+sdk env install
+nvm install --lts
+nvm use
+cd api && mvn install -Popenapi,h2 && cd ..
+git submodule init && git submodule update
+cd frontend && npm i && npm run api && cd ..
+
 source ./build-1-images.sh
 
 export KC_BOOTSTRAP_ADMIN_USERNAME=$(cat ./secrets/keycloak/admin_user.txt)

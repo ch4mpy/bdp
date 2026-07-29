@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/bdp.iml" filepath="$PROJECT_DIR$/.idea/bdp.iml" />
-      <module fileurl="file://$PROJECT_DIR$/api/service-common/service-common.iml" filepath="$PROJECT_DIR$/api/service-common/service-common.iml" />
     </modules>
   </component>
 </project>
