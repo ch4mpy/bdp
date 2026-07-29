@@ -16,8 +16,10 @@ spring:
     name: card-service
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
   profiles:
     active:
       - postgresql

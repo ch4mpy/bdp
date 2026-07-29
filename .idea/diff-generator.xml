@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DiffGenerationConfig">
+    <option name="liquibaseAuthor" value="" />
+    <option name="sourceModelValue" value="customer-service:customer-service" />
+    <option name="targetDbValue" value="9347c301-7ea5-46fe-8f52-f74319734d0f" />
+  </component>
+</project>
