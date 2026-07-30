@@ -1,16 +1,12 @@
 package nc.sgcb.labs.account.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.jpa.IbanStringAttributeConverter;
+
+import java.io.Serializable;
 
 @Entity
 @Table(name = "accounts")
@@ -35,8 +31,10 @@ public class Account {
   @Embedded
   private Amount balance;
 
+
   @Data
-  static class Pk {
+  static class Pk implements Serializable {
+
     @EqualsAndHashCode.Include
     @ToString.Include
     @Convert(converter = IbanStringAttributeConverter.class)
