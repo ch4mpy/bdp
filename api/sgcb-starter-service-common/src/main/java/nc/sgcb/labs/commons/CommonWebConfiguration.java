@@ -13,10 +13,9 @@ import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.domain.IbanStringMapper;
 
 @Configuration
+@RequiredArgsConstructor
 public class CommonWebConfiguration implements WebMvcConfigurer {
-  @Autowired
-  @Setter
-  private IbanStringMapper ibanStringMapper;
+  private final IbanStringMapper ibanStringMapper;
 
   @Override
   public void addFormatters(FormatterRegistry registry) {
@@ -30,14 +29,6 @@ public class CommonWebConfiguration implements WebMvcConfigurer {
     @Override
     public @Nullable Iban convert(@Nullable String source) {
       return ibanStringMapper.map(source);
-    }
-  }
-
-  static class StringLocalDateConverter implements Converter<String, LocalDate> {
-
-    @Override
-    public @Nullable LocalDate convert(@Nullable String source) {
-      return source == null ? null : LocalDate.parse(source);
     }
   }
 }

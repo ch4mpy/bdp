@@ -2,10 +2,13 @@ package nc.sgcb.labs.card.payment.jpa;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
+
+import nc.sgcb.labs.commons.domain.IbanStringMapperImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import nc.sgcb.labs.card.payment.domain.Card;
@@ -15,6 +18,7 @@ import nc.sgcb.labs.commons.domain.Iban;
 
 @DataJpaTest
 @ActiveProfiles("h2")
+@Import({IbanStringMapperImpl.class})
 class CardPaymentRepositoryTest {
 
   @Autowired

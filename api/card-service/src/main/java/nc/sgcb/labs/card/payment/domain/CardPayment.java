@@ -1,15 +1,8 @@
 package nc.sgcb.labs.card.payment.domain;
 
 import java.time.Instant;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
+
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.jpa.IbanStringAttributeConverter;
 
 @Entity
 @Table(name = "payments")
@@ -47,6 +41,7 @@ public class CardPayment {
   private Card card;
 
   @Column(nullable = false)
+  @Convert(converter = IbanStringAttributeConverter.class)
   private Iban destinationIban;
 
   @Column(nullable = false)

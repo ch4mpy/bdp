@@ -5,20 +5,18 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <property name="byte[].type" value="bytea" dbms="postgresql"/>
-    <property name="byte[].type" value="BLOB" dbms="h2"/>
-    <changeSet id="1785311095741-1" author="ch4mp">
+    <changeSet id="1785443484807-1" author="jerome">
         <createSequence incrementBy="1" sequenceName="payment_seq" startValue="1"/>
     </changeSet>
-    <changeSet id="1785311095741-2" author="ch4mp">
+    <changeSet id="1785443484807-2" author="jerome">
         <createSequence incrementBy="50" sequenceName="revinfo_seq" startValue="1"/>
     </changeSet>
-    <changeSet id="1785311095741-3" author="ch4mp">
+    <changeSet id="1785443484807-3" author="jerome">
         <createTable tableName="cards">
             <column name="number" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_cards"/>
             </column>
-            <column name="iban" type="${byte[].type}">
+            <column name="iban" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="active" type="BOOLEAN">
@@ -32,7 +30,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1785311095741-4" author="ch4mp">
+    <changeSet id="1785443484807-4" author="jerome">
         <createTable tableName="payments">
             <column name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_payments"/>
@@ -43,7 +41,7 @@
             <column name="card_number" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="destination_iban" type="${byte[].type}">
+            <column name="destination_iban" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="accepted" type="BOOLEAN">
@@ -57,7 +55,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1785311095741-5" author="ch4mp">
+    <changeSet id="1785443484807-5" author="jerome">
         <createTable tableName="revchanges">
             <column name="rev" type="BIGINT">
                 <constraints nullable="false"/>
@@ -65,7 +63,7 @@
             <column name="entityname" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1785311095741-6" author="ch4mp">
+    <changeSet id="1785443484807-6" author="jerome">
         <createTable tableName="revinfo">
             <column name="rev" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_revinfo"/>
@@ -73,12 +71,12 @@
             <column name="revtstmp" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1785311095741-7" author="ch4mp">
+    <changeSet id="1785443484807-7" author="jerome">
         <addForeignKeyConstraint baseColumnNames="card_number" baseTableName="payments"
                                  constraintName="FK_PAYMENTS_ON_CARD_NUMBER" referencedColumnNames="number"
                                  referencedTableName="cards"/>
     </changeSet>
-    <changeSet id="1785311095741-8" author="ch4mp">
+    <changeSet id="1785443484807-8" author="jerome">
         <addForeignKeyConstraint baseColumnNames="rev" baseTableName="revchanges"
                                  constraintName="fk_revchanges_on_default_tracking_modified_entities_changelog"
                                  referencedColumnNames="rev" referencedTableName="revinfo"/>

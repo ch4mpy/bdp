@@ -1,10 +1,6 @@
 package nc.sgcb.labs.account.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.jpa.IbanStringAttributeConverter;
 
 @Entity
 @Table(name = "accounts")
@@ -23,6 +20,7 @@ import nc.sgcb.labs.commons.domain.Iban;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@IdClass(Account.Pk.class)
 public class Account {
 
   @Id
@@ -36,4 +34,12 @@ public class Account {
 
   @Embedded
   private Amount balance;
+
+  @Data
+  static class Pk {
+    @EqualsAndHashCode.Include
+    @ToString.Include
+    @Convert(converter = IbanStringAttributeConverter.class)
+    private Iban iban;
+  }
 }

@@ -2,9 +2,12 @@ package nc.sgcb.labs.commons.domain;
 
 import java.io.Serializable;
 import java.util.regex.Pattern;
+
+import jakarta.persistence.Convert;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import nc.sgcb.labs.commons.jpa.IbanStringAttributeConverter;
 
 @Data
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)

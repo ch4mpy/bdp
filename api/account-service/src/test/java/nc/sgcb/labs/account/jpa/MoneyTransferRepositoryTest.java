@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
+
+import nc.sgcb.labs.commons.domain.IbanStringMapperImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import nc.sgcb.labs.account.domain.MoneyTransfer;
 import nc.sgcb.labs.account.domain.MoneyTransferFilteringCriteria;
@@ -16,6 +19,7 @@ import nc.sgcb.labs.commons.domain.Iban;
 
 @DataJpaTest
 @ActiveProfiles("h2")
+@Import({IbanStringMapperImpl.class})
 class MoneyTransferRepositoryTest {
 
   @Autowired
