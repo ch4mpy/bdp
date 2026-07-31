@@ -43,8 +43,12 @@ if [ ! -d ./secrets/ssl ]; then
 fi
 if [ ! -f ./secrets/ssl/password.txt ]; then
   if [ -f ~/.ssh/${CN}.crt ]; then
-    echo "Please copy the self-signed SSL certificate password to ./secrets/ssl/password.txt"
-    exit 1
+    if [ -f ~/.ssh/${CN}.password.txt ]; then
+      cp ~/.ssh/${CN}.password.txt ./secrets/ssl/password.txt
+    else
+      echo "Please copy the self-signed SSL certificate password to ./secrets/ssl/password.txt"
+      exit 1
+    fi
   else
     echo $(openssl rand -hex 16) > ./secrets/ssl/password.txt
   fi

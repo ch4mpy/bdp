@@ -5,16 +5,22 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <changeSet id="1785443450006-1" author="jerome">
+    <changeSet id="1785489658825-1" author="ch4mp">
+        <createSequence incrementBy="1" sequenceName="accounts_seq" startValue="1"/>
+    </changeSet>
+    <changeSet id="1785489658825-2" author="ch4mp">
         <createSequence incrementBy="50" sequenceName="revinfo_seq" startValue="1"/>
     </changeSet>
-    <changeSet id="1785443450006-2" author="jerome">
+    <changeSet id="1785489658825-3" author="ch4mp">
         <createSequence incrementBy="1" sequenceName="transfers_seq" startValue="1"/>
     </changeSet>
-    <changeSet id="1785443450006-3" author="jerome">
+    <changeSet id="1785489658825-4" author="ch4mp">
         <createTable tableName="accounts">
-            <column name="iban" type="VARCHAR(255)">
+            <column name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_accounts"/>
+            </column>
+            <column name="iban" type="VARCHAR(255)">
+                <constraints nullable="false"/>
             </column>
             <column name="customer_id" type="VARCHAR(255)">
                 <constraints nullable="false"/>
@@ -27,7 +33,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1785443450006-4" author="jerome">
+    <changeSet id="1785489658825-5" author="ch4mp">
         <createTable tableName="revchanges">
             <column name="rev" type="BIGINT">
                 <constraints nullable="false"/>
@@ -35,7 +41,7 @@
             <column name="entityname" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1785443450006-5" author="jerome">
+    <changeSet id="1785489658825-6" author="ch4mp">
         <createTable tableName="revinfo">
             <column name="rev" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_revinfo"/>
@@ -43,7 +49,7 @@
             <column name="revtstmp" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1785443450006-6" author="jerome">
+    <changeSet id="1785489658825-7" author="ch4mp">
         <createTable tableName="transfers">
             <column name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_transfers"/>
@@ -68,7 +74,10 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1785443450006-7" author="jerome">
+    <changeSet id="1785489658825-8" author="ch4mp">
+        <addUniqueConstraint columnNames="iban" constraintName="uc_accounts_iban" tableName="accounts"/>
+    </changeSet>
+    <changeSet id="1785489658825-9" author="ch4mp">
         <addForeignKeyConstraint baseColumnNames="rev" baseTableName="revchanges"
                                  constraintName="fk_revchanges_on_default_tracking_modified_entities_changelog"
                                  referencedColumnNames="rev" referencedTableName="revinfo"/>

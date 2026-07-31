@@ -1,16 +1,13 @@
 package nc.sgcb.labs.account.jpa;
 
-import java.util.List;
-import java.util.Optional;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.stereotype.Repository;
 import lombok.RequiredArgsConstructor;
 import nc.sgcb.labs.account.domain.Account;
 import nc.sgcb.labs.commons.domain.Iban;
+import org.springframework.cache.annotation.*;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Caching decorator for {@link JpaAccountRepository} to avoid hitting the database too often.
@@ -29,13 +26,13 @@ public class AccountRepository {
   private final JpaAccountRepository jpaRepository;
 
   @Cacheable(cacheNames = ACCOUNT_EXISTS_BY_IBAN_CACHE, key = "#iban")
-  public boolean existsById(Iban iban) {
-    return jpaRepository.existsById(iban);
+  public boolean existsByIban(Iban iban) {
+    return jpaRepository.existsByIban(iban);
   }
 
   @Cacheable(cacheNames = ACCOUNTS_BY_IBAN_CACHE, key = "#iban")
-  public Optional<Account> findById(Iban iban) {
-    return jpaRepository.findById(iban);
+  public Optional<Account> findByIban(Iban iban) {
+    return jpaRepository.findByIban(iban);
   }
 
   @Cacheable(cacheNames = ACCOUNTS_BY_CUSTOMER_ID_CACHE, key = "#customerId")

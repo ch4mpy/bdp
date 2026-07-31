@@ -6,8 +6,6 @@ import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.jpa.IbanStringAttributeConverter;
 
-import java.io.Serializable;
-
 @Entity
 @Table(name = "accounts")
 @Data
@@ -16,10 +14,17 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@IdClass(Account.Pk.class)
 public class Account {
 
   @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "accountSeq")
+  @SequenceGenerator(name = "accountSeq", sequenceName = "accounts_seq", allocationSize = 1)
+  @EqualsAndHashCode.Include
+  @ToString.Include
+  private Long id;
+
+  @Column(unique = true, nullable = false)
+  @Convert(converter = IbanStringAttributeConverter.class)
   @EqualsAndHashCode.Include
   @ToString.Include
   private Iban iban;
@@ -30,14 +35,4 @@ public class Account {
 
   @Embedded
   private Amount balance;
-
-
-  @Data
-  static class Pk implements Serializable {
-
-    @EqualsAndHashCode.Include
-    @ToString.Include
-    @Convert(converter = IbanStringAttributeConverter.class)
-    private Iban iban;
-  }
 }

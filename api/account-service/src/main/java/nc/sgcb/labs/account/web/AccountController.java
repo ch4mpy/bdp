@@ -1,21 +1,5 @@
 package nc.sgcb.labs.account.web;
 
-import java.net.URI;
-import java.util.List;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.server.ResponseStatusException;
 import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,10 +10,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nc.sgcb.labs.account.domain.Account;
 import nc.sgcb.labs.account.jpa.AccountRepository;
-import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.exception.ResourceNotFoundException;
 import nc.sgcb.labs.customer.api.CustomersApi;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.cfg.MapperBuilder;
+
+import java.net.URI;
+import java.util.List;
 
 @Tag(name = "Accounts")
 @RestController
@@ -47,13 +42,13 @@ public class AccountController {
   private final AccountMapper accountMapper;
 
   private final CustomersApi customersApi;
+  private final MapperBuilder mapperBuilder;
 
   /**
    * Requires the `account.read_any` authority or that the given customer ID matches the
    * authenticated user.
-   * 
+   *
    * @param customerId
-   * 
    * @return all accounts with the given customer ID.
    */
   @Transactional(readOnly = true)
@@ -67,11 +62,11 @@ public class AccountController {
 
   /**
    * Requires the `account.create` authority.
-   * 
+   *
    * @param dto
    * @return a 201 Created response with the Location header set to the newly created account's URL.
    * @throws ResourceNotFoundException if the customer ID in the request is not known by the
-   *         customer service.
+   * customer service.
    */
   @Transactional
   @PostMapping(BASE_PATH)
@@ -81,7 +76,7 @@ public class AccountController {
     final var iban = Iban.of(dto.iban());
 
     // Assert that no account with this IBAN is managed already
-    if (accountRepo.existsById(iban)) {
+    if (accountRepo.existsByIban(iban)) {
       log.warn("Rejecting duplicate account {} creation", iban);
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
@@ -94,14 +89,13 @@ public class AccountController {
     } catch (HttpClientErrorException e) {
       if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
         log.warn("Rejecting account {} creation for unknown customer {}", iban, dto.customerId());
-        throw new ResourceNotFoundException(
-            "Customer %s is not known by the customer-service".formatted(dto.iban()));
+        throw new ResourceNotFoundException("Customer %s is not known by the customer-service".formatted(
+            dto.iban()));
       } else {
-        log
-            .error(
-                "Unexpected error while checking customer {} existence in customer-service",
-                dto.customerId(),
-                e);
+        log.error(
+            "Unexpected error while checking customer {} existence in customer-service",
+            dto.customerId(),
+            e);
       }
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR,
@@ -110,31 +104,19 @@ public class AccountController {
     }
 
     // Create the new account
-    final var account = accountRepo
-        .save(
-            Account
-                .builder()
-                .customerId(dto.customerId())
-                .iban(iban)
-                .balance(Amount.builder().currencyIso3(dto.currency()).digits(0L).build())
-                .build());
+    final var account = accountRepo.save(accountMapper.map(dto));
     log.info("Created new account {} for customer {}", account.getIban(), account.getCustomerId());
 
     return ResponseEntity
-        .created(
-            URI
-                .create(
-                    ACCOUNT_PATH
-                        .replace(
-                            "{%s}".formatted(ACCOUNT_PLACEHOLDER),
-                            account.getIban().toMachineReadableString())))
+        .created(URI.create(ACCOUNT_PATH.replace("{%s}".formatted(ACCOUNT_PLACEHOLDER),
+            account.getIban().toMachineReadableString())))
         .build();
   }
 
   /**
    * Requires the `account.read_any` authority or that the given account's customer ID matches the
    * authenticated user.
-   * 
+   *
    * @param account
    * @return the account with the given IBAN.
    */

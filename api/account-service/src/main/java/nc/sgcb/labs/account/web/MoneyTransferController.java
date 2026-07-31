@@ -1,25 +1,5 @@
 package nc.sgcb.labs.account.web;
 
-import java.net.URI;
-import java.util.Objects;
-import org.jspecify.annotations.Nullable;
-import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PagedModel;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -31,6 +11,22 @@ import nc.sgcb.labs.account.domain.MoneyTransfer;
 import nc.sgcb.labs.account.jpa.AccountRepository;
 import nc.sgcb.labs.account.jpa.MoneyTransferRepository;
 import nc.sgcb.labs.commons.domain.Iban;
+import org.jspecify.annotations.Nullable;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.net.URI;
+import java.util.Objects;
 
 @Tag(name = "MoneyTransfers")
 @RestController
@@ -59,20 +55,24 @@ public class MoneyTransferController {
    */
   @Transactional(readOnly = true)
   @GetMapping(BASE_PATH)
-  @PreAuthorize("hasAuthority('account.read_any') or @ac.ownsAccount(#dto.sourceIban) or @ac.ownsAccount(#dto.destinationIban)")
+  @PreAuthorize(
+      "hasAuthority('account.read_any') or @ac.ownsAccount(#dto.sourceIban) or @ac.ownsAccount(#dto.destinationIban)")
   public PagedModel<MoneyTransferResponse> listMoneyTransfers(
-      @Nullable @Valid @ParameterObject MoneyTransferFilterRequest dto,
+      @Nullable @Valid @ParameterObject
+      MoneyTransferFilterRequest dto,
       @ParameterObject Pageable pageable) {
     var criteria = transferMapper.map(dto == null ? MoneyTransferFilterRequest.ALL : dto);
     var transferPage = transferRepo.findAll(MoneyTransferRepository.searchSpec(criteria), pageable);
     var content = transferPage.getContent().stream().map(transferMapper::map).toList();
-    return new PagedModel<>(
-        new PageImpl<>(content, transferPage.getPageable(), transferPage.getTotalElements()));
+    return new PagedModel<>(new PageImpl<>(
+        content,
+        transferPage.getPageable(),
+        transferPage.getTotalElements()));
   }
 
   /**
    * Requires the `account.transfer` authority.
-   * 
+   *
    * This labs implementation ignores other banks. If the source or destination account isn't
    * managed by this service (another bank?), the withdraw / credit is ignored and a transfer is
    * saved anyway.
@@ -85,83 +85,76 @@ public class MoneyTransferController {
   @PostMapping(BASE_PATH)
   // Off course, in a real world being the owner of the destination account would be enough to
   // transfer money to it...
-  @PreAuthorize("hasAuthority('account.transfer') or @ac.ownsAccount(#dto.sourceIban) or @ac.ownsAccount(#dto.destinationIban)")
+  @PreAuthorize(
+      "hasAuthority('account.transfer') or @ac.ownsAccount(#dto.sourceIban) or @ac.ownsAccount(#dto.destinationIban)")
   public ResponseEntity<Void> transferMoneyBetweenAccounts(
       @RequestBody @Valid MoneyTransferRequest dto,
       Authentication auth) {
-    final var sourceAccount = accountRepo.findById(Iban.of(dto.sourceIban()));
-    final var destinationAccount = accountRepo.findById(Iban.of(dto.destinationIban()));
+    final var sourceAccount = accountRepo.findByIban(Iban.of(dto.sourceIban()));
+    final var destinationAccount = accountRepo.findByIban(Iban.of(dto.destinationIban()));
 
     final var sourceCurrency = sourceAccount.map(a -> a.getBalance().getCurrencyIso3()).orElse("?");
     final var destinationCurrency =
         destinationAccount.map(a -> a.getBalance().getCurrencyIso3()).orElse("?");
 
-    if ((sourceAccount.isPresent() && !Objects.equals(sourceCurrency, dto.currency()))
-        || (destinationAccount.isPresent()
-            && !Objects.equals(destinationCurrency, dto.currency()))) {
-      log
-          .warn(
-              "{} attempting a transfer in {} which is not the same as source's ({}) or destination's ({}) currencies",
-              auth.getName(),
-              dto.currency(),
-              sourceAccount.map(a -> a.getBalance().getCurrencyIso3()).orElse("?"),
-              destinationAccount.map(a -> a.getBalance().getCurrencyIso3()).orElse("?"));
+    if ((sourceAccount.isPresent() && !Objects.equals(sourceCurrency, dto.currency())) || (
+        destinationAccount.isPresent() && !Objects.equals(destinationCurrency, dto.currency()))) {
+      log.warn(
+          "{} attempting a transfer in {} which is not the same as source's ({}) or destination's ({}) currencies",
+          auth.getName(),
+          dto.currency(),
+          sourceAccount.map(a -> a.getBalance().getCurrencyIso3()).orElse("?"),
+          destinationAccount.map(a -> a.getBalance().getCurrencyIso3()).orElse("?"));
       throw new ResponseStatusException(
           HttpStatus.CONFLICT,
-          "The transfer currency (%s) must be the same as source's (%s) and destination's (%s) ones"
-              .formatted(sourceCurrency, destinationCurrency, dto.currency()));
+          "The transfer currency (%s) must be the same as source's (%s) and destination's (%s) ones".formatted(
+              sourceCurrency,
+              destinationCurrency,
+              dto.currency()));
     }
 
-    log
-        .info(
-            "Transfering {} {} from {} to {}",
-            dto.amount(),
-            dto.currency(),
-            dto.sourceIban(),
-            dto.destinationIban());
+    log.info(
+        "Transfering {} {} from {} to {}",
+        dto.amount(),
+        dto.currency(),
+        dto.sourceIban(),
+        dto.destinationIban());
 
     sourceAccount.ifPresent(a -> {
       a.getBalance().setDigits(a.getBalance().getDigits() - dto.amount());
       accountRepo.save(a);
-      log
-          .info(
-              "{} transfered {}{} from {}",
-              auth.getName(),
-              dto.amount(),
-              dto.currency(),
-              dto.sourceIban());
+      log.info(
+          "{} transfered {}{} from {}",
+          auth.getName(),
+          dto.amount(),
+          dto.currency(),
+          dto.sourceIban());
     });
 
     destinationAccount.ifPresent(a -> {
       a.getBalance().setDigits(a.getBalance().getDigits() + dto.amount());
       accountRepo.save(a);
-      log
-          .info(
-              "{} transfered {}{} to {}",
-              auth.getName(),
-              dto.amount(),
-              dto.currency(),
-              dto.destinationIban());
+      log.info(
+          "{} transfered {}{} to {}",
+          auth.getName(),
+          dto.amount(),
+          dto.currency(),
+          dto.destinationIban());
     });
 
     var transfer = transferRepo.save(transferMapper.map(dto));
-    log
-        .info(
-            "{} transfered {}{} from {} to {}",
-            auth.getName(),
-            dto.amount(),
-            dto.currency(),
-            dto.sourceIban(),
-            dto.destinationIban());
+    log.info(
+        "{} transfered {}{} from {} to {}",
+        auth.getName(),
+        dto.amount(),
+        dto.currency(),
+        dto.sourceIban(),
+        dto.destinationIban());
 
     return ResponseEntity
-        .created(
-            URI
-                .create(
-                    TRANSFER_PATH
-                        .replace(
-                            "{%s}".formatted(TRANSFER_ID_PLACEHOLDER),
-                            transfer.getId().toString())))
+        .created(URI.create(TRANSFER_PATH.replace(
+            "{%s}".formatted(TRANSFER_ID_PLACEHOLDER),
+            transfer.getId().toString())))
         .build();
   }
 
@@ -174,7 +167,8 @@ public class MoneyTransferController {
    */
   @Transactional(readOnly = true)
   @GetMapping(TRANSFER_PATH)
-  @PreAuthorize("hasAuthority('account.read_any') or @ac.ownsAccount(#transfer.sourceIban) or @ac.ownsAccount(#transfer.destinationIban)")
+  @PreAuthorize(
+      "hasAuthority('account.read_any') or @ac.ownsAccount(#transfer.sourceIban) or @ac.ownsAccount(#transfer.destinationIban)")
   public MoneyTransferResponse getMoneyTransfer(
       @Parameter(schema = @Schema(type = "integer"),
           description = "The ID of the money transfer to retrieve")

@@ -99,3 +99,11 @@ else
   echo "${JAVA_HOME}/bin/keytool" -importkeystore -srckeystore ${CERTIF_DIR}/${CN}.p12 -srckeypass "${SSL_PASSWORD}" -srcstorepass "${SSL_PASSWORD}" -srcstoretype pkcs12 -srcalias "${CN}" -destkeystore ${CERTIF_DIR}/${CN}.jks -deststoretype PKCS12 -destkeypass "${SSL_PASSWORD}" -deststorepass "${SSL_PASSWORD}" -destalias "${CN}"
   "${JAVA_HOME}/bin/keytool" -importkeystore -srckeystore ${CERTIF_DIR}/${CN}.p12 -srckeypass "${SSL_PASSWORD}" -srcstorepass "${SSL_PASSWORD}" -srcstoretype pkcs12 -srcalias "${CN}" -destkeystore ${CERTIF_DIR}/${CN}.jks -deststoretype PKCS12 -destkeypass "${SSL_PASSWORD}" -deststorepass "${SSL_PASSWORD}" -destalias "${CN}"
 fi
+
+echo ""
+if [ -f ${CERTIF_DIR}/${CN}.password.txt ]; then
+  echo "${CERTIF_DIR}/${CN}.password.txt already exists, doing nothing"
+else
+  echo "Saving the SSL password to: ${CERTIF_DIR}/${CN}.password.txt"
+  echo "${SSL_PASSWORD}" > ${CERTIF_DIR}/${CN}.password.txt
+fi

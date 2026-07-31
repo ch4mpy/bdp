@@ -13,4 +13,7 @@ public interface AccountMapper {
   @Mapping(target = "currency", source = "balance.currencyIso3")
   AccountResponse map(Account account);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "balance.currencyIso3", source = "currency")
+  Account map(AccountCreationRequest dto);
 }
