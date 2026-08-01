@@ -1,5 +1,27 @@
 package nc.sgcb.labs.account.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 import com.c4_soft.springaddons.security.oauth2.test.annotations.WithJwt;
 import com.c4_soft.springaddons.security.oauth2.test.webmvc.AutoConfigureAddonsWebmvcResourceServerSecurity;
 import nc.sgcb.labs.account.AccountFixtures;
@@ -12,28 +34,8 @@ import nc.sgcb.labs.account.jpa.AccountRepository;
 import nc.sgcb.labs.account.jpa.MoneyTransferRepository;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.domain.IbanStringMapper;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithAnonymousUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import nc.sgcb.labs.currency.api.CurrenciesApi;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = MoneyTransferController.class,
     properties = {"logging.level.org.springframework=DEBUG"})
@@ -47,6 +49,9 @@ class MoneyTransferControllerTest {
 
   @MockitoBean
   MoneyTransferRepository transferRepo;
+
+  @MockitoBean
+  CurrenciesApi currenciesApi;
 
   @Autowired
   MockMvc mockMvc;
@@ -65,20 +70,19 @@ class MoneyTransferControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUserIsAdvisor_whenListTransfers_thenOk() throws Exception {
-    Account source = AccountFixtures.createCustomersXpfAccount(100000L);
-    Account destination = AccountFixtures.createSomeonesXpfAccount(200000L);
+    Account source = AccountFixtures.createCustomersXpfAccount(100000);
+    Account destination = AccountFixtures.createSomeonesXpfAccount(200000);
 
-    MoneyTransfer transfer = MoneyTransferFixtures.createMoneyTransfer(source, destination, 1000L);
+    MoneyTransfer transfer = MoneyTransferFixtures.createMoneyTransfer(source, destination, 1000);
 
-    when(transferRepo.findAll(
-        any(Specification.class),
-        any(Pageable.class))).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(
-        transfer)));
+    when(transferRepo.findAll(any(Specification.class), any(Pageable.class)))
+        .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(transfer)));
 
     var mvcResult = mockMvc
-        .perform(get("https://localhost" + MoneyTransferController.BASE_PATH)
-            .param("sourceIban", source.getIban().toMachineReadableString())
-            .param("destinationIban", destination.getIban().toMachineReadableString()))
+        .perform(
+            get("https://localhost" + MoneyTransferController.BASE_PATH)
+                .param("sourceIban", source.getIban().toMachineReadableString())
+                .param("destinationIban", destination.getIban().toMachineReadableString()))
         .andExpect(status().isOk())
         .andReturn();
 
@@ -91,42 +95,43 @@ class MoneyTransferControllerTest {
   @WithJwt("advisor.json")
   void givenInvalidTransferFilter_whenListTransfers_thenBadRequest() throws Exception {
     mockMvc
-        .perform(get("https://localhost" + MoneyTransferController.BASE_PATH).param(
-            "labelContaining",
-            "ab"))
+        .perform(
+            get("https://localhost" + MoneyTransferController.BASE_PATH)
+                .param("labelContaining", "ab"))
         .andExpect(status().isBadRequest());
   }
 
   @Test
   @WithAnonymousUser
   void givenAnonymousUser_whenTransferMoney_thenUnauthorized() throws Exception {
-    Account s1 = AccountFixtures.createCustomersXpfAccount(100000L);
-    Account d1 = AccountFixtures.createSomeonesXpfAccount(50000L);
+    Account s1 = AccountFixtures.createCustomersXpfAccount(100000);
+    Account d1 = AccountFixtures.createSomeonesXpfAccount(50000);
 
     var dto = new MoneyTransferRequest(
         s1.getIban().toMachineReadableString(),
         d1.getIban().toMachineReadableString(),
-        1000L,
-        s1.getBalance().getCurrencyIso3(),
+        1000,
+        s1.getBalance().getCurrency().name(),
         "label");
 
     mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(dto)))
+        .perform(
+            post("https://localhost" + MoneyTransferController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dto)))
         .andExpect(status().isUnauthorized());
   }
 
   @Test
   @WithJwt("card-service.json")
   void givenServiceHasTransferAuthority_whenTransferMoney_thenCreated() throws Exception {
-    Account source = AccountFixtures.createCustomersXpfAccount(100000L);
-    Account destination = AccountFixtures.createSomeonesXpfAccount(50000L);
+    Account source = AccountFixtures.createCustomersXpfAccount(100000);
+    Account destination = AccountFixtures.createSomeonesXpfAccount(50000);
 
     var dto = new MoneyTransferRequest(
         source.getIban().toMachineReadableString(),
         destination.getIban().toMachineReadableString(),
-        1000L,
+        1000,
         "XPF",
         "some label");
 
@@ -139,24 +144,27 @@ class MoneyTransferControllerTest {
       }
       return transfer;
     });
+    when(currenciesApi.change(anyInt(), anyString(), anyString()))
+        .thenAnswer(i -> ResponseEntity.ok(i.getArgument(0, Integer.class)));
 
     mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(dto)))
+        .perform(
+            post("https://localhost" + MoneyTransferController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dto)))
         .andExpect(status().isCreated());
   }
 
   @Test
   @WithJwt("card-service.json")
   void givenUnknownSource_whenTransferMoney_thenCreated() throws Exception {
-    Account source = AccountFixtures.createCustomersXpfAccount(100000L);
-    Account destination = AccountFixtures.createSomeonesXpfAccount(50000L);
+    Account source = AccountFixtures.createCustomersXpfAccount(100000);
+    Account destination = AccountFixtures.createSomeonesXpfAccount(50000);
 
     var dto = new MoneyTransferRequest(
         source.getIban().toMachineReadableString(),
         destination.getIban().toMachineReadableString(),
-        1000L,
+        1000,
         "XPF",
         "label");
 
@@ -169,24 +177,27 @@ class MoneyTransferControllerTest {
       }
       return transfer;
     });
+    when(currenciesApi.change(anyInt(), anyString(), anyString()))
+        .thenAnswer(i -> ResponseEntity.ok(i.getArgument(0, Integer.class)));
 
     mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(dto)))
+        .perform(
+            post("https://localhost" + MoneyTransferController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dto)))
         .andExpect(status().isCreated());
   }
 
   @Test
   @WithJwt("card-service.json")
   void givenUnknownDestination_whenTransferMoney_thenCreated() throws Exception {
-    Account source = AccountFixtures.createCustomersXpfAccount(100000L);
-    Iban destinationIban = AccountFixtures.createSomeonesXpfAccount(50000L).getIban();
+    Account source = AccountFixtures.createCustomersXpfAccount(100000);
+    Iban destinationIban = AccountFixtures.createSomeonesXpfAccount(50000).getIban();
 
     var dto = new MoneyTransferRequest(
         source.getIban().toMachineReadableString(),
         destinationIban.toMachineReadableString(),
-        1000L,
+        1000,
         "XPF",
         "label");
 
@@ -199,151 +210,123 @@ class MoneyTransferControllerTest {
       }
       return transfer;
     });
+    when(currenciesApi.change(anyInt(), anyString(), anyString()))
+        .thenAnswer(i -> ResponseEntity.ok(i.getArgument(0, Integer.class)));
 
     mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(dto)))
+        .perform(
+            post("https://localhost" + MoneyTransferController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(dto)))
         .andExpect(status().isCreated());
-  }
-
-  @Test
-  @WithJwt("card-service.json")
-  void givenSourceAndDestinationHaveDifferentCurrencies_whenTransferMoney_thenConflict()
-      throws Exception {
-    Account source = AccountFixtures.createCustomersXpfAccount(100000L);
-    Account destination = AccountFixtures.createCustomersEurAccount(50000L);
-
-    var dto = new MoneyTransferRequest(
-        source.getIban().toMachineReadableString(),
-        destination.getIban().toMachineReadableString(),
-        1000L,
-        "XPF",
-        "label");
-
-    when(accountRepo.findByIban(source.getIban())).thenReturn(Optional.of(source));
-    when(accountRepo.findByIban(destination.getIban())).thenReturn(Optional.of(destination));
-    when(transferRepo.save(any(MoneyTransfer.class))).thenAnswer(invocation -> {
-      final var transfer = invocation.getArgument(0, MoneyTransfer.class);
-      if (transfer.getId() == null) {
-        transfer.setId(42L);
-      }
-      return transfer;
-    });
-
-    mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(dto)))
-        .andExpect(status().isConflict());
-  }
-
-  @Test
-  @WithJwt("card-service.json")
-  void givenSourceAnTransferHaveDifferentCurrencies_whenTransferMoney_thenConflict()
-      throws Exception {
-    Account source = AccountFixtures.createCustomersXpfAccount(100000L);
-    Account destination = AccountFixtures.createCustomersXpfAccount(50000L);
-
-    var dto = new MoneyTransferRequest(
-        source.getIban().toMachineReadableString(),
-        destination.getIban().toMachineReadableString(),
-        1000L,
-        "EUR",
-        "label");
-
-    when(accountRepo.findByIban(source.getIban())).thenReturn(Optional.of(source));
-    when(accountRepo.findByIban(destination.getIban())).thenReturn(Optional.of(destination));
-
-    mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(dto)))
-        .andExpect(status().isConflict());
   }
 
   @SuppressWarnings("null")
   @Test
   @WithJwt("card-service.json")
   void givenInvalidTransferRequest_whenTransferMoney_thenBadRequest() throws Exception {
-    Account source = AccountFixtures.createCustomersXpfAccount(100000L);
-    Account destination = AccountFixtures.createCustomersXpfAccount(50000L);
+    Account source = AccountFixtures.createCustomersXpfAccount(100000);
+    Account destination = AccountFixtures.createCustomersXpfAccount(50000);
 
     when(accountRepo.findByIban(source.getIban())).thenReturn(Optional.of(source));
     when(accountRepo.findByIban(destination.getIban())).thenReturn(Optional.of(destination));
 
     mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(new MoneyTransferRequest(
-                "not-an-iban",
-                destination.getIban().toMachineReadableString(),
-                1000L,
-                "XPF",
-                "label"))))
+        .perform(
+            post("https://localhost" + MoneyTransferController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    json
+                        .writeValueAsString(
+                            new MoneyTransferRequest(
+                                "not-an-iban",
+                                destination.getIban().toMachineReadableString(),
+                                1000,
+                                "XPF",
+                                "label"))))
         .andExpect(status().isBadRequest());
 
     mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(new MoneyTransferRequest(
-                source
-                    .getIban()
-                    .toMachineReadableString(), "not-an-iban", 1000L, "XPF", "label"))))
+        .perform(
+            post("https://localhost" + MoneyTransferController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    json
+                        .writeValueAsString(
+                            new MoneyTransferRequest(
+                                source.getIban().toMachineReadableString(),
+                                "not-an-iban",
+                                1000,
+                                "XPF",
+                                "label"))))
         .andExpect(status().isBadRequest());
 
     mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(new MoneyTransferRequest(
-                source.getIban().toMachineReadableString(),
-                destination.getIban().toMachineReadableString(),
-                -1L,
-                "XPF",
-                "label"))))
+        .perform(
+            post("https://localhost" + MoneyTransferController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    json
+                        .writeValueAsString(
+                            new MoneyTransferRequest(
+                                source.getIban().toMachineReadableString(),
+                                destination.getIban().toMachineReadableString(),
+                                -1,
+                                "XPF",
+                                "label"))))
         .andExpect(status().isBadRequest());
 
     mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(new MoneyTransferRequest(
-                source.getIban().toMachineReadableString(),
-                destination.getIban().toMachineReadableString(),
-                1000L,
-                "XPFX",
-                "label"))))
+        .perform(
+            post("https://localhost" + MoneyTransferController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    json
+                        .writeValueAsString(
+                            new MoneyTransferRequest(
+                                source.getIban().toMachineReadableString(),
+                                destination.getIban().toMachineReadableString(),
+                                1000,
+                                "XPFX",
+                                "label"))))
         .andExpect(status().isBadRequest());
 
     mockMvc
-        .perform(post("https://localhost" + MoneyTransferController.BASE_PATH)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(json.writeValueAsString(new MoneyTransferRequest(
-                source.getIban().toMachineReadableString(),
-                destination.getIban().toMachineReadableString(),
-                1000L,
-                "XPF",
-                "la"))))
+        .perform(
+            post("https://localhost" + MoneyTransferController.BASE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    json
+                        .writeValueAsString(
+                            new MoneyTransferRequest(
+                                source.getIban().toMachineReadableString(),
+                                destination.getIban().toMachineReadableString(),
+                                1000,
+                                "XPF",
+                                "la"))))
         .andExpect(status().isBadRequest());
   }
 
   @Test
   @WithJwt("advisor.json")
   void givenUserIsAdvisor_whenGetTransfer_thenOk() throws Exception {
-    Account source3 = AccountFixtures.createCustomersXpfAccount(100000L);
-    Account destination3 = AccountFixtures.createSomeonesXpfAccount(50000L);
+    Account source3 = AccountFixtures.createCustomersXpfAccount(100000);
+    Account destination3 = AccountFixtures.createSomeonesXpfAccount(50000);
 
     MoneyTransfer transfer2 =
-        MoneyTransferFixtures.createMoneyTransfer(source3, destination3, 1000L);
+        MoneyTransferFixtures.createMoneyTransfer(source3, destination3, 1000);
 
     when(transferRepo.findById(1L)).thenReturn(Optional.of(transfer2));
 
-    var actual = json.readValue(
-        mockMvc
-            .perform(get("https://localhost" + MoneyTransferController.TRANSFER_PATH, "1"))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString(), MoneyTransferResponse.class);
+    var actual = json
+        .readValue(
+            mockMvc
+                .perform(get("https://localhost" + MoneyTransferController.TRANSFER_PATH, "1"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(),
+            MoneyTransferResponse.class);
 
     assertThat(actual.label()).contains("Test transfer of");
   }

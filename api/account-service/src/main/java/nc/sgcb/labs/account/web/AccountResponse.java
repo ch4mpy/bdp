@@ -1,5 +1,11 @@
 package nc.sgcb.labs.account.web;
 
-public record AccountResponse(String iban, String customerId, String currency, Long balance) {
+import jakarta.validation.constraints.NotNull;
+
+public record AccountResponse(
+    @NotNull String iban,
+    @NotNull String customerId,
+    @NotNull String currency,
+    @NotNull Integer balance) {
 
 }

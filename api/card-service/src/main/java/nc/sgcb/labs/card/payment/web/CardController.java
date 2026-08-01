@@ -40,6 +40,7 @@ import nc.sgcb.labs.card.payment.domain.CardPayment;
 import nc.sgcb.labs.card.payment.jpa.CardPaymentRepository;
 import nc.sgcb.labs.card.payment.jpa.CardRepository;
 import nc.sgcb.labs.commons.domain.Amount;
+import nc.sgcb.labs.commons.domain.Currency;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.domain.Period;
 import nc.sgcb.labs.commons.exception.ResourceNotFoundException;
@@ -347,14 +348,14 @@ public class CardController {
   }
 
   @Transactional(readOnly = true)
-  Long getAcceptedPaymentsCumulatedAmountOn30Days(Card card) {
+  Integer getAcceptedPaymentsCumulatedAmountOn30Days(Card card) {
     final var now = Instant.now();
     final var last30DaysPayments = paymentRepo
         .findByCardNumberAndTimestampBetween(card.getNumber(), now.minus(30, ChronoUnit.DAYS), now);
     return last30DaysPayments
         .stream()
         .filter(CardPayment::isAccepted)
-        .mapToLong(p -> p.getAmount().getDigits())
+        .mapToInt(p -> p.getAmount().getDigits())
         .sum();
 
   }
@@ -365,7 +366,12 @@ public class CardController {
         .save(
             CardPayment
                 .builder()
-                .amount(Amount.builder().currencyIso3(dto.currency()).digits(dto.amount()).build())
+                .amount(
+                    Amount
+                        .builder()
+                        .currency(Currency.valueOf(dto.currency()))
+                        .digits(dto.amount())
+                        .build())
                 .card(card)
                 .destinationIban(Iban.of(dto.destinationIban()))
                 .accepted(false)
@@ -377,7 +383,7 @@ public class CardController {
     try {
       var body = new MoneyTransferRequest()
           .amount(payment.getAmount().getDigits())
-          .currency(payment.getAmount().getCurrencyIso3())
+          .currency(payment.getAmount().getCurrency().name())
           .sourceIban(payment.getCard().getIban().toMachineReadableString())
           .destinationIban(payment.getDestinationIban().toMachineReadableString())
           .label(

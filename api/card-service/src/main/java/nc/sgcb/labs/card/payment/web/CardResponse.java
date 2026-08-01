@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotNull;
 public record CardResponse(
     @NotNull String number,
     @NotNull String iban,
-    @NotNull Long transactionCeiling,
-    @NotNull Long rolling30Ceiling,
+    @NotNull Integer transactionCeiling,
+    @NotNull Integer rolling30Ceiling,
     boolean isActive) {
 
 }

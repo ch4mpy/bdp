@@ -2,7 +2,13 @@ package nc.sgcb.labs.commons.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Embeddable
 @Data
@@ -16,8 +22,9 @@ public class Amount {
    */
   @Column(nullable = false)
   @Builder.Default
-  private Long digits = 0L;
+  private int digits = 0;
 
   @Column(nullable = false)
-  private String currencyIso3;
+  @Enumerated(EnumType.STRING)
+  private Currency currency;
 }

@@ -6,7 +6,7 @@ issuer: ${reverse-proxy-uri}/auth/realms/labs
 accounts-service: https://${cn}:8081
 cards-service: https://${cn}:8082
 customers-service: https://${cn}:8083
-users-service: https://${cn}:8084
+currencies-service: https://${cn}:8084
 
 server:
   port: 7080
@@ -91,6 +91,19 @@ spring:
               uri: ${customers-service}
               predicates:
                 - Path=/m2m/customers/**
+              filters:
+                - StripPrefix=2
+            - id: currencies-bff
+              uri: ${currencies-service}
+              predicates:
+                - Path=/bff/currencies/**
+              filters:
+                - TokenRelay=
+                - StripPrefix=2
+            - id: currencies-m2m
+              uri: ${currencies-service}
+              predicates:
+                - Path=/m2m/currencies/**
               filters:
                 - StripPrefix=2
     refresh:

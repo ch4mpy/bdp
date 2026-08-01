@@ -1,0 +1,13 @@
+{
+  "iss": "https://host.docker.internal/auth/realms/labs",
+  "aud": "account",
+  "sub": "customer-subject",
+  "azp": "gateway",
+  "scope": "openid profile email",
+  "email_verified": true,
+  "name": "John Doeuf",
+  "preferred_username": "customer",
+  "given_name": "John",
+  "family_name": "Doeuf",
+  "email": "john.deuf@mail.pf"
+}

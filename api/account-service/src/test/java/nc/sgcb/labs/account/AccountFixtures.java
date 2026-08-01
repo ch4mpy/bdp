@@ -2,6 +2,7 @@ package nc.sgcb.labs.account;
 
 import nc.sgcb.labs.account.domain.Account;
 import nc.sgcb.labs.commons.domain.Amount;
+import nc.sgcb.labs.commons.domain.Currency;
 import nc.sgcb.labs.commons.domain.Iban;
 
 public class AccountFixtures {
@@ -10,8 +11,8 @@ public class AccountFixtures {
 
   public static String SOMEONE_SUBJECT = "someone-subject";
 
-  public static Account createCustomersXpfAccount(Long balanceDigits) {
-    final var balance = Amount.builder().currencyIso3("XPF").digits(balanceDigits).build();
+  public static Account createCustomersXpfAccount(Integer balanceDigits) {
+    final var balance = Amount.builder().currency(Currency.XPF).digits(balanceDigits).build();
     return Account
         .builder()
         .customerId(CUSTOMER_SUBJECT)
@@ -20,8 +21,8 @@ public class AccountFixtures {
         .build();
   }
 
-  public static Account createCustomersEurAccount(Long balanceDigits) {
-    final var balance = Amount.builder().currencyIso3("EUR").digits(balanceDigits).build();
+  public static Account createCustomersEurAccount(Integer balanceDigits) {
+    final var balance = Amount.builder().currency(Currency.EUR).digits(balanceDigits).build();
     return Account
         .builder()
         .customerId(CUSTOMER_SUBJECT)
@@ -30,8 +31,8 @@ public class AccountFixtures {
         .build();
   }
 
-  public static Account createSomeonesXpfAccount(Long balanceDigits) {
-    final var balance = Amount.builder().currencyIso3("XPF").digits(balanceDigits).build();
+  public static Account createSomeonesXpfAccount(Integer balanceDigits) {
+    final var balance = Amount.builder().currency(Currency.XPF).digits(balanceDigits).build();
     return Account
         .builder()
         .customerId(SOMEONE_SUBJECT)

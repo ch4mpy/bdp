@@ -1,0 +1,18 @@
+package nc.sgcb.labs.currency;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
+import com.c4_soft.springaddons.rest.RestClientHttpExchangeProxyFactoryBean;
+import dev.frankfurter.api.RatesApi;
+
+@Configuration
+public class RestConfiguration {
+
+  @Bean
+  RatesApi customersApi(RestClient frankfurterClient) throws Exception {
+    return new RestClientHttpExchangeProxyFactoryBean<>(RatesApi.class, frankfurterClient)
+        .getObject();
+  }
+
+}

@@ -1,10 +1,17 @@
 package nc.sgcb.labs.account.jpa;
 
-import nc.sgcb.labs.account.AccountFixtures;
-import nc.sgcb.labs.account.CacheConfiguration;
-import nc.sgcb.labs.account.domain.Account;
-import nc.sgcb.labs.commons.domain.Amount;
-import nc.sgcb.labs.commons.domain.Iban;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,16 +19,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import nc.sgcb.labs.account.AccountFixtures;
+import nc.sgcb.labs.account.CacheConfiguration;
+import nc.sgcb.labs.account.domain.Account;
+import nc.sgcb.labs.commons.domain.Amount;
+import nc.sgcb.labs.commons.domain.Currency;
+import nc.sgcb.labs.commons.domain.Iban;
 
 @SpringBootTest(classes = {CacheConfiguration.class, AccountRepository.class})
 @ActiveProfiles("h2")
@@ -39,20 +42,23 @@ class AccountRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    customerXpfAccount = AccountFixtures.createCustomersXpfAccount(100000L);
+    customerXpfAccount = AccountFixtures.createCustomersXpfAccount(100000);
 
     final var accounts = new ConcurrentHashMap<Iban, Account>();
     accounts.put(customerXpfAccount.getIban(), customerXpfAccount);
 
-    when(jpaAccountRepo.existsByIban(any(Iban.class))).thenAnswer(invocation -> accounts.containsKey(
-        invocation.getArgument(0, Iban.class)));
-    when(jpaAccountRepo.findByIban(any(Iban.class))).thenAnswer(invocation -> Optional.ofNullable(
-        accounts.get(invocation.getArgument(0, Iban.class))));
-    when(jpaAccountRepo.findByCustomerId(anyString())).thenAnswer(invocation -> accounts
-        .values()
-        .stream()
-        .filter(a -> a.getCustomerId().equals(invocation.getArgument(0)))
-        .toList());
+    when(jpaAccountRepo.existsByIban(any(Iban.class)))
+        .thenAnswer(invocation -> accounts.containsKey(invocation.getArgument(0, Iban.class)));
+    when(jpaAccountRepo.findByIban(any(Iban.class)))
+        .thenAnswer(
+            invocation -> Optional.ofNullable(accounts.get(invocation.getArgument(0, Iban.class))));
+    when(jpaAccountRepo.findByCustomerId(anyString()))
+        .thenAnswer(
+            invocation -> accounts
+                .values()
+                .stream()
+                .filter(a -> a.getCustomerId().equals(invocation.getArgument(0)))
+                .toList());
     when(jpaAccountRepo.save(any(Account.class))).thenAnswer(invocation -> {
       Account account = invocation.getArgument(0);
       accounts.put(account.getIban(), account);
@@ -62,7 +68,7 @@ class AccountRepositoryTest {
 
   @Test
   @DirtiesContext
-    // prevent cache operation conflict between tests
+  // prevent cache operation conflict between tests
   void givenFindByIdCalledTwiceWithSameIban_whenSaveAccountWithSameIbanAndCallFindByIdAgain_thenCacheUpdatedAndFindByIdCalledOnlyOnceOverall() {
     // accountService.findById called twice, but underlying jpaAccountRepo.findById should be
     // called only once.
@@ -73,12 +79,14 @@ class AccountRepositoryTest {
 
     // save a new Account instance with the same iban and a different balance
     // (do not work with a reference to the instance already in the cache)
-    var account = accountRepo.save(Account
-        .builder()
-        .iban(customerXpfAccount.getIban())
-        .customerId(customerXpfAccount.getCustomerId())
-        .balance(Amount.builder().digits(200000L).currencyIso3("XPF").build())
-        .build());
+    var account = accountRepo
+        .save(
+            Account
+                .builder()
+                .iban(customerXpfAccount.getIban())
+                .customerId(customerXpfAccount.getCustomerId())
+                .balance(Amount.builder().digits(200000).currency(Currency.XPF).build())
+                .build());
     assertEquals(200000L, account.getBalance().getDigits());
 
     // retrieve the account from the cache to verify that it was updated when saving the new
@@ -93,9 +101,9 @@ class AccountRepositoryTest {
 
   @Test
   @DirtiesContext
-    // prevent cache operation conflict between tests
+  // prevent cache operation conflict between tests
   void givenExistsByIdReturnedFalseBeforeSavingAccount_whenSaveAccountWithSameIbanAndCallExistsByIdAgain_thenCacheEvictedAndExistsByIdCalledOnlyTwiceOverall() {
-    var customerEurAccount = AccountFixtures.createCustomersEurAccount(200000L);
+    var customerEurAccount = AccountFixtures.createCustomersEurAccount(200000);
 
     // accountService.existsById called twice, but underlying jpaAccountRepo.existsById should be
     // called only once.
@@ -117,9 +125,9 @@ class AccountRepositoryTest {
 
   @Test
   @DirtiesContext
-    // prevent cache operation conflict between tests
+  // prevent cache operation conflict between tests
   void givenFindByCustomerIdCalledTwiceWithSameCustomerId_whenSaveAccountWithSameCustomerIdAndCallFindByCustomerIdAgain_thenCacheEvictedAndFindByCustomerIdCalledOnlyTwiceOverall() {
-    var customerEurAccount = AccountFixtures.createCustomersEurAccount(200000L);
+    var customerEurAccount = AccountFixtures.createCustomersEurAccount(200000);
 
     assertEquals(customerXpfAccount.getCustomerId(), customerEurAccount.getCustomerId());
 

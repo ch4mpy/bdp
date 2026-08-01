@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 public record CardCeilingsRequest(
-    @NotNull @Min(1) Long transactionCeiling,
-    @NotNull @Min(1) Long rolling30Ceiling) {
+    @NotNull @Min(1) Integer transactionCeiling,
+    @NotNull @Min(1) Integer rolling30Ceiling) {
 
 }

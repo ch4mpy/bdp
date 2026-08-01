@@ -14,7 +14,7 @@ public class CardFixtures {
 
   public static final String SOMEONE_IBAN = "FR761111222233334443";
 
-  public static Card createCustomersCard(Long transactionCeiling, Long rolling30Ceiling) {
+  public static Card createCustomersCard(Integer transactionCeiling, Integer rolling30Ceiling) {
     var iban = Iban.of(CUSTOMER_IBAN);
     return Card
         .builder()
@@ -26,7 +26,7 @@ public class CardFixtures {
         .build();
   }
 
-  public static Card createSomeonesCard(Long transactionCeiling, Long rolling30Ceiling) {
+  public static Card createSomeonesCard(Integer transactionCeiling, Integer rolling30Ceiling) {
     var iban = Iban.of(SOMEONE_IBAN);
     return Card
         .builder()

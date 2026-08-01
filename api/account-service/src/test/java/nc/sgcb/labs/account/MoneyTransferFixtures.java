@@ -9,13 +9,13 @@ public class MoneyTransferFixtures {
   public static MoneyTransfer createMoneyTransfer(
       Account source,
       Account destination,
-      Long amountDigits) {
+      Integer amountDigits) {
     return MoneyTransfer
         .builder()
         .amount(
             Amount
                 .builder()
-                .currencyIso3(source.getBalance().getCurrencyIso3())
+                .currency(source.getBalance().getCurrency())
                 .digits(amountDigits)
                 .build())
         .destinationIban(destination.getIban())
@@ -23,7 +23,7 @@ public class MoneyTransferFixtures {
             "Test transfer of %d %s from %s to %s"
                 .formatted(
                     amountDigits,
-                    source.getBalance().getCurrencyIso3(),
+                    source.getBalance().getCurrency(),
                     source.getIban(),
                     destination.getIban()))
         .sourceIban(source.getIban())

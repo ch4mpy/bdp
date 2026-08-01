@@ -1,0 +1,17 @@
+{
+  "iss": "https://host.docker.internal/auth/realms/labs",
+  "aud": "user-service",
+  "sub": "17f54fbc-d9ff-4547-a357-77c66f909028",,
+  "azp": "customer-service"
+  "resource_access": {
+    "user-service": {
+      "roles": [
+        "create",
+        "read_any"
+      ]
+    }
+  },
+  "scope": "openid profile email",
+  "preferred_username": "service-account-customer-service",
+  "client_id": "customer-service"
+}

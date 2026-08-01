@@ -15,14 +15,14 @@ public interface MoneyTransferMapper {
   MoneyTransferFilteringCriteria map(MoneyTransferFilterRequest dto);
 
   @Mapping(target = "amount", source = "amount.digits")
-  @Mapping(target = "currency", source = "amount.currencyIso3")
+  @Mapping(target = "currency", source = "amount.currency")
   MoneyTransferResponse map(MoneyTransfer domain);
 
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "timestamp", ignore = true)
   @Mapping(target = "amount.digits", source = "amount")
-  @Mapping(target = "amount.currencyIso3", source = "currency")
+  @Mapping(target = "amount.currency", source = "currency")
   MoneyTransfer map(MoneyTransferRequest dto);
 
 }

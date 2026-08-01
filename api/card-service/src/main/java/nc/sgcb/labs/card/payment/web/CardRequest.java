@@ -6,6 +6,6 @@ import nc.sgcb.labs.commons.validation.IbanString;
 
 public record CardRequest(
     @NotNull @IbanString String iban,
-    @NotNull @Min(1) Long transactionCeiling,
-    @NotNull @Min(1) Long rolling30Ceiling) {
+    @NotNull @Min(1) Integer transactionCeiling,
+    @NotNull @Min(1) Integer rolling30Ceiling) {
 }
