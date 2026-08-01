@@ -2,7 +2,7 @@
 <project version="4">
   <component name="DiffGenerationConfig">
     <option name="liquibaseAuthor" value="" />
-    <option name="sourceModelValue" value="account-service:account-service" />
-    <option name="targetDbValue" value="18fe9ad6-cd35-414d-a09e-c0ee177239e9" />
+    <option name="sourceModelValue" value="customer-service:customer-service" />
+    <option name="targetDbValue" value="9347c301-7ea5-46fe-8f52-f74319734d0f" />
   </component>
 </project>
