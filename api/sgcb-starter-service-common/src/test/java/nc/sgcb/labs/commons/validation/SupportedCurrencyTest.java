@@ -1,14 +1,13 @@
 package nc.sgcb.labs.commons.validation;
 
-import org.junit.jupiter.api.Test;
-import nc.sgcb.labs.commons.validation.CurrencyIso3.IbanConstraintValidator;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import nc.sgcb.labs.commons.validation.SupportedCurrency.SupportedCurrencyConstraintValidator;
 
-class CurrencyIso3Test {
+class SupportedCurrencyTest {
 
-  IbanConstraintValidator validator = new IbanConstraintValidator();
+  SupportedCurrencyConstraintValidator validator = new SupportedCurrencyConstraintValidator();
 
   @Test
   void givenValueIsNull_whenIsValid_thenTrue() {

@@ -1,10 +1,7 @@
 package nc.sgcb.labs.card.payment.jpa;
 
-import nc.sgcb.labs.card.payment.domain.Card;
-import nc.sgcb.labs.card.payment.domain.CardPayment;
-import nc.sgcb.labs.commons.domain.Amount;
-import nc.sgcb.labs.commons.domain.Iban;
-import nc.sgcb.labs.commons.domain.IbanStringMapperImpl;
+import static org.assertj.core.api.Assertions.assertThat;
+import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +9,12 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.time.Instant;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import nc.sgcb.labs.card.payment.domain.Card;
+import nc.sgcb.labs.card.payment.domain.CardPayment;
+import nc.sgcb.labs.commons.domain.Amount;
+import nc.sgcb.labs.commons.domain.Currency;
+import nc.sgcb.labs.commons.domain.Iban;
+import nc.sgcb.labs.commons.domain.IbanStringMapperImpl;
 
 @DataJpaTest
 @ActiveProfiles("h2")
@@ -39,43 +38,53 @@ class CardPaymentRepositoryTest {
   @BeforeEach
   @SuppressWarnings("null")
   void setUp() {
-    card1 = cardRepo.save(Card
-        .builder()
-        .number("1111-1111-1111-1111-1")
-        .iban(iban)
-        .ceilings(Card.Ceilings.builder().rolling30(300000L).transaction(100000L).build())
-        .build());
-    card2 = cardRepo.save(Card
-        .builder()
-        .number("2222-2222-2222-2222-2")
-        .iban(iban)
-        .ceilings(Card.Ceilings.builder().rolling30(500000L).transaction(150000L).build())
-        .build());
+    card1 = cardRepo
+        .save(
+            Card
+                .builder()
+                .number("1111-1111-1111-1111-1")
+                .iban(iban)
+                .ceilings(Card.Ceilings.builder().rolling30(300000).transaction(100000).build())
+                .build());
+    card2 = cardRepo
+        .save(
+            Card
+                .builder()
+                .number("2222-2222-2222-2222-2")
+                .iban(iban)
+                .ceilings(Card.Ceilings.builder().rolling30(500000).transaction(150000).build())
+                .build());
 
-    payment1 = paymentRepo.save(CardPayment
-        .builder()
-        .card(card1)
-        .amount(Amount.builder().digits(120000L).currencyIso3("XPF").build())
-        .destinationIban(Iban.of("FR7622222222222222222"))
-        .accepted(false)
-        .timestamp(Instant.parse("2026-01-01T00:01:10Z"))
-        .build());
-    payment2 = paymentRepo.save(CardPayment
-        .builder()
-        .card(card1)
-        .amount(Amount.builder().digits(120000L).currencyIso3("XPF").build())
-        .destinationIban(Iban.of("FR7622222222222222222"))
-        .accepted(false)
-        .timestamp(Instant.parse("2026-01-01T00:01:30Z"))
-        .build());
-    payment3 = paymentRepo.save(CardPayment
-        .builder()
-        .card(card2)
-        .amount(Amount.builder().digits(120000L).currencyIso3("XPF").build())
-        .destinationIban(Iban.of("FR7622222222222222222"))
-        .timestamp(Instant.parse("2026-01-01T00:02:30Z"))
-        .accepted(true)
-        .build());
+    payment1 = paymentRepo
+        .save(
+            CardPayment
+                .builder()
+                .card(card1)
+                .amount(Amount.builder().digits(120000).currency(Currency.XPF).build())
+                .destinationIban(Iban.of("FR7622222222222222222"))
+                .accepted(false)
+                .timestamp(Instant.parse("2026-01-01T00:01:10Z"))
+                .build());
+    payment2 = paymentRepo
+        .save(
+            CardPayment
+                .builder()
+                .card(card1)
+                .amount(Amount.builder().digits(120000).currency(Currency.XPF).build())
+                .destinationIban(Iban.of("FR7622222222222222222"))
+                .accepted(false)
+                .timestamp(Instant.parse("2026-01-01T00:01:30Z"))
+                .build());
+    payment3 = paymentRepo
+        .save(
+            CardPayment
+                .builder()
+                .card(card2)
+                .amount(Amount.builder().digits(120000).currency(Currency.XPF).build())
+                .destinationIban(Iban.of("FR7622222222222222222"))
+                .timestamp(Instant.parse("2026-01-01T00:02:30Z"))
+                .accepted(true)
+                .build());
   }
 
   @Test
@@ -87,10 +96,11 @@ class CardPaymentRepositoryTest {
   @Test
   @SuppressWarnings("null")
   void whenFindByCardNumberAndTimestampBetween_thenFiltered() {
-    final var actual = paymentRepo.findByCardNumberAndTimestampBetween(
-        "1111-1111-1111-1111-1",
-        Instant.parse("2026-01-01T00:01:00Z"),
-        Instant.parse("2026-01-01T00:01:15Z"));
+    final var actual = paymentRepo
+        .findByCardNumberAndTimestampBetween(
+            "1111-1111-1111-1111-1",
+            Instant.parse("2026-01-01T00:01:00Z"),
+            Instant.parse("2026-01-01T00:01:15Z"));
     assertThat(actual).containsExactlyInAnyOrder(payment1);
 
   }

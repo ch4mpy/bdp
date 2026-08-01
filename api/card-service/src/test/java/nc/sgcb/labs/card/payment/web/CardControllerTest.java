@@ -36,6 +36,7 @@ import nc.sgcb.labs.card.payment.domain.CardPayment;
 import nc.sgcb.labs.card.payment.jpa.CardPaymentRepository;
 import nc.sgcb.labs.card.payment.jpa.CardRepository;
 import nc.sgcb.labs.commons.domain.Amount;
+import nc.sgcb.labs.commons.domain.Currency;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.domain.IbanStringMapper;
 import nc.sgcb.labs.commons.exception.CommonExceptionsHandler;
@@ -67,7 +68,7 @@ class CardControllerTest {
   ObjectMapper json;
 
   private static AccountResponse accountOwnedBy(String customerId, String iban, String currency) {
-    return new AccountResponse().iban(iban).customerId(customerId).currency(currency).balance(0L);
+    return new AccountResponse().iban(iban).customerId(customerId).currency(currency).balance(0);
   }
 
   // ===================== listCards =====================
@@ -85,7 +86,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUserHasReadAnyAuthority_whenListCards_thenOk() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByIban(card.getIban())).thenReturn(List.of(card));
 
     var mvcResult = mockMvc
@@ -101,7 +102,7 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenUserIsAccountOwner_whenListCards_thenOk() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByIban(card.getIban())).thenReturn(List.of(card));
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(
@@ -122,7 +123,7 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenUserIsNotAccountOwner_whenListCards_thenForbidden() throws Exception {
-    var card = CardFixtures.createSomeonesCard(1000L, 5000L);
+    var card = CardFixtures.createSomeonesCard(1000, 5000);
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(
             ResponseEntity
@@ -157,7 +158,7 @@ class CardControllerTest {
   @Test
   @WithAnonymousUser
   void givenAnonymousUser_whenCreateCard_thenUnauthorized() throws Exception {
-    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
+    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000, 5000);
 
     mockMvc
         .perform(
@@ -170,7 +171,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUserHasCreateAuthority_whenCreateCardWithKnownAccount_thenCreated() throws Exception {
-    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
+    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000, 5000);
 
     when(accountsApi.getAccount(CardFixtures.CUSTOMER_IBAN))
         .thenReturn(
@@ -197,7 +198,7 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenUserDoesNotHaveCreateAuthority_whenCreateCard_thenForbidden() throws Exception {
-    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
+    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000, 5000);
 
     mockMvc
         .perform(
@@ -210,7 +211,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUnknownAccount_whenCreateCard_thenNotFound() throws Exception {
-    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000L, 5000L);
+    var dto = new CardRequest(CardFixtures.CUSTOMER_IBAN, 1000, 5000);
 
     when(accountsApi.getAccount(CardFixtures.CUSTOMER_IBAN))
         .thenThrow(
@@ -233,7 +234,7 @@ class CardControllerTest {
         .perform(
             post("https://localhost" + CardController.BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new CardRequest(null, 1000L, 5000L))))
+                .content(json.writeValueAsString(new CardRequest(null, 1000, 5000))))
         .andExpect(status().is4xxClientError());
 
     // invalid iban
@@ -241,7 +242,7 @@ class CardControllerTest {
         .perform(
             post("https://localhost" + CardController.BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new CardRequest("not-an-iban", 1000L, 5000L))))
+                .content(json.writeValueAsString(new CardRequest("not-an-iban", 1000, 5000))))
         .andExpect(status().is4xxClientError());
 
     // non positive ceilings
@@ -250,9 +251,7 @@ class CardControllerTest {
             post("https://localhost" + CardController.BASE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    json
-                        .writeValueAsString(
-                            new CardRequest(CardFixtures.CUSTOMER_IBAN, 0L, 5000L))))
+                    json.writeValueAsString(new CardRequest(CardFixtures.CUSTOMER_IBAN, 0, 5000))))
         .andExpect(status().is4xxClientError());
   }
 
@@ -269,7 +268,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUserHasReadAnyAuthority_whenGetCard_thenOk() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
 
     var actual = json
@@ -288,7 +287,7 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenUserIsCardOwner_whenGetCard_thenOk() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(
@@ -307,7 +306,7 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenUserIsNotCardOwner_whenGetCard_thenForbidden() throws Exception {
-    var card = CardFixtures.createSomeonesCard(1000L, 5000L);
+    var card = CardFixtures.createSomeonesCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(
@@ -351,7 +350,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUserHasCardStatusEditAuthority_whenSetCardStatus_thenAccepted() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     var dto = new CardStatusRequest(false);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(cardRepo.save(any(Card.class))).thenAnswer(i -> i.getArgument(0));
@@ -368,7 +367,7 @@ class CardControllerTest {
   @WithJwt("customer.json")
   void givenUserDoesNotHaveCardStatusEditAuthority_whenSetCardStatus_thenForbidden()
       throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     var dto = new CardStatusRequest(false);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
 
@@ -383,7 +382,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenInvalidPayload_whenSetCardStatus_thenBadRequest() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
 
     mockMvc
@@ -412,7 +411,7 @@ class CardControllerTest {
   @Test
   @WithAnonymousUser
   void givenAnonymousUser_whenSetCardCeilings_thenUnauthorized() throws Exception {
-    var dto = new CardCeilingsRequest(1000L, 5000L);
+    var dto = new CardCeilingsRequest(1000, 5000);
 
     mockMvc
         .perform(
@@ -425,8 +424,8 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUserHasCeilingsEditAuthority_whenSetCardCeilings_thenAccepted() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
-    var dto = new CardCeilingsRequest(2000L, 10000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
+    var dto = new CardCeilingsRequest(2000, 10000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(cardRepo.save(any(Card.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -442,8 +441,8 @@ class CardControllerTest {
   @WithJwt("customer.json")
   void givenUserDoesNotHaveCeilingsEditAuthority_whenSetCardCeilings_thenForbidden()
       throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
-    var dto = new CardCeilingsRequest(2000L, 10000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
+    var dto = new CardCeilingsRequest(2000, 10000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
 
     mockMvc
@@ -457,14 +456,14 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenInvalidPayload_whenSetCardCeilings_thenBadRequest() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
 
     mockMvc
         .perform(
             put("https://localhost" + CardController.CARD_CEILINGS_PATH, card.getNumber())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(new CardCeilingsRequest(0L, 5000L))))
+                .content(json.writeValueAsString(new CardCeilingsRequest(0, 5000))))
         .andExpect(status().is4xxClientError());
   }
 
@@ -484,7 +483,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenUserHasReadAnyAuthority_whenListCardPayments_thenOk() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     var from = Instant.now().minus(1, ChronoUnit.DAYS);
     var to = Instant.now();
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
@@ -502,7 +501,7 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenUserIsCardOwner_whenListCardPayments_thenOk() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     var from = Instant.now().minus(1, ChronoUnit.DAYS);
     var to = Instant.now();
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
@@ -528,7 +527,7 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenUserIsNotCardOwner_whenListCardPayments_thenForbidden() throws Exception {
-    var card = CardFixtures.createSomeonesCard(1000L, 5000L);
+    var card = CardFixtures.createSomeonesCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(
@@ -550,7 +549,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenMissingPeriodEnd_whenListCardPayments_thenBadRequest() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
 
     mockMvc
@@ -563,7 +562,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenMissingPeriodStart_whenListCardPayments_thenBadRequest() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
 
     mockMvc
@@ -576,7 +575,7 @@ class CardControllerTest {
   @Test
   @WithJwt("advisor.json")
   void givenMissingPeriod_whenListCardPayments_thenBadRequest() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
 
     mockMvc
@@ -590,7 +589,7 @@ class CardControllerTest {
   @WithAnonymousUser
   void givenAnonymousUser_whenCreateCardPayment_thenUnauthorized() throws Exception {
     var dto =
-        new CardPaymentCreationRequest("XPF", 100L, "some-card-number", CardFixtures.SOMEONE_IBAN);
+        new CardPaymentCreationRequest("XPF", 100, "some-card-number", CardFixtures.SOMEONE_IBAN);
 
     mockMvc
         .perform(
@@ -604,9 +603,9 @@ class CardControllerTest {
   @WithJwt("customer.json")
   void givenUserIsCardOwnerAndDestinationCurrencyDiffers_whenCreateCardPayment_thenCreated()
       throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     var dto =
-        new CardPaymentCreationRequest("XPF", 100L, card.getNumber(), CardFixtures.SOMEONE_IBAN);
+        new CardPaymentCreationRequest("XPF", 100, card.getNumber(), CardFixtures.SOMEONE_IBAN);
 
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
@@ -656,9 +655,9 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenUserIsNotCardOwner_whenCreateCardPayment_thenForbidden() throws Exception {
-    var card = CardFixtures.createSomeonesCard(1000L, 5000L);
+    var card = CardFixtures.createSomeonesCard(1000, 5000);
     var dto =
-        new CardPaymentCreationRequest("XPF", 100L, card.getNumber(), CardFixtures.SOMEONE_IBAN);
+        new CardPaymentCreationRequest("XPF", 100, card.getNumber(), CardFixtures.SOMEONE_IBAN);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(
@@ -680,9 +679,9 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenAmountExceedsTransactionCeiling_whenCreateCardPayment_thenConflict() throws Exception {
-    var card = CardFixtures.createCustomersCard(100L, 5000L);
+    var card = CardFixtures.createCustomersCard(100, 5000);
     var dto =
-        new CardPaymentCreationRequest("XPF", 500L, card.getNumber(), CardFixtures.SOMEONE_IBAN);
+        new CardPaymentCreationRequest("XPF", 500, card.getNumber(), CardFixtures.SOMEONE_IBAN);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(
@@ -712,9 +711,9 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenAmountExceedsRolling30Ceiling_whenCreateCardPayment_thenConflict() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 500L);
+    var card = CardFixtures.createCustomersCard(1000, 500);
     var dto =
-        new CardPaymentCreationRequest("XPF", 500L, card.getNumber(), CardFixtures.SOMEONE_IBAN);
+        new CardPaymentCreationRequest("XPF", 500, card.getNumber(), CardFixtures.SOMEONE_IBAN);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(
@@ -736,7 +735,7 @@ class CardControllerTest {
     var existingPayment = CardPayment
         .builder()
         .id(1L)
-        .amount(Amount.builder().currencyIso3("XPF").digits(400L).build())
+        .amount(Amount.builder().currency(Currency.XPF).digits(400).build())
         .card(card)
         .destinationIban(Iban.of(CardFixtures.SOMEONE_IBAN))
         .accepted(true)
@@ -760,7 +759,7 @@ class CardControllerTest {
   @Test
   @WithJwt("customer.json")
   void givenInvalidPayload_whenCreateCardPayment_thenBadRequest() throws Exception {
-    var card = CardFixtures.createCustomersCard(1000L, 5000L);
+    var card = CardFixtures.createCustomersCard(1000, 5000);
     when(cardRepo.findByNumber(card.getNumber())).thenReturn(Optional.of(card));
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(
@@ -781,7 +780,7 @@ class CardControllerTest {
                         .writeValueAsString(
                             new CardPaymentCreationRequest(
                                 "XPF",
-                                100L,
+                                100,
                                 card.getNumber(),
                                 "not-an-iban"))))
         .andExpect(status().is4xxClientError());
@@ -796,7 +795,7 @@ class CardControllerTest {
                         .writeValueAsString(
                             new CardPaymentCreationRequest(
                                 "XPF",
-                                -1L,
+                                -1,
                                 card.getNumber(),
                                 CardFixtures.SOMEONE_IBAN))))
         .andExpect(status().is4xxClientError());

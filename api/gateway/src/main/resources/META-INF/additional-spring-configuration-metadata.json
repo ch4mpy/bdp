@@ -38,17 +38,17 @@
 		{
 			"name": "cards-service",
 			"type": "java.net.URI",
-			"description": "Root URI for the accounts REST API"
+			"description": "Root URI for the cards REST API"
 		},
 		{
 			"name": "customers-service",
 			"type": "java.net.URI",
-			"description": "Root URI for the accounts REST API"
+			"description": "Root URI for the customers REST API"
 		},
 		{
-			"name": "users-service",
+			"name": "currencies-service",
 			"type": "java.net.URI",
-			"description": "Root URI for the accounts REST API"
+			"description": "Root URI for the currencies REST API"
 		}
 	]
 }

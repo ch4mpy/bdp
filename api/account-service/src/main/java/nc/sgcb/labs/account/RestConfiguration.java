@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.client.RestClient;
 import com.c4_soft.springaddons.rest.RestClientHttpExchangeProxyFactoryBean;
+import nc.sgcb.labs.currency.api.CurrenciesApi;
 import nc.sgcb.labs.customer.api.CustomersApi;
 
 @Configuration
@@ -18,6 +19,14 @@ public class RestConfiguration {
   CustomersApi customersApi(RestClient customerServiceClient) throws Exception {
     return new RestClientHttpExchangeProxyFactoryBean<>(CustomersApi.class, customerServiceClient)
         .getObject();
+  }
+
+  @SuppressWarnings("null")
+  @Bean
+  CurrenciesApi currenciesApi(RestClient currenciesServiceClient) throws Exception {
+    return new RestClientHttpExchangeProxyFactoryBean<>(
+        CurrenciesApi.class,
+        currenciesServiceClient).getObject();
   }
 
   @Bean

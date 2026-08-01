@@ -1,0 +1,101 @@
+package nc.sgcb.labs.currency.frankfurter;
+
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.util.Optional;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
+import dev.frankfurter.api.RatesApi;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import nc.sgcb.labs.commons.domain.Amount;
+import nc.sgcb.labs.commons.domain.Currency;
+import nc.sgcb.labs.currency.domain.ForexService;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
+public class FrankfurterForexService implements ForexService {
+  public static final Currency PIVOT_CURR = Currency.EUR;
+
+  private final CachingRatesRepository ratesRepo;
+
+  @Override
+  public Amount convert(Amount amount, Currency targetCurrency) {
+    final var source =
+        new BigDecimal(amount.getDigits()).scaleByPowerOfTen(-1 * amount.getCurrency().decimals);
+    final var rate = getExchangeRate(amount.getCurrency(), targetCurrency);
+    final var converted = source.multiply(rate);
+    return Amount
+        .builder()
+        .currency(targetCurrency)
+        .digits(
+            converted
+                .scaleByPowerOfTen(targetCurrency.decimals)
+                .round(MathContext.DECIMAL32)
+                .intValue())
+        .build();
+  }
+
+  public BigDecimal getExchangeRate(Currency sourceCurrency, Currency targetCurrency) {
+    if (sourceCurrency.equals(targetCurrency)) {
+      return BigDecimal.ONE;
+    }
+    final var sourceToPivot = PIVOT_CURR.equals(sourceCurrency) ? BigDecimal.ONE
+        : BigDecimal.ONE
+            .divide(ratesRepo.fetchRate(PIVOT_CURR, sourceCurrency), 5, RoundingMode.HALF_UP);
+    final var pivotToTarget = PIVOT_CURR.equals(targetCurrency) ? BigDecimal.ONE
+        : ratesRepo.fetchRate(PIVOT_CURR, targetCurrency);
+    return sourceToPivot.multiply(pivotToTarget);
+  }
+
+  @RequiredArgsConstructor
+  @Repository
+  @CacheConfig(cacheNames = CachingRatesRepository.FOREX_CACHE_NAME)
+  static class CachingRatesRepository {
+    public static final String FOREX_CACHE_NAME = "frankfurterForexCache";
+    public static final String PROVIDERS = "ECB";
+
+    private final RatesApi ratesApi;
+
+    @Cacheable(cacheNames = FOREX_CACHE_NAME)
+    public BigDecimal fetchRate(Currency fromCurrency, Currency toCurrency) {
+      if (Currency.XPF.equals(toCurrency) && fromCurrency.equals(Currency.EUR)) {
+        // Hardcoded rate for EUR to XPF as Frankfurter API does not support XPF
+        return BigDecimal.valueOf(119.331742243);
+      }
+      if (fromCurrency.equals(toCurrency)) {
+        return BigDecimal.ONE;
+      }
+      try {
+        final var response = ratesApi
+            .getRate(
+                fromCurrency.name(),
+                toCurrency.name(),
+                Optional.empty(),
+                Optional.of(PROVIDERS));
+        return response.getBody().getRate();
+      } catch (HttpClientErrorException e) {
+        log
+            .error(
+                "Failed to fetch exchange rate from %s to %s from Frankfurter API: %s"
+                    .formatted(fromCurrency, toCurrency, e.getMessage()),
+                e);
+        throw new ResponseStatusException(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Failed to fetch exchange rate from %s to %s from Frankfurter API"
+                .formatted(fromCurrency, toCurrency),
+            e);
+      }
+    }
+  }
+}

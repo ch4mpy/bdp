@@ -41,7 +41,7 @@ class CardRepositoryTest {
   void setUp() {
     cardNumber = "123456";
     accountIban = Iban.of("FR76 1111222233334444");
-    ceilings = Card.Ceilings.builder().transaction(50000L).rolling30(100000L).build();
+    ceilings = Card.Ceilings.builder().transaction(50000).rolling30(100000).build();
 
     final var cards = new ConcurrentHashMap<String, Card>();
     cards
@@ -73,8 +73,8 @@ class CardRepositoryTest {
     // once.
     var actual = cardService.findByNumber(cardNumber);
     var actual2 = cardService.findByNumber(cardNumber);
-    assertEquals(100000L, actual.get().getCeilings().getRolling30());
-    assertEquals(100000L, actual2.get().getCeilings().getRolling30());
+    assertEquals(100000, actual.get().getCeilings().getRolling30());
+    assertEquals(100000, actual2.get().getCeilings().getRolling30());
 
     // save a new Card instance with the same card number and different ceilings
     // (do not work with a reference to the instance already in the cache)
@@ -83,14 +83,14 @@ class CardRepositoryTest {
             Card
                 .builder()
                 .iban(accountIban)
-                .ceilings(new Card.Ceilings(150000L, 300000L))
+                .ceilings(new Card.Ceilings(150000, 300000))
                 .number(cardNumber)
                 .build());
-    assertEquals(300000L, card.getCeilings().getRolling30());
+    assertEquals(300000, card.getCeilings().getRolling30());
 
     // retrieve the card from the cache to verify that it was updated when saving the new instance
     var actual3 = cardService.findByNumber(cardNumber);
-    assertEquals(300000L, actual3.get().getCeilings().getRolling30());
+    assertEquals(300000, actual3.get().getCeilings().getRolling30());
 
     // only the 1st call to cardService.findByNumber should delegate to cardRepo.findById
     // (save should @CachePut here, not @CacheEvict)
@@ -105,8 +105,8 @@ class CardRepositoryTest {
     // once.
     var actual = cardService.findByIban(accountIban);
     var actual2 = cardService.findByIban(accountIban);
-    assertEquals(100000L, actual.get(0).getCeilings().getRolling30());
-    assertEquals(100000L, actual2.get(0).getCeilings().getRolling30());
+    assertEquals(100000, actual.get(0).getCeilings().getRolling30());
+    assertEquals(100000, actual2.get(0).getCeilings().getRolling30());
 
     // save a new Card instance with the same card number and different ceilings
     // (do not work with a reference to the instance already in the cache)
@@ -115,14 +115,14 @@ class CardRepositoryTest {
             Card
                 .builder()
                 .iban(accountIban)
-                .ceilings(new Card.Ceilings(150000L, 300000L))
+                .ceilings(new Card.Ceilings(150000, 300000))
                 .number(cardNumber)
                 .build());
-    assertEquals(300000L, card.getCeilings().getRolling30());
+    assertEquals(300000, card.getCeilings().getRolling30());
 
     // retrieve the card from the cache to verify that it was evicted when saving the new instance
     var actual3 = cardService.findByIban(accountIban);
-    assertEquals(300000L, actual3.get(0).getCeilings().getRolling30());
+    assertEquals(300000, actual3.get(0).getCeilings().getRolling30());
 
     // only the 1st and 3rd calls to cardService.findByNumber should delegate to cardRepo.findById
     // (save should @CacheEvict here, not @CachePut)

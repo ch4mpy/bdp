@@ -8,6 +8,7 @@ import nc.sgcb.labs.account.domain.MoneyTransfer;
 import nc.sgcb.labs.account.domain.MoneyTransferFilteringCriteria;
 import nc.sgcb.labs.account.domain.MoneyTransfer_;
 import nc.sgcb.labs.commons.domain.Amount_;
+import nc.sgcb.labs.commons.domain.Currency;
 import nc.sgcb.labs.commons.domain.Iban;
 
 /**
@@ -20,29 +21,29 @@ public interface MoneyTransferRepository
   static Specification<MoneyTransfer> searchSpec(MoneyTransferFilteringCriteria criteria) {
     var spec = Specification.<MoneyTransfer>unrestricted();
 
-    if (criteria.sourceIban().isPresent()) {
-      spec = spec.and(sourceAccountNumberLike(criteria.sourceIban().get()));
+    if (criteria.sourceIban() != null) {
+      spec = spec.and(sourceAccountNumberLike(Iban.of(criteria.sourceIban())));
     }
-    if (criteria.destinationIban().isPresent()) {
-      spec = spec.and(destinationAccountNumberLike(criteria.destinationIban().get()));
+    if (criteria.destinationIban() != null) {
+      spec = spec.and(destinationAccountNumberLike(Iban.of(criteria.destinationIban())));
     }
-    if (criteria.minAmount().isPresent()) {
-      spec = spec.and(amountGe(criteria.minAmount().get()));
+    if (criteria.minAmount() != null) {
+      spec = spec.and(amountGe(criteria.minAmount()));
     }
-    if (criteria.maxAmount().isPresent()) {
-      spec = spec.and(amountLe(criteria.maxAmount().get()));
+    if (criteria.maxAmount() != null) {
+      spec = spec.and(amountLe(criteria.maxAmount()));
     }
-    if (criteria.currencyIso3().isPresent()) {
-      spec = spec.and(currencyLike(criteria.currencyIso3().get()));
+    if (criteria.currency() != null) {
+      spec = spec.and(currencyLike(Currency.valueOf(criteria.currency())));
     }
-    if (criteria.timestampBefore().isPresent()) {
-      spec = spec.and(timestampBefore(criteria.timestampBefore().get()));
+    if (criteria.timestampBefore() != null) {
+      spec = spec.and(timestampBefore(criteria.timestampBefore()));
     }
-    if (criteria.timestampAfter().isPresent()) {
-      spec = spec.and(timestampAfter(criteria.timestampAfter().get()));
+    if (criteria.timestampAfter() != null) {
+      spec = spec.and(timestampAfter(criteria.timestampAfter()));
     }
-    if (criteria.labelContaining().isPresent()) {
-      spec = spec.and(labelLike(criteria.labelContaining().get()));
+    if (criteria.labelContaining() != null) {
+      spec = spec.and(labelLike(criteria.labelContaining()));
     }
 
     return orderBytimestampDesc(spec);
@@ -59,18 +60,18 @@ public interface MoneyTransferRepository
   }
 
   @SuppressWarnings("unused")
-  private static Specification<MoneyTransfer> currencyLike(String iso3) {
+  private static Specification<MoneyTransfer> currencyLike(Currency iso3) {
     return (root, query, cb) -> cb
-        .like(root.get(MoneyTransfer_.amount).get(Amount_.currencyIso3), iso3);
+        .equal(root.get(MoneyTransfer_.amount).get(Amount_.currency), iso3);
   }
 
   @SuppressWarnings("unused")
-  private static Specification<MoneyTransfer> amountGe(Long digits) {
+  private static Specification<MoneyTransfer> amountGe(Integer digits) {
     return (root, query, cb) -> cb.ge(root.get(MoneyTransfer_.amount).get(Amount_.digits), digits);
   }
 
   @SuppressWarnings("unused")
-  private static Specification<MoneyTransfer> amountLe(Long digits) {
+  private static Specification<MoneyTransfer> amountLe(Integer digits) {
     return (root, query, cb) -> cb.le(root.get(MoneyTransfer_.amount).get(Amount_.digits), digits);
   }
 

@@ -1,6 +1,12 @@
 package nc.sgcb.labs.card.payment.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,9 +53,9 @@ public class Card {
   public static class Ceilings {
 
     @Column(name = "transaction_ceiling", nullable = false)
-    private Long transaction;
+    private Integer transaction;
 
     @Column(name = "rolling30_ceiling", nullable = false)
-    private Long rolling30;
+    private Integer rolling30;
   }
 }

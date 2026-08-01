@@ -4,15 +4,15 @@ import java.time.Instant;
 import org.jspecify.annotations.Nullable;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
-import nc.sgcb.labs.commons.validation.CurrencyIso3;
 import nc.sgcb.labs.commons.validation.IbanString;
+import nc.sgcb.labs.commons.validation.SupportedCurrency;
 
 /**
  * @param sourceIban a valid IBAN for the source account (optional)
  * @param destinationIban a valid IBAN for the destination account (optional)
  * @param minAmount the minimum amount of the transfer (optional)
  * @param maxAmount the maximum amount of the transfer (optional)
- * @param currencyIso3 a valid ISO 4217 currency code (optional)
+ * @param currency a valid ISO 4217 currency code (optional)
  * @param timestampAfter the earliest timestamp of the transfer (optional)
  * @param timestampBefore the latest timestamp of the transfer (optional)
  * @param labelContaining a substring of at least 3 characters that should be contained in the
@@ -21,9 +21,9 @@ import nc.sgcb.labs.commons.validation.IbanString;
 public record MoneyTransferFilterRequest(
     @Nullable @IbanString String sourceIban,
     @Nullable @IbanString String destinationIban,
-    @Nullable @Min(0) Long minAmount,
-    @Nullable @Min(0) Long maxAmount,
-    @Nullable @CurrencyIso3 String currencyIso3,
+    @Nullable @Min(0) Integer minAmount,
+    @Nullable @Min(0) Integer maxAmount,
+    @Nullable @SupportedCurrency String currency,
     @Nullable Instant timestampAfter,
     @Nullable Instant timestampBefore,
     @Nullable @Size(min = 3) String labelContaining) {

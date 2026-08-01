@@ -5,13 +5,13 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <changeSet id="1785443515855-1" author="jerome">
+    <changeSet id="1785566181319-1" author="ch4mp">
         <createSequence incrementBy="1" sequenceName="benficiaries_seq" startValue="1"/>
     </changeSet>
-    <changeSet id="1785443515855-2" author="jerome">
+    <changeSet id="1785566181319-2" author="ch4mp">
         <createSequence incrementBy="50" sequenceName="revinfo_seq" startValue="1"/>
     </changeSet>
-    <changeSet id="1785443515855-3" author="jerome">
+    <changeSet id="1785566181319-3" author="ch4mp">
         <createTable tableName="benficiaries">
             <column name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_benficiaries"/>
@@ -27,7 +27,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet id="1785443515855-4" author="jerome">
+    <changeSet id="1785566181319-4" author="ch4mp">
         <createTable tableName="revchanges">
             <column name="rev" type="BIGINT">
                 <constraints nullable="false"/>
@@ -35,7 +35,7 @@
             <column name="entityname" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="1785443515855-5" author="jerome">
+    <changeSet id="1785566181319-5" author="ch4mp">
         <createTable tableName="revinfo">
             <column name="rev" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="pk_revinfo"/>
@@ -43,14 +43,14 @@
             <column name="revtstmp" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet id="1785443515855-6" author="jerome">
+    <changeSet id="1785566181319-6" author="ch4mp">
         <addUniqueConstraint columnNames="label" constraintName="uc_43f2eae19d0eabc0cf5df4d4d"
                              tableName="benficiaries"/>
     </changeSet>
-    <changeSet id="1785443515855-7" author="jerome">
+    <changeSet id="1785566181319-7" author="ch4mp">
         <addUniqueConstraint columnNames="iban" constraintName="uc_a5c37d5691418578ecd3de5fc" tableName="benficiaries"/>
     </changeSet>
-    <changeSet id="1785443515855-8" author="jerome">
+    <changeSet id="1785566181319-8" author="ch4mp">
         <addForeignKeyConstraint baseColumnNames="rev" baseTableName="revchanges"
                                  constraintName="fk_revchanges_on_default_tracking_modified_entities_changelog"
                                  referencedColumnNames="rev" referencedTableName="revinfo"/>

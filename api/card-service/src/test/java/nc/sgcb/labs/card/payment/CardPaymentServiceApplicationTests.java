@@ -49,7 +49,7 @@ class CardPaymentServiceApplicationTests {
   CardPaymentRepository paymentRepo;
 
   private static AccountResponse accountOwnedBy(String customerId, String iban, String currency) {
-    return new AccountResponse().iban(iban).customerId(customerId).currency(currency).balance(0L);
+    return new AccountResponse().iban(iban).customerId(customerId).currency(currency).balance(0);
   }
 
   @Test
@@ -59,7 +59,7 @@ class CardPaymentServiceApplicationTests {
   @WithMockUser(username = CardFixtures.CUSTOMER_SUBJECT)
   void givenMoneyTransferFails_whenCreateCardPayment_thenPaymentIsPersistedAsNotAccepted()
       throws Exception {
-    var card = cardRepo.save(CardFixtures.createCustomersCard(1000L, 5000L));
+    var card = cardRepo.save(CardFixtures.createCustomersCard(1000, 5000));
 
     when(accountsApi.getAccount(card.getIban().toMachineReadableString()))
         .thenReturn(

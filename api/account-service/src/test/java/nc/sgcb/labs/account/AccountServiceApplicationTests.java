@@ -38,7 +38,7 @@ class AccountServiceApplicationTests {
   @Test
   @WithJwt("advisor.json")
   void givenUserIsAdvisor_whenGetAccountWithAKnownIban_thenOk() throws Exception {
-    var account = accountRepo.save(AccountFixtures.createCustomersXpfAccount(100000L));
+    var account = accountRepo.save(AccountFixtures.createCustomersXpfAccount(100000));
 
     var actual = json
         .readValue(
