@@ -12,4 +12,7 @@
       </database-info>
     </database-infos>
   </component>
+  <component name="JpaLiquibaseChangesConfig">
+    <exclude-change idName="revinfo#username" tagName="dropColumn" />
+  </component>
 </project>
