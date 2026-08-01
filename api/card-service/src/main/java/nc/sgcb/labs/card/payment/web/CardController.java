@@ -180,7 +180,7 @@ public class CardController {
       @RequestBody @Valid CardStatusRequest dto,
       Authentication auth) {
     log
-        .info(
+        .debug(
             "{} is changing status {} card status from {} to {}",
             auth.getName(),
             card.getNumber(),
@@ -188,7 +188,7 @@ public class CardController {
             dto.isActive());
     card.setActive(dto.isActive());
     cardRepo.save(card);
-    log.debug("{} changed card {} status to {}", auth.getName(), card.getNumber(), dto.isActive());
+    log.info("{} changed card {} status to {}", auth.getName(), card.getNumber(), dto.isActive());
   }
 
   /**
@@ -214,7 +214,7 @@ public class CardController {
         .transaction(dto.transactionCeiling())
         .build();
     log
-        .info(
+        .debug(
             "{} is changing card {} ceilings from {} to {}",
             auth.getName(),
             card.getNumber(),
@@ -222,7 +222,7 @@ public class CardController {
             newCeilings);
     card.setCeilings(newCeilings);
     cardRepo.save(card);
-    log.debug("{} changed card {} ceilings to {}", auth.getName(), card.getNumber(), newCeilings);
+    log.info("{} changed card {} ceilings to {}", auth.getName(), card.getNumber(), newCeilings);
   }
 
   /**
@@ -264,7 +264,8 @@ public class CardController {
       @Parameter(schema = @Schema(type = "string",
           description = "The number of the card to create a payment with"))
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
-      @RequestBody @Valid CardPaymentCreationRequest dto) throws ResourceNotFoundException {
+      @RequestBody @Valid CardPaymentCreationRequest dto,
+      Authentication auth) throws ResourceNotFoundException {
     // Assert that the destination account is known by the account service
     try {
       log.debug("Retrieving account {} from the account service", dto.destinationIban());
@@ -309,9 +310,11 @@ public class CardController {
 
       transferMoneyAndAccept(payment);
       log
-          .debug(
-              "Sucessfully transferred money for card payment {} with card {} to account {}",
-              payment.getId(),
+          .info(
+              "{} paid {}{} with card {} to account {}",
+              auth.getName(),
+              dto.amount(),
+              dto.currency(),
               card.getNumber(),
               dto.destinationIban());
 

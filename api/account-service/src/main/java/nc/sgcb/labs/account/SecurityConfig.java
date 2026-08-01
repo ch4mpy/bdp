@@ -35,8 +35,7 @@ public class SecurityConfig {
     private final AccountRepository accountRepo;
 
     public boolean isAccountOwner(@Nullable String customerId, @Nullable String ibanString) {
-      return ibanString == null
-          ? false
+      return ibanString == null ? false
           : accountRepo
               .findByIban(Iban.of(ibanString))
               .map(account -> Objects.equals(customerId, account.getCustomerId()))

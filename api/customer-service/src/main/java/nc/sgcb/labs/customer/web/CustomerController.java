@@ -91,6 +91,7 @@ public class CustomerController {
       @RequestBody @Valid CustomerCreationRequest dto,
       Authentication auth) {
     var customer = userRepo.save(customerMapper.map(dto));
+    log.info("{} created customer {}", auth.getName(), customer);
     return ResponseEntity
         .created(
             URI

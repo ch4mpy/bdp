@@ -29,19 +29,21 @@ public class SpringDataWebConvertersTestConfiguration {
 
       @Override
       public void addFormatters(FormatterRegistry registry) {
-        registry.addConverter(
-            String.class,
-            Account.class,
-            iban -> accountRepo
-                .flatMap(r -> iban == null ? Optional.empty() : r.findByIban(Iban.of(iban)))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+        registry
+            .addConverter(
+                String.class,
+                Account.class,
+                iban -> accountRepo
+                    .flatMap(r -> iban == null ? Optional.empty() : r.findByIban(Iban.of(iban)))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
 
-        registry.addConverter(
-            String.class,
-            MoneyTransfer.class,
-            id -> transferRepo
-                .flatMap(r -> id == null ? Optional.empty() : r.findById(Long.valueOf(id)))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+        registry
+            .addConverter(
+                String.class,
+                MoneyTransfer.class,
+                id -> transferRepo
+                    .flatMap(r -> id == null ? Optional.empty() : r.findById(Long.valueOf(id)))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
       }
     };
   }

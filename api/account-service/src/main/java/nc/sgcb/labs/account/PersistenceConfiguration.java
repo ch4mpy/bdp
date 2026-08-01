@@ -1,7 +1,7 @@
 /**
  *
  */
-package nc.sgcb.labs.customer;
+package nc.sgcb.labs.account;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -54,6 +54,7 @@ public class PersistenceConfiguration {
       }
     }
   }
+
 
   @Entity
   @Table(name = "REVINFO")

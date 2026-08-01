@@ -1,7 +1,7 @@
 /**
  *
  */
-package nc.sgcb.labs.customer;
+package nc.sgcb.labs.card.payment;
 
 import java.io.Serializable;
 import java.util.Date;

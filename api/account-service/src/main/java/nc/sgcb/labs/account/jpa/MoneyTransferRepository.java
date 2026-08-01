@@ -22,10 +22,10 @@ public interface MoneyTransferRepository
     var spec = Specification.<MoneyTransfer>unrestricted();
 
     if (criteria.sourceIban() != null) {
-      spec = spec.and(sourceAccountNumberLike(Iban.of(criteria.sourceIban())));
+      spec = spec.and(sourceAccountNumberLike(criteria.sourceIban()));
     }
     if (criteria.destinationIban() != null) {
-      spec = spec.and(destinationAccountNumberLike(Iban.of(criteria.destinationIban())));
+      spec = spec.and(destinationAccountNumberLike(criteria.destinationIban()));
     }
     if (criteria.minAmount() != null) {
       spec = spec.and(amountGe(criteria.minAmount()));
@@ -34,7 +34,7 @@ public interface MoneyTransferRepository
       spec = spec.and(amountLe(criteria.maxAmount()));
     }
     if (criteria.currency() != null) {
-      spec = spec.and(currencyLike(Currency.valueOf(criteria.currency())));
+      spec = spec.and(currencyLike(criteria.currency()));
     }
     if (criteria.timestampBefore() != null) {
       spec = spec.and(timestampBefore(criteria.timestampBefore()));
