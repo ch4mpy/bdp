@@ -67,7 +67,7 @@ class MoneyTransferRepositoryTest {
             MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
-                        "FR76 123456789",
+                        Iban.of("FR76 123456789"),
                         null,
                         null,
                         null,
@@ -99,7 +99,7 @@ class MoneyTransferRepositoryTest {
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
                         null,
-                        "FR76 444555666",
+                        Iban.of("FR76 444555666"),
                         null,
                         null,
                         null,
@@ -175,7 +175,7 @@ class MoneyTransferRepositoryTest {
                         null,
                         null,
                         null,
-                        "XPF",
+                        Currency.XPF,
                         null,
                         null,
                         null)));
@@ -252,11 +252,11 @@ class MoneyTransferRepositoryTest {
             MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
-                        "FR76 111222333",
-                        "FR76 444555666",
+                        Iban.of("FR76 111222333"),
+                        Iban.of("FR76 444555666"),
                         1000,
                         1000,
-                        "XPF",
+                        Currency.XPF,
                         instant,
                         instant,
                         "1000")));

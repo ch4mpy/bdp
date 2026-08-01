@@ -1,8 +1,17 @@
 package nc.sgcb.labs.card.payment.domain;
 
 import java.time.Instant;
-
-import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +23,7 @@ import nc.sgcb.labs.commons.domain.Amount;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.jpa.IbanStringAttributeConverter;
 
+@Audited
 @Entity
 @Table(name = "payments")
 @Data

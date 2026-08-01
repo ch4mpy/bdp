@@ -25,4 +25,5 @@ public interface MoneyTransferMapper {
   @Mapping(target = "amount.currency", source = "currency")
   MoneyTransfer map(MoneyTransferRequest dto);
 
+
 }

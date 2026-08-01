@@ -1,5 +1,6 @@
 package nc.sgcb.labs.card.payment.domain;
 
+import org.hibernate.envers.Audited;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
@@ -17,6 +18,7 @@ import lombok.ToString;
 import nc.sgcb.labs.commons.domain.Iban;
 import nc.sgcb.labs.commons.jpa.IbanStringAttributeConverter;
 
+@Audited
 @Entity
 @Table(name = "cards")
 @Data
