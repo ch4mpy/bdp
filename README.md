@@ -1,90 +1,112 @@
-# REST-hero : TPs de création d'APIs REST avec Spring Boot
+# REST-hero : APIs REST avec Spring Boot
 
-Le support de TP est une banque en ligne simplifiée permettant de :
+Bien que certains raccourcis métier aient été pris, ce support de TP répond à des exigences techniques avancées. Les services REST sont notamment :
+- **Audités** :
+    * Hibernate Envers garde la trace de chaque version des entités en base données avec l'instant et l'auteur de la modification
+    * Chaque endpoint qui modifie l'état de l'application (`POST`, `PUT` ou `DELETE`) log au niveau `info` un résumé de ce qui a été modifié et par qui
+- **Observables** et observée de manière centralisée : émet des logs collectées dans Loki, des métriques dans Mimir et des traces dans Tempo, le tout visualisé dans [Grafana](https://host.docker.internal/grafana).
+- **Documentés** avec OpenAPI : permet aux clients de générer le code pour les consommer et aux développeurs de la visualiser dans une Swagger-UI.
+- **Communicants** : Appels REST inter-service:
+  * le `customer-service` utilise Keycloak pour accéder aux utilisateurs
+  * l'`account-service` vérifie auprès du `customer-service` qu'un client existe avant de créer un compte à son nom. Il sollicite aussi le `currency-service` lorsqu'un virement nécessite des opérations de change.
+  * le `card-service` vérifie auprès de l'`account-service` qu'un compte existe avant de lui attacher une carte et lui déclare un transfert d'argent lors d'un paiement par carte.
+- **Sécurisés** : 
+  * chaque endpoint d'API vérifie l'identité attachée à la requête et ses relations éventuelles avec les ressources qu'elle cherche à manipuler pour prendre autoriser l'accès.
+  * ne sont utilisés que des clients OAuth2 confidentiels (avec mot de passe). Les requêtes du front React sont autorisées avec le patter [_OAuth2 BFF_]()
+- **Persistants** : les objets métier sont sauvegardés dans PostgreSQL avec JPA. Les requêtes les plus complexes (filtres sur les paiements par carte et les mouvements entre comptes) sont construites avec des spécifications JPA.
+- **Performants** : utilisation de caches pour limiter les accès à la base de données et les appels REST inter-services lorsque c'est pertinent.
 
-- gérer bénéficiaires d'un client
-- effectuer des virements. Il n'y a pas de connexion à d'autres banques. Ces services nes sont même pas simulés. Les
-  opérations de crédit / débit de ces comptes sont simplement ignorées.
-- gérer des cartes de paiement pour chaque compte: créer, activer, désactiver
-- effectuer des paiements par carte.
+- [Introduction](#intro)
+- [Déploiement de l'environnement de dev](#dev-deployment)
+- [1. Build avec Maven](#maven-build)
+  * [1.1. Introduction](#maven-build-intro)
+    - [1.1.1. Structure](#maven-build-structure)
+    - [1.1.2. Phases](#maven-build-phases)
+  * [1.2. Dépendances](#maven-build-dependencies)
+  * [1.3. Processeurs d’annotations à la compilation](#maven-build-annotations-preprocessing)
+  * [1.4. Génération de spec OpenAPI à partir du code source](#maven-build-openapi-spec-generation)
+  * [1.5. Génération de code client à partir de spec OpenAPI](#maven-build-openapi-client-code-generation)
+  * [1.6. Manipulation des ressources](#maven-build-resources-handling)
+- [2. Fondamentaux Spring](#spring)
+  * [2.1. Injection de dépendance](#spring-di)
+  * [2.2. `@Component` et variantes](#spring-components)
+  * [2.3. `@Configuration` et `@Bean`](#spring-configuration)
+  * [2.4. Proxies générés](#spring-proxies)
+  * [2.5. Tests](#spring-testing)
+- [3. Modèles objet-relationnel et accès aux données](#jpa)
+  * [3.1. `@Entity`](#jpa-entity)
+  * [3.2. Identifiants générés](#jpa-generated-ids)
+  * [3.3. Relations](#jpa-relations)
+  * [3.4. Conversion de types](#jpa-type-converter)
+  * [3.5. `@Repository` Spring Data JPA](#jpa-repositories)
+  * [3.6. JPA query methods](#jpa-query-dsl)
+  * [3.7. Spécifications JPA](#jpa-specifications)
+  * [3.8. Transactions](#jpa-transactions)
+- [4. Services REST WebMvc avec Spring Boot](#rest-controller)
+  * [4.1. `@RequestMapping`](#rest-controller-request-mapping)
+  * [4.2. Convertisseurs automatiques de Spring](#rest-controller-converters)
+  * [4.3. Validation des entrées](#rest-controller-validation)
+  * [4.4. Gestion des exceptions](#rest-controller-exceptions)
+  * [4.5. Génération de la documentation OpenAPI](#rest-controller-openapi)
+  * [4.6. Appels de services REST externes](#rest-controller-inter-service-communication)
+  * [4.7. Logs](#rest-controller-logging)
+- [5. Mise en cache](#caching)
 
-Elle est composée de :
+## <a href="intro"/>Introduction
 
-- une interface graphique React
-- une API REST composée de :
-    * une `gateway`. Les requêtes (du frontend) préfixées avec `/gateway/bff` sont autorisées avec des cookies de
-      session (`http-only=true`) et protégées contre le CSRF (cookie `XSRF-TOKEN` avec `http-only=false` et header
-      `X-XSRF-TOKEN` requis pour pour les requêtes `POST`, `PUT` `PATCH` et `DELETE`). Les requêtes de clients OAuth2
-      (appels inter-services, Bruno, Postman, ...) préfixées avec `/gateway/m2m` sont autorisées avec un `Bearer` token
-      dans le header `Authorization`.
-    * `sgcb-starter-service-common` est un starter Spring Boot qui contenant des classes et de l'auto-configuration
-      partagée.
-    * `currency-service` fournit un référentiel des devise supportées et du change sur le fixing veille de la BCE
-      (via [https://frankfurter.dev](https://frankfurter.dev/))
-    * `customer-service` responsable des clients et de leurs bénéficiaires. Ce service ne stocke que les bénéficiaires
-      dans sa base de données. Les clients sont des utilisateurs de Keycloak (lecture / écriture via l'API Keycloak).
-    * `account-service` responsable des comptes bancaires et des transferts entre comptes.
-    * `card-service`responsable des cartes et des paiements par carte.
+Le cas d'utilisation est une banque en ligne simplifiée avec :
+- Opérations de change basées sur le fixing veille de la Banque Centrale Européenne.
+- Gestion des bénéficiaires d'un client.
+- Virements entre comptes. Il n'y a pas de connexion à d'autres banques. Les opérations de crédit / débit des comptes qui ne sont pas gérés en interne sont simplement ignorées.
+- Gestion des cartes de paiement pour chaque compte: création & (dés)activation.
+- Paiements par carte.
 
-Principales caractéristiques techniques de l'API REST:
+La solution est composée d'une interface graphique React interrogeant une API REST composée des modules suivants :
+- une `gateway`. Les requêtes (du frontend) préfixées avec `/gateway/bff` sont autorisées avec des cookies de session (`http-only=true`) et protégées contre le CSRF (cookie `XSRF-TOKEN` avec `http-only=false` et header `X-XSRF-TOKEN` requis pour pour les requêtes `POST`, `PUT` `PATCH` et `DELETE`). Les requêtes de clients OAuth2 (appels inter-services, Bruno, Postman, ...) préfixées avec `/gateway/m2m` sont autorisées avec un `Bearer` token dans le header `Authorization`.
+- `sgcb-starter-service-common` est un starter Spring Boot qui contenant des classes et de l'auto-configuration partagée.
+- `currency-service` fournit un référentiel des devise supportées et du change sur le fixing veille de la BCE (via [https://frankfurter.dev](https://frankfurter.dev/))
+- `customer-service` responsable des clients et de leurs bénéficiaires. Ce service ne stocke que les bénéficiaires dans sa base de données. Les clients sont des utilisateurs de Keycloak (lecture / écriture via l'API Keycloak).
+- `account-service` responsable des comptes bancaires et des transferts entre comptes.
+- `card-service`responsable des cartes et des paiements par carte.
 
-- **Auditée** :
-    * Hibernate Envers garde la trace de chaque modification en base données en associant le moment où a été effectuée
-      la modification et par qui la requête a été initiée
-    * Chaque endpoint qui modifie l'état de l'application (`POST`, `PUT` ou `DELETE`) log au niveau `info` un résumé de
-      ce qui a été modifié et par qui
-- **Observable** : émet des logs collectées dans Loki, les métriques des métriques dans Mimir et les traces dans Tempo,
-  le tout visualisé dans Grafana.
-- **Documentée** avec OpenAPI : permet aux clients de générer le code pour les consommer et aux développeurs de la
-  visualiser dans une Swagger-UI.
-- **Communicante** : Appels REST inter-service:
-    * le `customer-service` utilise Keycloak pour accéder aux utilisateurs
-    * l'`account-service` vérifie auprès du `customer-service` qu'un client existe avant de créer un compte à son nom.
-      Il sollicite aussi le `currency-service` lorsqu'un virement nécessite des opérations de change.
-    * le `card-service` vérifie auprès de l'`account-service` qu'un compte existe avant de lui attacher une carte et lui
-      déclare un transfert d'argent lors d'un paiement par carte.
-- **Sécurisée** : chaque endpoint d'API vérifie l'identité attachée à la requête et ses relations éventuelles avec les
-  ressources qu'elle cherche à manipuler pour prendre autoriser l'accès.
-- **Persistante** : les objets métier sont sauvegardés dans PostgreSQL avec JPA. Les requêtes les plus complexes
-  (filtres sur les paiements par carte et les mouvements entre comptes) sont construites avec des spécifications JPA.
-- **Performante** : utilisation de caches (lorsque c'est pertinent).
+## <a href="dev-deployment"/>Déploiement de l'environnement de dev
 
-#### Pré-requis
-
+Pré-requis :
 - [Git](https://git-scm.com/install/). Sur Windows, Git bash avec Mingw
 - [nvm](https://www.nvmnode.com/fr/guide/download.html)
 - [SDKMan](https://sdkman.io/install/) avec `zip` configuré. Sous Windows,
   installer [7-zip](https://www.7-zip.fr/download.html) et créer une copie de`7z.exe` nommée `zip.exe`)
 - Docker ou [Docker Desktop](https://docs.docker.com/desktop/)
 - une entrée `127.0.0.1 host.docker.internal` dans `/etc/hosts` (`C:\windows\system32\drivers\etc\hosts` sous Windows)
-- un IDE (Eclipse STS et Visual Studio Code ou IntelliJ Ultimate)
+- un IDE : [Eclipse STS](https://spring.io/tools#eclipse) et [Visual Studio Code](https://code.visualstudio.com/download) (avec des plugins pour React) ou IntelliJ Ultimate
 
+Pour :
+- créer des certificats SSL auto-signés
+- monter l'infra dans Docker (bases PostgreSQL, Keycloak, Mailpit, Grafana, Loki, Prometheus, Tempo)
+- faire un 1er build Maven générant les specs OpenAPI du back
+- installer les dépendances du front et générer le code client pour consommer l'API
 ```bash
 bash ./deploy-dev.sh
 ```
 
-Les services Docker :
+Dans [Keycloak](https://host.docker.internal/auth/admin/master/console/#/labs/realm-settings/email), éditer le mot de passe SMTP avec la valeur de `secrets/mail/password.txt`.
 
+Les services Docker :
 - https://host.docker.internal/ui/ le frontend React (`advisor`/`secret`)
 - https://host.docker.internal/auth/admin/master/console/#/labs Keycloak (`admin`/`secret`)
 - https://host.docker.internal/grafana
 - https://host.docker.internal/mailpit
 
-Dans [Keycloak](https://host.docker.internal/auth/admin/master/console/#/labs/realm-settings/email), éditer le mot de
-passe SMTP avec la valeur de `secrets/mail/password.txt`.
-
 Pour démarrer le front depuis le répertoire `frontend`:
-
 ```bash
 npm run dev
 ```
 
-Pour démarrer les services de l'API depuis un IDE, surcharger le propriété `spring.datasource.password` avec la valeur
-du fichier `/secrets/rest-api/postgres_password.txt` dans une run config.
+Pour démarrer les services de l'API depuis un IDE, surcharger le propriété `spring.datasource.password` avec la valeur du fichier `/secrets/rest-api/postgres_password.txt` dans une run config.
 
-## 1. Build avec Maven
+## 1. <a name="maven-build"/>Build avec Maven
 
-### 1.1. Introduction
+### 1.1. <a name="maven-build-intro"/>Introduction
 
 Par convention, bien que déclarés dans le module parent, les modules d'un projet Maven suivent l'arborescence de
 répertoires.
@@ -101,7 +123,7 @@ api/
 
 Ce qui est défini dans le pom parent sert de valeur par défaut pour les modules (group-id, version, dépendances, etc.).
 
-#### Structure
+#### 1.1.1. <a name="maven-build-structure"/>Structure
 
 Un _"artifact"_ (livrable) est identifié par ses `groupId`, `artifactId` et `version`.
 
@@ -139,7 +161,7 @@ La section `profiles` permet de surcharger toute partie du build pour certaines 
 le profile `openapi` pour ajouter des dépendances à SpringDoc-OpenAPI, lancer l'application avant les test d'
 intégration, récupérer la spec OpenAPI sur la swagger-ui; puis arrêter l'application après les tests d'intégration.
 
-#### Phases
+#### 1.1.2. <a name="maven-build-phases"/>Phases
 
 - **_validate_** : intégrité des POMs
 - _initialize_ :
@@ -174,7 +196,7 @@ L'éxécution d'une phase sur un module provoque son exécution sur l'ensemble d
 module spécifique, préciser son nom avec l'option `-pl` mais attention, pour que les dépendances soient aussi
 assemblées, il faut ajouter `-am`. Par exemple (`mvn install -pl rest-api -am`)
 
-### 1.2. Dépendances
+### 1.2. <a name="maven-build-dependencies"/>Dépendances
 
 Spring Boot gère la compatibilité d'un très grand nombre de dépendances. Pour initier un projet,
 utiliser https://start.spring.io ou un plugin équivalent de l'IDE.
@@ -200,15 +222,15 @@ Dépendances utilisées durant les TPs:
 - `lombok` : réduction de la verbosité Java
 - `spring-addons-starter-oidc` : auto-configuration OIDC supplémentaire
 - `mapstruct` : mapping automatique
-- `jspecify` : null saftey
+- `jspecify` : null safety
 
-### 1.3. Processeurs d’annotations à la compilation
+### 1.3. <a name="maven-build-annotations-preprocessing"/>Processeurs d’annotations à la compilation
 
 `lombok`, `mapstruct`, `spring-boot-configuration-processor` et `therapi-runtime-javadoc-scribe` génèrent du code à
 partir d'annotations. Il faut indiquer au `maven-compiler-plugin` l'ordre dans lequel les appliquer (par exemple
 Mapstruct utilise les accesseurs générés par Lombok).
 
-### 1.4. Génération de spec OpenAPI à partir du code source
+### 1.4. <a name="maven-build-openapi-spec-generation"/>Génération de spec OpenAPI à partir du code source
 
 Swagger peut générer des specs OpenAPI à partir de code Java. Il expose cette spec au runtime. Par défaut, la spec
 elle-même est disponible sur `/v3/api-docs`.
@@ -225,7 +247,6 @@ Il faut donc préalablement démarrer l'application (utilisation du `spring-boot
 besoin de récupérer la configuration OpenID du provider, nous utiliserons le `wiremock-maven-plugin`pour en exposer une.
 
 ```xml
-
 <profile>
     <id>openapi</id>
     <properties>
@@ -324,7 +345,7 @@ besoin de récupérer la configuration OpenID du provider, nous utiliserons le `
 </profile>
 ```
 
-### 1.5. Génération de code client à partir de spec OpenAPI
+### 1.5. <a name="maven-build-openapi-client-code-generation"/>Génération de code client à partir de spec OpenAPI
 
 Le `openapi-generator-maven-plugin` permet de générer beaucoup de code à partir d'un spec OpenAPI. Ici nous nous
 intéressons aux interfaces `@HttpExchange` dont Spring sait générer des implémentations.
@@ -332,7 +353,6 @@ intéressons aux interfaces `@HttpExchange` dont Spring sait générer des impl�
 Voici son management dans le POM parent :
 
 ```xml
-
 <plugin>
     <groupId>org.openapitools</groupId>
     <artifactId>openapi-generator-maven-plugin</artifactId>
@@ -365,7 +385,6 @@ Voici son management dans le POM parent :
 Il faut ensuite l'exécuter dans chaque module avec :
 
 ```xml
-
 <plugin>
     <groupId>org.openapitools</groupId>
     <artifactId>openapi-generator-maven-plugin</artifactId>
@@ -395,7 +414,6 @@ La spec exposée par Keycloak étant imparfaite et le code généré comprenant 
 problèmes de compilation, on applique le `fmt-maven-plugin`:
 
 ```xml
-
 <plugin>
     <groupId>com.spotify.fmt</groupId>
     <artifactId>fmt-maven-plugin</artifactId>
@@ -420,13 +438,12 @@ problèmes de compilation, on applique le `fmt-maven-plugin`:
 </plugin>
 ```
 
-### 1.6. Manipulation des ressources
+### 1.6. <a name="maven-build-resources-handling"/>Manipulation des ressources
 
 Par défaut, Maven utilise les ressources de `src/main/resources` et `src/test/resources` telles quelles. Il est possible
 de modifier ce comportement dans le `buils`. Par exemple :
 
 ```xml
-
 <resources>
     <resource>
         <directory>src/main/resources</directory>
@@ -437,7 +454,50 @@ de modifier ce comportement dans le `buils`. Par exemple :
 </resources>
 ```
 
-## 2. Modèles objet-relationnel et accès aux données
+## 2. <a name="spring"/>Fondamentaux Spring
+
+### 2.1. <a name="spring-di"/>Injection de dépendance
+
+L'injection de dépendance est le fait de compter sur le conteneur d'application pour fournir à un objet ceux dont il dépend pour accomplir ses tâches. 
+
+Je recommande de faire l'injection par le biais du constructeur. 
+
+Par exemple, pour l'`AccountController` qui a besoin de collaborer avec les 
+- `AccountRepository` pour manipuler les comptes en base de donnée
+- `AccountMapper` pour faire des conversions entre DTOs et objets métier
+- `CustomersApi` pour dialoguer avec le `customer-service`
+
+```java
+@RestController
+public class AccountController {
+  private final AccountRepository accountRepo;
+  private final AccountMapper accountMapper;
+  private final CustomersApi customersApi;
+
+  // Peut être remplacé par @RequiredArgsContructor de Lombok
+  public AccountController(AccountRepository accountRepo, AccountMapper accountMapper, CustomersApi customersApi) {
+    this.accountRepo = accountRepo;
+    this.accountMapper = accountMapper;
+    this.customersApi = customersApi;
+  }
+}
+```
+
+Spring s'occupe d'instancier les classes dans le bon ordre.
+
+Les composants fournis par le biais de l'injection de dépendances peuvent être facilement remplacés pendant les tests.
+
+### 2.2. <a name="spring-components"/>`@Component` et variantes
+
+### 2.3. <a name="spring-configuration"/>`@Configuration` et `@Bean`
+
+### 2.4. <a name="spring-proxies"/>Proxies générés
+
+### 2.5. <a name="spring-testing"/>Tests
+
+
+
+## 3. <a name="jpa"/>Modèles objet-relationnel et accès aux données
 
 Les bases de données relationnelles sont modélisées avec des entités (tables) et des relations (clefs étrangères).
 
@@ -449,7 +509,7 @@ permet l'ORM (Object-Relational Mapping).
 
 **La Javadoc JPA est excellente et contient de très nombreux exemples.** Il faut la consulter sans retenue.
 
-### 2.1. `@Entity`
+### 3.1. <a name="jpa-entity"/>`@Entity`
 
 Une entité est une classe mappée sur une table en base de donnée.
 
@@ -460,7 +520,6 @@ Elle doit avoir un constructeur par défaut (sans paramètre) dont la visibilit�
 Il est possible (et souvent recommandé) de limiter les méthodes `equals` et `hasCode` à la (ou aux) propriété (s) `@Id`.
 
 ```java
-
 @Entity
 @Table(name = "cards")
 @Data
@@ -484,7 +543,7 @@ public class Card {
 }
 ```
 
-### 2.2. Identifiants générés
+### 3.2. <a name="jpa-generated-ids"/>Identifiants générés
 
 H2 et Postgres utilisent les séquences pour les identifiants numériques auto-générés (pas de PK auto-incrémentée come
 MySQL par exemple).
@@ -495,14 +554,12 @@ MySQL par exemple).
 Les séquences sont décrites avec `@Generator`.
 
 ```java
-
 @Id
 @GeneratedValue(generator = "cardPaymentSeq")
 @SequenceGenerator(name = "cardPaymentSeq", sequenceName = "payment_seq", allocationSize = 1)
 private Long id;
-```
 
-### 2.3. Relations
+### 3.3. <a name="jpa-relations"/>Relations
 
 Une propriété ayant pour type une autre entité doit être décorées avec `@OneToOne` ou `@ManyToOne`.
 
@@ -513,14 +570,14 @@ En cas de relation bidirectionnelle, il faut indiquer un `mappedBy` du côté _"
 
 `@Embeddable` indique qu'une classe n'est pas mappée sur une table. Ses propriétés sont ajoutées aux colonnes de la
 table des entités dans lesquelles elle est `@Embedded`.
+```
 
-### 2.4. Conversion de types
+### 3.4. <a href="jpa-type-converter"/>Conversion de types
 
 Lorsqu'un objet est mappé sur un type simple en base, il possible définir un `@Converter(autoApply = true)` qui
 implémente `AttributeConverter<E, C>`.
 
 ```java
-
 @Converter(autoApply = true)
 public class InstantStringAttributeConverter implements AttributeConverter<Instant, String> {
 
@@ -542,7 +599,7 @@ public class InstantStringAttributeConverter implements AttributeConverter<Insta
 }
 ```
 
-### 2.5. `@Repository` Spring Data JPA
+### 3.5. <a name="jpa-repositories"/>`@Repository` Spring Data JPA
 
 Leur rôle est de manipuler les données en base. Ce sont généralement des singletons générés par Spring à partir d'une
 interface.
@@ -550,7 +607,7 @@ interface.
 Il y a une arborescence d'interfaces qui apportent diverses fonctionnalités nous nous intéressons à
 `JpaRepository<E, ID>` (CRUD, éventuellement paginé) et `JpaSpecificationExecutor<E>` (filtres avec spécifications).
 
-### 2.6. JPA query methods
+### 3.6. <a name="jpa-query-dsl"/>JPA query methods
 
 Spring Data expose
 un [DSL pour les opérations simples sur les entités](https://docs.spring.io/spring-data/jpa/reference/repositories/query-keywords-reference.html).
@@ -564,7 +621,7 @@ public interface CardPaymentJpaRepository extends JpaRepository<CardPayment, Str
 }
 ```
 
-### 2.7. Spécifications JPA
+### 3.7. <a name="jpa-specifications"/>Spécifications JPA
 
 Lorsque la logique de filtrage devient trop complexe (notamment lors de l'application de critères optionnels), les _"
 query methods"_ sont généralement inadaptées.
@@ -576,7 +633,7 @@ Le `@Repository` qui les utilise doit implémenter `JpaSpecificationExecutor<E>`
 Je recommande d'exposer des factories sur le repo pour convertir les critères de filtre en spécification. Se reporter à
 `MoneyTransferJpaRepository` pour un exemple.
 
-### 2.8. Transactions
+### 3.8. <a name="jpa-transactions"/>Transactions
 
 Les opérations d'accès aux données en base se font à l'intérieur d'une transaction.
 
@@ -589,92 +646,11 @@ Le plus simple est généralement de décorer les méthodes de `@Controller` ave
 demande parfois plus de finesse (différentes méthode exécutées dans des transactions différentes pour que certaines
 soient `commit` alors que d'autre sont `rollback`).
 
-### 2.9. Mise en cache
-
-L'enjeu principal de la mise en cache est l'obsolescence des données. Il faut donc remplacer ou supprimer des données en
-cache lors d'accès en écriture, ce qui implique :
-
-- avoir la maîtrise totale de ces écritures
-- utiliser un cache distribué (Redis ?) en environnement distribué
-
-Je conseille de créer un cache par type de donnée et par index. Par exemple, si on souhaite accéder à des instances de
-`Bidule` soit par la valeur de leur propriété `truc`, soit par celle de lor propriété `machin`, on créera deux caches:
-`bidulesParTruc` et `bidulesParMachin`.
-
-Pour activer la mise en cache dans l'application :
-
-```java
-
-@Configuration
-@EnableCaching
-public class CacheConfiguration {
-
-  @Bean
-  CacheManager cacheManager() {
-    // utiliser un autre `CacheManager` pour un cache distribué
-    return new ConcurrentMapCacheManager();
-  }
-}
-```
-
-Pour déclarer un ou plusieurs caches, on décore généralement une classe :
-
-```java
-@CacheConfig(cacheNames = {"bidulesParTruc", "bidulesParMachin"})
-```
-
-Pour indiquer que la valeur de retour peut ête mise en cache :
-
-```java
-@Cacheable(cacheNames = "bidulesParTruc")
-```
-
-Pour indiquer qu'une opération en écriture nécessite des opérations de mise à jour du cache :
-
-```java
-@Caching(put = @CachePut(cacheNames = "bidulesParTruc", key = "#bidule.truc"),
-    evict = @CacheEvict(cacheNames = "bidulesParMachin", key = "#bidule.machin"))
-```
-
-Lorsqu'une classe expose une interface publique plus importante que nécessaire cela peut grandement compliquer la
-gestion des caches. Je recommande dans ce cas de faire un proxy n'exposant que le strict nécessaire et gérer les caches
-à ce niveau.
-
-## 3. Services REST WebMvc avec Spring Boot
+## 4. <a name="rest-controller"/>Services REST WebMvc avec Spring Boot
 
 Nous nous intéressons ici aux `@RestController` qui forment la façade visible d'une API REST.
 
-### 3.1. Injection de dépendances
-
-Un `@RestController` est un singleton managé par Spring. On peut donc lui faire injecter tout autre `@Component`
-(`@Repository`, `@Service`, ...). Je recommande de faire l'injection par le biais du constructeur. Par exemple, pour l'
-`AccountController` qui a besoin de collaborer avec les `AccountRepository` pour manipuler les comptes en base de
-donnée, `AccountMapper` pour faire des conversions entre DTOs et objets métier et `CustomersApi` pour dialoguer avec le
-`customer-service` :
-
-```java
-
-@RestController
-public class AccountController {
-  private final AccountRepository accountRepo;
-  private final AccountMapper accountMapper;
-  private final CustomersApi customersApi;
-
-  // Peut être remplacé par @RequiredArgsContructor de Lombok
-  public AccountController(AccountRepository accountRepo, AccountMapper accountMapper, CustomersApi customersApi) {
-    this.accountRepo = accountRepo;
-    this.accountMapper = accountMapper;
-    this.customersApi = customersApi;
-  }
-}
-```
-
-Spring s'occupe d'instancier les `@Bean` et `@Component` nécessaires dans le bon ordre.
-
-Les composants fournis par le biais de l'injection de dépendances peuvent être facilement remplacés pendant les tests
-(`@MockitoBean`).
-
-### 3.2. `@RequestMapping`
+### 4.1. <a name="rest-controller-request-mapping"/>`@RequestMapping`
 
 Avec les signatures et types de retour de méthode, `@RequestMapping` participe à la définition d'un endpoint. On utilise
 préférentiellement `@RequestMapping` au niveau de la classe pour les définitions communes à toutes les méthodes et ses
@@ -711,7 +687,7 @@ Une différence notable entre `POST` et `PUT` est que lors de la répétition d'
 avec le même _body_, seule la première requête devrait avoir un effet, alors que la répétition d'un `POST` doit créer
 autant de ressources (ou tenter de le faire).
 
-### 3.3. Convertisseurs automatiques de Spring
+### 4.2. <a name="rest-controller-converters"/>Convertisseurs automatiques de Spring
 
 Au niveau du protocole HTTP, toutes les valeurs sont des `String`.
 
@@ -727,7 +703,6 @@ En considérant que `MyEntity` a un `@Id Long id` et qu'il existe un `JpaReposit
 `GET /resources/42` est routée sur la fonction suivante où `entity` est l'entité avec l'identifiant `42` :
 
 ```java
-
 @GetMapping("/resources/{resourceId}")
 Resource getResource(@PathVariable("resourceId") MyEntity entity);
 ```
@@ -737,7 +712,6 @@ Il est possible d'ajouter des converters dans le registry en fournissant une `@C
 (`AccountRepository extends JpaRepository<Account, Iban>`):
 
 ```java
-
 @Configuration
 public class WebConfiguration implements WebMvcConfigurer {
   @Autowired(required = false)
@@ -766,7 +740,7 @@ public class WebConfiguration implements WebMvcConfigurer {
 }
 ```
 
-### 3.4. Validation des entrées
+### 4.3. <a name="rest-controller-validation"/>Validation des entrées
 
 L'utilisation de `jakarta.validation` permet de détecter au plus tôt les requêtes avec des données invalides. Lorsqu'un
 paramètre ou attribut ne respecte pas les contraintes de validation, une `MethodArgumentNotValidException` ou
@@ -783,7 +757,6 @@ public record MoneyTransferRequest(
 ```
 
 ```java
-
 @PostMapping(BASE_PATH)
 public ResponseEntity<Void> transferMoneyBetweenAccounts(@RequestBody @Valid MoneyTransferRequest dto);
 ```
@@ -792,7 +765,6 @@ Il est possible de créer ses propres annotations de validation. De telles annot
 `ConstraintValidator` :
 
 ```java
-
 @Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.RECORD_COMPONENT})
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = CurrencyIso3.IbanConstraintValidator.class)
@@ -822,7 +794,7 @@ public @interface CurrencyIso3 {
 Je recommande de laisser passer `null` et de combiner les annotations avec `@NotNull` pour rendre un paramètre /
 attribut obligatoire.
 
-### 3.5. Gestion des exceptions
+### 4.4. <a name="rest-controller-exceptions"/>Gestion des exceptions
 
 Lorsqu'une erreur est détectée (technique ou métier), une exception est levée.
 
@@ -835,7 +807,6 @@ Les `@ExceptionHandler` déclarés dans un `@RestControllerAdvice` servent inter
 réponse à envoyer :
 
 ```java
-
 @RestControllerAdvice
 public class CommonExceptionsHandler {
 
@@ -850,7 +821,7 @@ public class CommonExceptionsHandler {
 Un raccourci lorsque créer et intercepter une exception métier n'a pas d'intérêt intrinsèque est de soulever une
 `ErrorResponseException` pour laquelle Spring fournit déjà un `@ExceptionHandler`.
 
-### 3.6. Génération de la documentation OpenAPI
+### 4.5. <a name="rest-controller-openapi"/>Génération de la documentation OpenAPI
 
 OpenAPI est un standard largement adopté issu de Swagger. Il permet notamment :
 
@@ -865,7 +836,6 @@ annotation Swagger:
   conversion implicite. Il faut utiliser `@Parameter` pour indiquer le format attendu dans la requête HTTP.
 
 ```java
-
 @GetMapping(TRANSFER_PATH)
 public MoneyTransferResponse getMoneyTransfer(
     @Parameter(schema = @Schema(type = "integer"), description = "The ID of the money transfer to retrieve")
@@ -876,7 +846,6 @@ public MoneyTransferResponse getMoneyTransfer(
   pseudo DTO). Il faut utiliser `@ParameterObject`.
 
 ```java
-
 @GetMapping(BASE_PATH)
 public PagedModel<MoneyTransferResponse> listMoneyTransfers(
     // les propriétés de MoneyTransferFilterRequest et de Pageable sont attendues en tant que request-param individuels dans l'URL
@@ -884,7 +853,7 @@ public PagedModel<MoneyTransferResponse> listMoneyTransfers(
     @ParameterObject Pageable pageable);
 ```
 
-### 3.7. Appels de services REST externes
+### 4.6. <a name="rest-controller-inter-service-communication"/>Appels de services REST externes
 
 Le client REST actuellement recommandé pour les servlets est `RestClient`. `RestTemplate` est en mode maintenance et
 `WebClient` est plus adapté aux application réactives.
@@ -955,7 +924,7 @@ try{
 }
 ```
 
-### 3.8. Logs
+### 4.7. <a name="rest-controller-logging"/>Logs
 
 Les logs sont la première source d'audit de l'application. Il est important de loguer suffisamment et au bon niveau:
 `error`, `warn`, `info`, `debug` ou `trace`.
@@ -992,3 +961,80 @@ management:
         otlp:
           endpoint: http://host.docker.internal:4318/v1/logs
 ```
+
+## 5. <a name="caching"/>Mise en cache
+
+L'enjeu principal de la mise en cache est l'obsolescence des données. Il faut donc remplacer ou supprimer des données en
+cache lors d'accès en écriture, ce qui implique :
+
+- avoir la maîtrise totale de ces écritures
+- utiliser un cache distribué (Redis ?) en environnement distribué
+
+Je conseille de créer un cache par type de donnée et par index. Par exemple, si on souhaite accéder à des instances de
+`Bidule` soit par la valeur de leur propriété `truc`, soit par celle de lor propriété `machin`, on créera deux caches:
+`bidulesParTruc` et `bidulesParMachin`.
+
+Pour activer la mise en cache dans l'application :
+```xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-cache</artifactId>
+</dependency>
+<!-- Optionnel. Permet la configuration de politiques d'expirations. -->
+<!-- Sans implémentation spécifique, Spring utilise un ConcurrentMapCacheManager -->
+<dependency>
+  <groupId>com.github.ben-manes.caffeine</groupId>
+  <artifactId>caffeine</artifactId>
+</dependency>
+```
+```java
+@Configuration
+@EnableCaching
+public class CacheConfiguration {
+}
+```
+```yml
+spring:
+  cache:
+    type: simple
+---
+spring:
+  cache:
+    type: caffeine
+    caffeine:
+      spec: expireAfterWrite=60m
+```
+
+Pour déclarer un ou plusieurs caches, on décore généralement une classe :
+```java
+@CacheConfig(cacheNames = {"bidulesParTruc", "bidulesParMachin"})
+```
+
+Pour indiquer que la valeur de retour peut ête mise en cache :
+```java
+@Cacheable(cacheNames = "bidulesParTruc")
+```
+
+Pour indiquer qu'une opération en écriture nécessite des opérations de mise à jour du cache :
+```java
+@Caching(put = @CachePut(cacheNames = "bidulesParTruc", key = "#bidule.truc"),
+    evict = @CacheEvict(cacheNames = "bidulesParMachin", key = "#bidule.machin"))
+```
+
+Lorsqu'une classe expose une interface publique plus importante que nécessaire cela peut grandement compliquer la
+gestion des caches. Je recommande dans ce cas de faire un proxy n'exposant que le strict nécessaire et gérer les caches
+à ce niveau.
+
+
+<p xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/">
+  La formation
+  <a property="dct:title" rel="cc:attributionURL" href="https://github.com/ch4mpy/REST-hero">REST-hero</a> 
+  par
+  <a rel="cc:attributionURL dct:creator" property="cc:attributionName" href="https://github.com/ch4mpy">Jérôme Wacongne</a>
+  est sous licence
+  <a href="https://creativecommons.org/licenses/by/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">
+    CC BY 4.0
+    <img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1">
+    <img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1">
+  </a>
+</p>
