@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -68,7 +69,7 @@ public class CardController {
   private final CardPaymentRepository paymentRepo;
   private final CardPaymentMapper paymentMapper;
   private final AccountsApi accountsApi;
-  private final MoneyTransfersApi transfersApi;
+  private final TransactionalCardPaymentHelper transactionalCardPaymentHelper;
 
   /**
    * Requires the `card.read_any` authority or that the authenticated user is the owner of the
@@ -258,6 +259,7 @@ public class CardController {
    * @throws ResourceNotFoundException if the destination account is not known by the account
    *         service
    */
+  @Transactional(readOnly = false)
   @PostMapping(path = PAYMENT_LIST_PATH)
   @PreAuthorize("#card.isActive() && @ac.ownsAccount(#card.getIban().toMachineReadableString())")
   public ResponseEntity<Void> createCardPayment(
@@ -284,7 +286,8 @@ public class CardController {
                 .formatted(card.getCeilings().getTransaction(), dto.amount()));
       }
 
-      final var cumulatedAmount = getAcceptedPaymentsCumulatedAmountOn30Days(card);
+      final var cumulatedAmount =
+          transactionalCardPaymentHelper.getAcceptedPaymentsCumulatedAmountOn30Days(card);
       if (card.getCeilings().getRolling30().compareTo(cumulatedAmount + dto.amount()) < 0) {
         log
             .warn(
@@ -300,7 +303,7 @@ public class CardController {
                 .formatted(card.getCeilings().getRolling30(), dto.amount(), cumulatedAmount));
       }
 
-      var payment = createPayemnt(card, dto);
+      var payment = transactionalCardPaymentHelper.createPayemnt(card, dto);
       log
           .debug(
               "Created card payment {} with card {} to account {}",
@@ -308,7 +311,7 @@ public class CardController {
               card.getNumber(),
               dto.destinationIban());
 
-      transferMoneyAndAccept(payment);
+      transactionalCardPaymentHelper.transferMoneyAndAccept(payment);
       log
           .info(
               "{} paid {}{} with card {} to account {}",
@@ -350,74 +353,84 @@ public class CardController {
     }
   }
 
-  @Transactional(readOnly = true)
-  Integer getAcceptedPaymentsCumulatedAmountOn30Days(Card card) {
-    final var now = Instant.now();
-    final var last30DaysPayments = paymentRepo
-        .findByCardNumberAndTimestampBetween(card.getNumber(), now.minus(30, ChronoUnit.DAYS), now);
-    return last30DaysPayments
-        .stream()
-        .filter(CardPayment::isAccepted)
-        .mapToInt(p -> p.getAmount().getDigits())
-        .sum();
+  @Service
+  @RequiredArgsConstructor
+  static class TransactionalCardPaymentHelper {
+    private final CardPaymentRepository paymentRepo;
+    private final MoneyTransfersApi transfersApi;
 
-  }
+    @Transactional(readOnly = true)
+    Integer getAcceptedPaymentsCumulatedAmountOn30Days(Card card) {
+      final var now = Instant.now();
+      final var last30DaysPayments = paymentRepo
+          .findByCardNumberAndTimestampBetween(
+              card.getNumber(),
+              now.minus(30, ChronoUnit.DAYS),
+              now);
+      return last30DaysPayments
+          .stream()
+          .filter(CardPayment::isAccepted)
+          .mapToInt(p -> p.getAmount().getDigits())
+          .sum();
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
-  CardPayment createPayemnt(Card card, CardPaymentCreationRequest dto) {
-    return paymentRepo
-        .save(
-            CardPayment
-                .builder()
-                .amount(
-                    Amount
-                        .builder()
-                        .currency(Currency.valueOf(dto.currency()))
-                        .digits(dto.amount())
-                        .build())
-                .card(card)
-                .destinationIban(Iban.of(dto.destinationIban()))
-                .accepted(false)
-                .build());
-  }
+    }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
-  CardPayment transferMoneyAndAccept(CardPayment payment) {
-    try {
-      var body = new MoneyTransferRequest()
-          .amount(payment.getAmount().getDigits())
-          .currency(payment.getAmount().getCurrency().name())
-          .sourceIban(payment.getCard().getIban().toMachineReadableString())
-          .destinationIban(payment.getDestinationIban().toMachineReadableString())
-          .label(
-              "Payment with card %s to %s"
-                  .formatted(
-                      payment.getCard().getNumber(),
-                      payment.getDestinationIban().toHumanReadableString()));
-      transfersApi.transferMoneyBetweenAccounts(body);
-    } catch (HttpClientErrorException e) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
+    CardPayment createPayemnt(Card card, CardPaymentCreationRequest dto) {
+      return paymentRepo
+          .save(
+              CardPayment
+                  .builder()
+                  .amount(
+                      Amount
+                          .builder()
+                          .currency(Currency.valueOf(dto.currency()))
+                          .digits(dto.amount())
+                          .build())
+                  .card(card)
+                  .destinationIban(Iban.of(dto.destinationIban()))
+                  .accepted(false)
+                  .build());
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
+    CardPayment transferMoneyAndAccept(CardPayment payment) {
+      try {
+        var body = new MoneyTransferRequest()
+            .amount(payment.getAmount().getDigits())
+            .currency(payment.getAmount().getCurrency().name())
+            .sourceIban(payment.getCard().getIban().toMachineReadableString())
+            .destinationIban(payment.getDestinationIban().toMachineReadableString())
+            .label(
+                "Payment with card %s to %s"
+                    .formatted(
+                        payment.getCard().getNumber(),
+                        payment.getDestinationIban().toHumanReadableString()));
+        transfersApi.transferMoneyBetweenAccounts(body);
+      } catch (HttpClientErrorException e) {
+        log
+            .error(
+                "Error while transferring money for card payment {} with card {} to account {}: {}",
+                payment.getId(),
+                payment.getCard().getNumber(),
+                payment.getDestinationIban(),
+                e.getMessage());
+        throw new ResponseStatusException(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Error while transferring money: %s".formatted(e.getMessage()),
+            e);
+      }
       log
-          .error(
-              "Error while transferring money for card payment {} with card {} to account {}: {}",
+          .debug(
+              "Sucessfully transferred money for card payment {} with card {} to account {}",
               payment.getId(),
               payment.getCard().getNumber(),
-              payment.getDestinationIban(),
-              e.getMessage());
-      throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR,
-          "Error while transferring money: %s".formatted(e.getMessage()),
-          e);
+              payment.getDestinationIban());
+      payment.setAccepted(true);
+      final var acceptedPayment = paymentRepo.save(payment);
+      log.debug("Saved card payment {} as accepted", acceptedPayment.getId());
+      return acceptedPayment;
     }
-    log
-        .debug(
-            "Sucessfully transferred money for card payment {} with card {} to account {}",
-            payment.getId(),
-            payment.getCard().getNumber(),
-            payment.getDestinationIban());
-    payment.setAccepted(true);
-    final var acceptedPayment = paymentRepo.save(payment);
-    log.debug("Saved card payment {} as accepted", acceptedPayment.getId());
-    return acceptedPayment;
   }
 
 }

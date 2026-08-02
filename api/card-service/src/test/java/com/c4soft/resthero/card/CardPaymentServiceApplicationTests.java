@@ -104,4 +104,5 @@ class CardPaymentServiceApplicationTests {
       assertThat(payment.isAccepted()).isFalse();
     });
   }
+
 }
