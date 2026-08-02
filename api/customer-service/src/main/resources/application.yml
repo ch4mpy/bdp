@@ -18,6 +18,8 @@ server:
 spring:
   application:
     name: customer-service
+  cache:
+    type: simple
   jpa:
     hibernate:
       ddl-auto: none

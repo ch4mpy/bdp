@@ -20,5 +20,4 @@ public class CacheConfiguration {
   CacheManager cacheManager() {
     return new ConcurrentMapCacheManager();
   }
-
 }
