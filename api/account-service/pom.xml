@@ -4,7 +4,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>nc.sgcb.labs</groupId>
+        <groupId>com.c4soft.resthero</groupId>
         <artifactId>api-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>..</relativePath>
@@ -83,8 +83,8 @@
         </dependency>
 
         <dependency>
-            <groupId>nc.sgcb.labs</groupId>
-            <artifactId>sgcb-starter-service-common</artifactId>
+            <groupId>com.c4soft.resthero</groupId>
+            <artifactId>rest-hero-starter-common</artifactId>
         </dependency>
 
         <dependency>
@@ -195,8 +195,8 @@
                             <inputSpec>
                                 ${project.basedir}/../../frontend/openapi/customer-service.openapi.json
                             </inputSpec>
-                            <apiPackage>nc.sgcb.labs.customer.api</apiPackage>
-                            <modelPackage>nc.sgcb.labs.customer.model</modelPackage>
+                            <apiPackage>com.c4soft.resthero.api</apiPackage>
+                            <modelPackage>com.c4soft.resthero.model</modelPackage>
                         </configuration>
                     </execution>
                     <execution>
@@ -208,8 +208,8 @@
                             <inputSpec>
                                 ${project.basedir}/../../frontend/openapi/currency-service.openapi.json
                             </inputSpec>
-                            <apiPackage>nc.sgcb.labs.currency.api</apiPackage>
-                            <modelPackage>nc.sgcb.labs.currency.model</modelPackage>
+                            <apiPackage>com.c4soft.resthero.api</apiPackage>
+                            <modelPackage>com.c4soft.resthero.model</modelPackage>
                         </configuration>
                     </execution>
                 </executions>

@@ -1,0 +1,3 @@
+com.c4soft.resthero.commons.CommonWebConfiguration
+com.c4soft.resthero.commons.domain.IbanStringMapper
+com.c4soft.resthero.commons.exception.CommonExceptionsHandler

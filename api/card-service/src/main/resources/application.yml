@@ -123,7 +123,7 @@ spring:
     activate:
       on-profile: h2
   datasource:
-    url: jdbc:h2:mem:card_payments
+    url: jdbc:h2:mem:cards
     username: sa
     password: password
   jpa:
@@ -134,7 +134,7 @@ spring:
     activate:
       on-profile: postgresql
   datasource:
-    url: jdbc:postgresql://host.docker.internal:2634/card_payments
+    url: jdbc:postgresql://host.docker.internal:2634/cards
     username: rest-api
     password: secret
   jpa:

@@ -1,9 +1,9 @@
-name: bdp-labs
+name: rest-hero
 
 services:
   reverse-proxy:
-    container_name: bdp-labs.reverse-proxy
-    image: bdp-labs.c4-soft.com/reverse-proxy
+    container_name: rest-hero.reverse-proxy
+    image: rest-hero.c4-soft.com/reverse-proxy
     volumes:
       - ./certs/${CN}.crt:/etc/nginx/certs/self_signed.crt
       - ./certs/${CN}.key:/etc/nginx/certs/self_signed_req_key.pem

@@ -1,0 +1,39 @@
+package com.c4soft.resthero.commons.jpa;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+import com.c4soft.resthero.commons.domain.Iban;
+import com.c4soft.resthero.commons.domain.IbanStringMapper;
+import com.c4soft.resthero.commons.jpa.IbanStringAttributeConverter;
+
+class IbanStringAttributeConverterTest {
+
+  IbanStringAttributeConverter converter = new IbanStringAttributeConverter(new IbanStringMapper());
+
+  @Test
+  @SuppressWarnings("null")
+  void givenValidHumanReadableIbanString_whenConvertToEntityAttribute_thenProduceValidIban() {
+    var ibanStr = "FR76 1111222233334444";
+    var actual = converter.convertToEntityAttribute(ibanStr);
+    assertEquals("FR", actual.getCountryCode());
+    assertEquals("76", actual.getCheckDigits());
+    assertEquals("1111222233334444", actual.getBban());
+  }
+
+  @Test
+  @SuppressWarnings("null")
+  void givenValidMachineReadableIbanString_whenConvertToEntityAttribute_thenProduceValidIban() {
+    var ibanStr = "FR761111222233334444";
+    var actual = converter.convertToEntityAttribute(ibanStr);
+    assertEquals("FR", actual.getCountryCode());
+    assertEquals("76", actual.getCheckDigits());
+    assertEquals("1111222233334444", actual.getBban());
+  }
+
+  @Test
+  void givenValidIban_whenConvertToconvertToDatabaseColumn_thenProduceHumanReadableString() {
+    var iban = Iban.of("FR761111222233334444");
+    assertEquals("FR761111222233334444", converter.convertToDatabaseColumn(iban));
+  }
+
+}

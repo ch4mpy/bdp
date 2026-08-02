@@ -1,16 +1,14 @@
-${AnsiColor.BLUE}  _____  ______  _____ _______   _                                  
-${AnsiColor.BLUE} |  __ \|  ____|/ ____|__   __| | |                                 
-${AnsiColor.BLUE} | |__) | |__  | (___    | |    | |__   ___ _ __ ___                
-${AnsiColor.BLUE} |  _  /|  __|  \___ \   | |    | '_ \ / _ \ '__/ _ \               
-${AnsiColor.BLUE} | | \ \| |____ ____) |  | |    | | | |  __/ | | (_) |              
-${AnsiColor.BLUE} |_|__\_\______|_____/   |_|    |_| |_|\___|_|  \___/   _____ _____ 
-${AnsiColor.BLUE}  / ____|                                         /\   |  __ \_   _|
-${AnsiColor.BLUE} | |    _   _ _ __ _ __ ___ _ __   ___ _   _     /  \  | |__) || |  
-${AnsiColor.BLUE} | |   | | | | '__| '__/ _ \ '_ \ / __| | | |   / /\ \ |  ___/ | |  
-${AnsiColor.BLUE} | |___| |_| | |  | | |  __/ | | | (__| |_| |  / ____ \| |    _| |_ 
-${AnsiColor.BLUE}  \_____\__,_|_|  |_|  \___|_| |_|\___|\__, | /_/    \_\_|   |_____|
-${AnsiColor.BLUE}                                        __/ |                       
-${AnsiColor.BLUE}                                       |___/                        
+${AnsiColor.BLUE}  _____  ______  _____ _______   _                                           
+${AnsiColor.BLUE} |  __ \|  ____|/ ____|__   __| | |                                          
+${AnsiColor.BLUE} | |__) | |__  | (___    | |    | |__   ___ _ __ ___                         
+${AnsiColor.BLUE} |  _  /|  __|  \___ \   | |    | '_ \ / _ \ '__/ _ \             _          
+${AnsiColor.BLUE} | | \ \| |____ ____) |  | |    | | | |  __/ | | (_) |           (_)         
+${AnsiColor.BLUE} |_|__\_\______|_____/ __|_| __ |_|_|_|\___|_|__\___/_ _ ____   ___  ___ ___ 
+${AnsiColor.BLUE}  / __| | | | '__| '__/ _ \ '_ \ / __| | | | / __|/ _ \ '__\ \ / / |/ __/ _ \
+${AnsiColor.BLUE} | (__| |_| | |  | | |  __/ | | | (__| |_| | \__ \  __/ |   \ V /| | (_|  __/
+${AnsiColor.BLUE}  \___|\__,_|_|  |_|  \___|_| |_|\___|\__, | |___/\___|_|    \_/ |_|\___\___|
+${AnsiColor.BLUE}                                       __/ |                                 
+${AnsiColor.BLUE}                                      |___/                                  
 ${AnsiColor.RED}Spring Boot ${spring-boot.formatted-version}           
 ${AnsiColor.RED}By Jérôme Wacongne ch4mp@c4-soft.com
 ${AnsiColor.BLACK}

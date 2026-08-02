@@ -19,7 +19,7 @@ server:
 
 spring:
   application:
-    name: ${gateway-client-id}
+    name: gateway
   security:
     oauth2:
       client:

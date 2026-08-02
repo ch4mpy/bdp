@@ -1,4 +1,4 @@
-name: bdp-labs
+name: rest-hero
 
 volumes:
   mailpit_data:
@@ -6,7 +6,7 @@ volumes:
 services:
   mailpit:
     image: axllent/mailpit
-    container_name: bdp-labs.mailpit
+    container_name: rest-hero.mailpit
     restart: unless-stopped
     volumes:
       - mailpit_data:/data

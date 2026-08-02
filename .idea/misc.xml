@@ -6,7 +6,7 @@
       <list>
         <option value="$PROJECT_DIR$/customer-service/pom.xml" />
         <option value="$PROJECT_DIR$/account-service/pom.xml" />
-        <option value="$PROJECT_DIR$/card-payment-service/pom.xml" />
+        <option value="$PROJECT_DIR$/card-service/pom.xml" />
         <option value="$PROJECT_DIR$/api/pom.xml" />
       </list>
     </option>

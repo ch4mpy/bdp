@@ -4,7 +4,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>nc.sgcb.labs</groupId>
+        <groupId>com.c4soft.resthero</groupId>
         <artifactId>api-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>..</relativePath>
@@ -71,8 +71,8 @@
         </dependency>
 
         <dependency>
-            <groupId>nc.sgcb.labs</groupId>
-            <artifactId>sgcb-starter-service-common</artifactId>
+            <groupId>com.c4soft.resthero</groupId>
+            <artifactId>rest-hero-starter-common</artifactId>
         </dependency>
 
         <dependency>

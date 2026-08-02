@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "bdp-labs keycloak-admin-api",
+  "name": "rest-hero keycloak-admin-api",
   "type": "collection",
   "ignore": [
     "node_modules",

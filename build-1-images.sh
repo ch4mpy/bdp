@@ -5,7 +5,7 @@ source ./build-0-env.sh
 # reverse-proxy
 if [ "$CN" = "host.docker.internal" ] || [ "$CN" = "localhost" ] || [ "$CN" = `hostname` ] || [ "$CN" = "$HOSTNAME" ]; then
   echo "building reverse proxy image"
-  docker build -t bdp-labs.c4-soft.com/reverse-proxy ./nginx-reverse-proxy
+  docker build -t rest-hero.c4-soft.com/reverse-proxy ./nginx-reverse-proxy
 fi
 
 # Keycloak
@@ -31,7 +31,7 @@ docker build \
   --build-arg KC_HTTPS_PORT=3643 \
   --build-arg KC_LOG_LEVEL=INFO \
   --secret id=ssl_password,src=./secrets/ssl/password.txt \
-  -t bdp-labs.c4-soft.com/keycloak:$KC_VERSION \
+  -t rest-hero.c4-soft.com/keycloak:$KC_VERSION \
   -f ./keycloak/Dockerfile \
   .
 

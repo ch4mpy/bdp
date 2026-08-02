@@ -1,4 +1,4 @@
-name: bdp-labs
+name: rest-hero
 
 volumes:
   keycloak:
@@ -12,7 +12,7 @@ secrets:
 
 services:
   keycloak-db:
-    container_name: bdp-labs.keycloak-db
+    container_name: rest-hero.keycloak-db
     image: ${KC_DB_IMAGE}
     hostname: ${CN}
     command:
@@ -37,8 +37,8 @@ services:
       retries: 20
 
   keycloak-server:
-    container_name: bdp-labs.keycloak-server
-    image: bdp-labs.c4-soft.com/keycloak:${KC_VERSION}
+    container_name: rest-hero.keycloak-server
+    image: rest-hero.c4-soft.com/keycloak:${KC_VERSION}
     command:
       - start
       - --db-username=${KC_DB_USERNAME}

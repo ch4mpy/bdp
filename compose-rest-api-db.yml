@@ -1,9 +1,9 @@
-name: bdp-labs
+name: rest-hero
 
 volumes:
   accounts_data:
     driver: local
-  card_payments_data:
+  cards_data:
     driver: local
   customers_data:
     driver: local
@@ -14,7 +14,7 @@ secrets:
 
 services:
   accounts_db:
-    container_name: bdp-labs.accounts-db
+    container_name: rest-hero.accounts-db
     image: postgres:18
     hostname: ${CN}
     restart: unless-stopped
@@ -37,24 +37,24 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
 
-  card_payments_db:
-    container_name: bdp-labs.card-payments-db
+  cards_db:
+    container_name: rest-hero.cards-db
     image: postgres:18
     hostname: ${CN}
     restart: unless-stopped
     ports:
-      - "${CARD_PAYMENTS_DB_PORT}:5432"
+      - "${CARDS_DB_PORT}:5432"
     secrets:
       - rest_api_db_password
     environment:
-      POSTGRES_DB: card_payments
+      POSTGRES_DB: cards
       POSTGRES_USER: rest-api
       POSTGRES_PASSWORD_FILE: /run/secrets/rest_api_db_password
       TZ: "Pacific/Tahiti"
     volumes:
-      - card_payments_data:/var/lib/postgresql
+      - cards_data:/var/lib/postgresql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d card_payments -U rest-api -p 5432" ]
+      test: [ "CMD-SHELL", "pg_isready -d cards -U rest-api -p 5432" ]
       interval: 3s
       timeout: 60s
       retries: 20
@@ -62,7 +62,7 @@ services:
       - host.docker.internal:host-gateway
 
   customers_db:
-    container_name: bdp-labs.customers-db
+    container_name: rest-hero.customers-db
     image: postgres:18
     hostname: ${CN}
     restart: unless-stopped
