@@ -42,15 +42,12 @@ if [ ! -d ./secrets/ssl ]; then
   mkdir ./secrets/ssl
 fi
 if [ ! -f ./secrets/ssl/password.txt ]; then
-  if [ -f ~/.ssh/${CN}.crt ]; then
-    if [ -f ~/.ssh/${CN}.password.txt ]; then
-      cp ~/.ssh/${CN}.password.txt ./secrets/ssl/password.txt
-    else
-      echo "Please copy the self-signed SSL certificate password to ./secrets/ssl/password.txt"
-      exit 1
-    fi
+  if [ -f ~/.ssh/${CN}.password.txt ]; then
+    cp ~/.ssh/${CN}.password.txt ./secrets/ssl/password.txt
   else
     echo $(openssl rand -hex 16) > ./secrets/ssl/password.txt
+    chmod 600 ./secrets/ssl/password.txt
+    cp ./secrets/ssl/password.txt ~/.ssh/${CN}.password.txt
   fi
 fi
 
@@ -59,15 +56,19 @@ if [ ! -d ./secrets/keycloak ]; then
 fi
 if [ ! -f ./secrets/keycloak/postgres_user.txt ]; then
   echo $KC_DB_USERNAME > ./secrets/keycloak/postgres_user.txt
+  chmod 600 ./secrets/keycloak/postgres_user.txt
 fi
 if [ ! -f ./secrets/keycloak/postgres_password.txt ]; then
   echo $(openssl rand -hex 16) > ./secrets/keycloak/postgres_password.txt
+  chmod 600 ./secrets/keycloak/postgres_password.txt
 fi
 if [ ! -f ./secrets/keycloak/admin_user.txt ]; then
   echo admin > ./secrets/keycloak/admin_user.txt
+  chmod 600 ./secrets/keycloak/admin_user.txt
 fi
 if [ ! -f ./secrets/keycloak/admin_password.txt ]; then
   echo secret > ./secrets/keycloak/admin_password.txt
+  chmod 600 ./secrets/keycloak/admin_password.txt
 fi
 
 if [ ! -d ./secrets/mail ]; then
@@ -76,20 +77,24 @@ if [ ! -d ./secrets/mail ]; then
 fi
 if [ ! -f ./secrets/mail/username.txt ]; then
   echo "mailpit" > ./secrets/mail/username.txt
+  chmod 600 ./secrets/mail/username.txt
 fi
 if [ ! -f ./secrets/mail/password.txt ]; then
   echo $(openssl rand -hex 16) > ./secrets/mail/password.txt
+  chmod 600 ./secrets/mail/password.txt
 fi
 if [ -f ./secrets/mail/auth.txt ]; then
   rm -f ./secrets/mail/auth.txt
 fi
 echo "$(cat ./secrets/mail/username.txt):$(cat ./secrets/mail/password.txt)" > ./secrets/mail/auth.txt
+chmod 600 ./secrets/mail/auth.txt
 
 if [ ! -d ./secrets/rest-api ]; then
   mkdir ./secrets/rest-api
 fi
 if [ ! -f ./secrets/rest-api/postgres_password.txt ]; then
   echo $(openssl rand -hex 16) > ./secrets/rest-api/postgres_password.txt
+  chmod 600 ./secrets/rest-api/postgres_password.txt
 fi
 
 # Generate self-signed SSL certificates

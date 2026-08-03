@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
@@ -34,21 +35,22 @@ class MoneyTransferRepositoryTest {
             Iban.of("FR76 111222333"),
             Iban.of("FR76 444555666"),
             new Amount(1000, Currency.XPF),
-            "Test transfer 1000 XPF"));
-    pauseBetweenTransfers();
-    transfer2 = moneyTransferJpaRepository.save(
-        MoneyTransfer.of(
-            Iban.of("FR76 123456789"),
-            Iban.of("FR76 987654321"),
-            new Amount(2000, Currency.EUR),
-            "Test transfer 20 EUR"));
-    pauseBetweenTransfers();
-    transfer3 = moneyTransferJpaRepository.save(
-        MoneyTransfer.of(
-            Iban.of("FR76 123456789"),
-            Iban.of("FR76 444555666"),
-            new Amount(3000, Currency.AUD),
-            "Test transfer 3 AUD"));
+            "Test transfer 1000 XPF",
+            Instant.parse("2026-01-01T12:34:56Z")));
+
+    transfer2 = moneyTransferJpaRepository.save(MoneyTransfer.of(
+        Iban.of("FR76 123456789"),
+        Iban.of("FR76 987654321"),
+        new Amount(2000, Currency.EUR),
+        "Test transfer 20 EUR",
+        Instant.parse("2026-02-01T12:34:56Z")));
+
+    transfer3 = moneyTransferJpaRepository.save(MoneyTransfer.of(
+        Iban.of("FR76 123456789"),
+        Iban.of("FR76 444555666"),
+        new Amount(3000, Currency.AUD),
+        "Test transfer 3 AUD",
+        Instant.parse("2026-03-01T12:34:56Z")));
   }
 
   private static void pauseBetweenTransfers() {
@@ -252,14 +254,14 @@ class MoneyTransferRepositoryTest {
             MoneyTransferRepository
                 .searchSpec(
                     new MoneyTransferFilteringCriteria(
-                        Iban.of("FR76 111222333"),
-                        Iban.of("FR76 444555666"),
-                        1000,
-                        1000,
-                        Currency.XPF,
-                        instant,
-                        instant,
-                        "1000")));
+                        transfer1.getSourceIban(),
+                        transfer1.getDestinationIban(),
+                        transfer1.getAmount().getDigits(),
+                        transfer1.getAmount().getDigits(),
+                        transfer1.getAmount().getCurrency(),
+                        transfer1.getTimestamp(),
+                        transfer1.getTimestamp(),
+                        "%d".formatted(transfer1.getAmount().getDigits()))));
     assertThat(actual).hasSize(1);
   }
 

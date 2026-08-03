@@ -64,12 +64,22 @@ public class MoneyTransfer {
       Iban destinationIban,
       Amount amount,
       String label) {
+    return of(sourceIban, destinationIban, amount, label, Instant.now());
+  }
+
+  public static MoneyTransfer of(
+      Iban sourceIban,
+      Iban destinationIban,
+      Amount amount,
+      String label,
+      Instant timestamp) {
     return MoneyTransfer
         .builder()
         .sourceIban(sourceIban)
         .destinationIban(destinationIban)
         .amount(amount)
         .label(label)
+        .timestamp(timestamp)
         .build();
   }
 }

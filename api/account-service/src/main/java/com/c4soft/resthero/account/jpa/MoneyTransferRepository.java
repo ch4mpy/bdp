@@ -60,9 +60,9 @@ public interface MoneyTransferRepository
   }
 
   @SuppressWarnings("unused")
-  private static Specification<MoneyTransfer> currencyLike(Currency iso3) {
+  private static Specification<MoneyTransfer> currencyLike(Currency currency) {
     return (root, query, cb) -> cb
-        .equal(root.get(MoneyTransfer_.amount).get(Amount_.currency), iso3);
+        .equal(root.get(MoneyTransfer_.amount).get(Amount_.currency), currency);
   }
 
   @SuppressWarnings("unused")
