@@ -1,6 +1,6 @@
 # REST-hero : APIs REST avec Spring Boot
 
-Bien que certains raccourcis métier aient été pris, ce support de TP répond à des exigences techniques avancées. Les services REST sont notamment :
+Ce support de TPs répond à des exigences de production avancées. Les services REST sont notamment :
 - **Audités** :
     * Hibernate Envers garde la trace de chaque version des entités en base données avec l'instant et l'auteur de la modification
     * Chaque endpoint qui modifie l'état de l'application (`POST`, `PUT` ou `DELETE`) log au niveau `info` un résumé de ce qui a été modifié et par qui
