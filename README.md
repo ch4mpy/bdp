@@ -12,7 +12,7 @@ Ce support de TPs répond à des exigences de production avancées. Les services
   * le `card-service` vérifie auprès de l'`account-service` qu'un compte existe avant de lui attacher une carte et lui déclare un transfert d'argent lors d'un paiement par carte.
 - **Sécurisés** : 
   * chaque endpoint d'API vérifie l'identité attachée à la requête et ses relations éventuelles avec les ressources qu'elle cherche à manipuler avant d'autoriser l'accès.
-  * ne sont utilisés que des clients OAuth2 confidentiels (avec mot de passe). Les requêtes du front React sont autorisées avec le patter [_OAuth2 BFF_](https://www.baeldung.com/spring-cloud-gateway-bff-oauth2)
+  * ne sont utilisés que des clients OAuth2 confidentiels (avec mot de passe). Les requêtes du front React sont autorisées avec le pattern [_OAuth2 BFF_](https://www.baeldung.com/spring-cloud-gateway-bff-oauth2)
 - **Persistants** : les objets métier sont sauvegardés dans PostgreSQL avec JPA. Les requêtes les plus complexes (filtres sur les paiements par carte et les mouvements entre comptes) sont construites avec des spécifications JPA.
 - **Performants** : utilisation de caches pour limiter les accès à la base de données et les appels REST inter-services lorsque c'est pertinent.
 
@@ -56,7 +56,7 @@ Ce support de TPs répond à des exigences de production avancées. Les services
   * [4.7. Logs](#rest-controller-logging)
 - [5. Mise en cache](#caching)
 
-## <a href="intro"/>Introduction
+## <a name="intro"/>Introduction
 
 Le cas d'utilisation est une banque en ligne simplifiée avec :
 - Opérations de change basées sur le fixing veille de la Banque Centrale Européenne.
@@ -67,27 +67,28 @@ Le cas d'utilisation est une banque en ligne simplifiée avec :
 
 La solution est composée d'une interface graphique React interrogeant une API REST composée des modules suivants :
 - une `gateway`. Les requêtes (du frontend) préfixées avec `/gateway/bff` sont autorisées avec des cookies de session (`http-only=true`) et protégées contre le CSRF (cookie `XSRF-TOKEN` avec `http-only=false` et header `X-XSRF-TOKEN` requis pour pour les requêtes `POST`, `PUT` `PATCH` et `DELETE`). Les requêtes de clients OAuth2 (appels inter-services, Bruno, Postman, ...) préfixées avec `/gateway/m2m` sont autorisées avec un `Bearer` token dans le header `Authorization`.
-- `rest-hero-starter-common` est un starter Spring Boot qui contenant des classes et de l'auto-configuration partagée.
+- `rest-hero-starter-common` est un starter Spring Boot contenant des classes et de l'auto-configuration partagée.
 - `currency-service` fournit un référentiel des devise supportées et du change sur le fixing veille de la BCE (via [https://frankfurter.dev](https://frankfurter.dev/))
 - `customer-service` responsable des clients et de leurs bénéficiaires. Ce service ne stocke que les bénéficiaires dans sa base de données. Les clients sont des utilisateurs de Keycloak (lecture / écriture via l'API Keycloak).
 - `account-service` responsable des comptes bancaires et des transferts entre comptes.
 - `card-service`responsable des cartes et des paiements par carte.
 
-## <a href="dev-deployment"/>Déploiement de l'environnement de dev
+## <a name="dev-deployment"/>Déploiement de l'environnement de dev
 
 Pré-requis :
-- [Git](https://git-scm.com/install/). Sur Windows, Git bash avec Mingw et notamment `zip`. Sous Windows, installer [7-zip](https://www.7-zip.fr/download.html) et créer une copie de`7z.exe` nommée `zip.exe`)
+- [Git](https://git-scm.com/install/). Sur Windows, Git bash avec Mingw. Toujours sous Windows, installer [7-zip](https://www.7-zip.fr/download.html) et créer une copie de`7z.exe` nommée `zip.exe`.
 - [nvm](https://www.nvmnode.com/fr/guide/download.html)
 - [SDKMan](https://sdkman.io/install/) 
 - Docker ou [Docker Desktop](https://docs.docker.com/desktop/)
 - une entrée `127.0.0.1 host.docker.internal` dans `/etc/hosts` (`C:\windows\system32\drivers\etc\hosts` sous Windows)
 - un IDE : [Eclipse STS](https://spring.io/tools#eclipse) et [Visual Studio Code](https://code.visualstudio.com/download) (avec des plugins pour React) ou IntelliJ Ultimate
 
-Pour :
-- créer des certificats SSL auto-signés
-- monter l'infra dans Docker (bases PostgreSQL, Keycloak, Mailpit, Grafana, Loki, Prometheus, Tempo)
-- faire un 1er build Maven générant les specs OpenAPI du back
-- installer les dépendances du front et générer le code client pour consommer l'API
+Le script `deploy-dev.sh` :
+- crée des certificats SSL auto-signés s'il n'y en a pas déjà dans `~/.ssh`
+- monte l'infra dans Docker (bases PostgreSQL, Keycloak, Mailpit, Grafana, Loki, Prometheus, Tempo)
+- fait un build Maven générant les specs OpenAPI du back
+- initialise le sous-module Git contenant le code du front React
+- installe les dépendances du front et génère le code client pour consommer l'API
 ```bash
 bash ./deploy-dev.sh
 ```
@@ -535,7 +536,7 @@ public class AccountController {
 
 Spring s'occupe d'instancier les classes dans le bon ordre.
 
-Lorsque plusieurs beans ont le même type, il sont résolus par un _qualifier_ qui est par défaut le nom de la méthode `@Bean` qui a instancier chacun d'eux. Un exemple tiré de la `RestConfiguration` de l'account-service dans lequel `customerServiceClient` et `currenciesServiceClient` sont deux instances de `RestClient` exposées en tant que bean par `spring-addons-starter-rest`:
+Lorsque plusieurs beans ont le même type, il sont résolus par un _qualifier_ qui est par défaut le nom de la méthode `@Bean` qui a instancié chacun d'eux. Un exemple tiré de la `RestConfiguration` de l'account-service dans lequel `customerServiceClient` et `currenciesServiceClient` sont deux instances de `RestClient` exposées en tant que bean par `spring-addons-starter-rest`:
 ```yaml
 com:
   c4-soft:
@@ -716,6 +717,7 @@ C'est notamment le cas pour :
 - `@Transactional`
 - `@Cacheable`, `@CachePut` et `@CacheEvict`
 - `@Observed`
+- `@PreAuthorize`
 
 Le proxy intercepte les appels à une méthode avant de déléguer au bean original.
 
@@ -742,6 +744,8 @@ Une solution :
 @Service
 @RequiredArgsConstructor
 public class AccountService {
+  // Le bean injecté est un proxy autour du TransactionalAccountService
+  // ajoutant la gestion de transaction
   private final TransactionalAccountService delegate;
 
   public void createAccount() {
@@ -791,8 +795,7 @@ Lors de la création de starters, il est important d'être peu intrusif et de la
 
 Les bases de données relationnelles sont modélisées avec des entités (tables) et des relations (clefs étrangères).
 
-Le Modèle object de Java n'est pas modélisables directement avec une représentation entité-relation (héritage, relations
-bi-directionnelles, ...)
+Le Modèle objet de Java ne peut être traduit directement en une représentation entité-relation (héritage, relations bi-directionnelles, ...)
 
 La JPA (Java Persistence API) permet de faire le pont entre les deux représentations (classes VS entité-relation). Il
 permet l'ORM (Object-Relational Mapping).
@@ -812,12 +815,12 @@ Il est possible (et souvent recommandé) de limiter les méthodes `equals` et `h
 ```java
 @Entity
 @Table(name = "cards")
-@Data
+@Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-@Builder
+@Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Card {
 
   @Id
@@ -852,7 +855,7 @@ private Long id;
 
 ### 3.3. <a name="jpa-relations"/>Relations
 
-Une propriété ayant pour type une autre entité doit être décorées avec `@OneToOne` ou `@ManyToOne`.
+Une propriété ayant pour type une autre entité doit porter `@OneToOne` ou `@ManyToOne`.
 ```java
 @Entity
 public class CardPayment {
@@ -896,7 +899,7 @@ public class Card {
 }
 ```
 
-### 3.4. <a href="jpa-type-converter"/>Conversion de types
+### 3.4. <a name="jpa-type-converter"/>Conversion de types
 
 Lorsqu'un objet est mappé sur un type simple en base, il possible définir un `@Converter(autoApply = true)` qui
 implémente `AttributeConverter<E, C>`.
@@ -966,10 +969,7 @@ public interface CardPaymentJpaRepository extends JpaRepository<CardPayment, Str
 
 ### 3.7. <a name="jpa-specifications"/>Spécifications JPA
 
-Lorsque la logique de filtrage devient trop complexe (notamment lors de l'application de critères optionnels), les _"
-query methods"_ sont généralement inadaptées.
-
-Les Spécifications JPA sont souvent plus adaptées.
+Lorsque la logique de filtrage devient trop complexe (notamment lors de l'application de critères optionnels), les Spécifications JPA sont souvent plus adaptées que les _"query methods"_.
 
 Le `@Repository` qui les utilise doit implémenter `JpaSpecificationExecutor<E>`.
 
@@ -1044,6 +1044,7 @@ Hibernate Envers permet de conserver chaque version des entités auditées dans 
 @EnableEnversRepositories
 public class PersistenceConfiguration {
 }
+```
 ```java
 @Audited
 @Entity
