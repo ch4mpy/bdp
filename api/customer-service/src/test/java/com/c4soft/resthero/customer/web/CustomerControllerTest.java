@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -35,11 +36,6 @@ import com.c4soft.resthero.customer.domain.Beneficiary;
 import com.c4soft.resthero.customer.domain.Customer;
 import com.c4soft.resthero.customer.jpa.BeneficiaryRepository;
 import com.c4soft.resthero.customer.keycloak.CustomerRepository;
-import com.c4soft.resthero.customer.web.BeneficiaryRequest;
-import com.c4soft.resthero.customer.web.BeneficiaryResponse;
-import com.c4soft.resthero.customer.web.CustomerController;
-import com.c4soft.resthero.customer.web.CustomerCreationRequest;
-import com.c4soft.resthero.customer.web.CustomerResponse;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = CustomerController.class, properties = {})
@@ -66,13 +62,9 @@ class CustomerControllerTest {
       String label,
       String iban,
       com.c4soft.resthero.customer.domain.Customer customer) {
-    return Beneficiary
-        .builder()
-        .id(id)
-        .label(label)
-        .iban(Iban.of(iban))
-        .customerId(customer.getId())
-        .build();
+    final var beneficiary = Mockito.spy(Beneficiary.of(customer.getId(), Iban.of(iban), label));
+    when(beneficiary.getId()).thenReturn(id);
+    return beneficiary;
   }
 
   // ===================== listCustomers =====================
@@ -124,8 +116,8 @@ class CustomerControllerTest {
     var newUserId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
     when(customerRepo.save(any())).thenAnswer(i -> {
-      final var customer = i.getArgument(0, Customer.class);
-      customer.setId(newUserId);
+      final var customer = Mockito.spy(i.getArgument(0, Customer.class));
+      when(customer.getId()).thenReturn(newUserId);
       return customer;
     });
 
@@ -311,8 +303,8 @@ class CustomerControllerTest {
     var customer = CustomerFixtures.createJohnDeuf();
     when(customerRepo.findById(customer.getId())).thenReturn(Optional.of(customer));
     when(beneficiaryRepo.save(any(Beneficiary.class))).thenAnswer(invocation -> {
-      var saved = invocation.getArgument(0, Beneficiary.class);
-      saved.setId(7L);
+      var saved = Mockito.spy(invocation.getArgument(0, Beneficiary.class));
+      when(saved.getId()).thenReturn(7L);
       return saved;
     });
 

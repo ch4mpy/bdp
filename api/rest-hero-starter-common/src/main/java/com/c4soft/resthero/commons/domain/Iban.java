@@ -2,8 +2,6 @@ package com.c4soft.resthero.commons.domain;
 
 import java.io.Serializable;
 import java.util.regex.Pattern;
-import com.c4soft.resthero.commons.jpa.IbanStringAttributeConverter;
-import jakarta.persistence.Convert;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +26,6 @@ public class Iban implements Serializable {
     this(Iban.of(iban));
   }
 
-  @SuppressWarnings("null")
   public String toHumanReadableString() {
     return "%s%s %s".formatted(countryCode, checkDigits, bban);
   }
@@ -42,7 +39,6 @@ public class Iban implements Serializable {
     return toHumanReadableString();
   }
 
-  @SuppressWarnings("null")
   private static String toMachineReadableString(String humanReadable) {
     return humanReadable.replaceAll("\\s", "").toUpperCase();
   }
@@ -52,7 +48,6 @@ public class Iban implements Serializable {
    * @return
    * @throws NotAnIbanException if the ibanStr is null or doesn't look like an IBAN
    */
-  @SuppressWarnings("null")
   public static Iban of(String ibanStr) throws NotAnIbanException {
     final var machineReable = toMachineReadableString(ibanStr);
     final var matcher = IBAN_PATTERN.matcher(machineReable);

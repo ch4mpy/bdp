@@ -10,7 +10,13 @@ import com.c4soft.resthero.customer.domain.Customer;
 @Mapper(componentModel = ComponentModel.SPRING, uses = {IbanStringMapper.class})
 public interface UserRepresentationMapper {
 
-  Customer map(UserRepresentation entity);
+  default Customer map(UserRepresentation entity) {
+    return new Customer(
+        entity.getId(),
+        entity.getFirstName(),
+        entity.getLastName(),
+        entity.getEmail());
+  }
 
   @Mapping(target = "username", source = "email")
   @Mapping(target = "enabled", expression = "java(true)")

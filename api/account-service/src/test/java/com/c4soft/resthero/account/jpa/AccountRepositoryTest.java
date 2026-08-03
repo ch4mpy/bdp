@@ -81,14 +81,12 @@ class AccountRepositoryTest {
 
     // save a new Account instance with the same iban and a different balance
     // (do not work with a reference to the instance already in the cache)
-    var account = accountRepo
-        .save(
-            Account
-                .builder()
-                .iban(customerXpfAccount.getIban())
-                .customerId(customerXpfAccount.getCustomerId())
-                .balance(Amount.builder().digits(200000).currency(Currency.XPF).build())
-                .build());
+    var updatedAccount =
+        Account.create(
+            customerXpfAccount.getIban(), customerXpfAccount.getCustomerId(), Currency.XPF);
+    updatedAccount.credit(new Amount(200000, Currency.XPF));
+
+    var account = accountRepo.save(updatedAccount);
     assertEquals(200000L, account.getBalance().getDigits());
 
     // retrieve the account from the cache to verify that it was updated when saving the new

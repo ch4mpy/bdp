@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -138,10 +139,8 @@ class MoneyTransferControllerTest {
     when(accountRepo.findByIban(source.getIban())).thenReturn(Optional.of(source));
     when(accountRepo.findByIban(destination.getIban())).thenReturn(Optional.of(destination));
     when(transferRepo.save(any(MoneyTransfer.class))).thenAnswer(invocation -> {
-      final var transfer = invocation.getArgument(0, MoneyTransfer.class);
-      if (transfer.getId() == null) {
-        transfer.setId(42L);
-      }
+      final var transfer = spy(invocation.getArgument(0, MoneyTransfer.class));
+      when(transfer.getId()).thenReturn(42L);
       return transfer;
     });
     when(currenciesApi.change(anyInt(), anyString(), anyString()))
@@ -171,10 +170,8 @@ class MoneyTransferControllerTest {
     when(accountRepo.findByIban(source.getIban())).thenReturn(Optional.empty());
     when(accountRepo.findByIban(destination.getIban())).thenReturn(Optional.of(destination));
     when(transferRepo.save(any(MoneyTransfer.class))).thenAnswer(invocation -> {
-      final var transfer = invocation.getArgument(0, MoneyTransfer.class);
-      if (transfer.getId() == null) {
-        transfer.setId(42L);
-      }
+      final var transfer = spy(invocation.getArgument(0, MoneyTransfer.class));
+      when(transfer.getId()).thenReturn(42L);
       return transfer;
     });
     when(currenciesApi.change(anyInt(), anyString(), anyString()))
@@ -204,10 +201,8 @@ class MoneyTransferControllerTest {
     when(accountRepo.findByIban(source.getIban())).thenReturn(Optional.of(source));
     when(accountRepo.findByIban(destinationIban)).thenReturn(Optional.empty());
     when(transferRepo.save(any(MoneyTransfer.class))).thenAnswer(invocation -> {
-      final var transfer = invocation.getArgument(0, MoneyTransfer.class);
-      if (transfer.getId() == null) {
-        transfer.setId(42L);
-      }
+      final var transfer = spy(invocation.getArgument(0, MoneyTransfer.class));
+      when(transfer.getId()).thenReturn(42L);
       return transfer;
     });
     when(currenciesApi.change(anyInt(), anyString(), anyString()))

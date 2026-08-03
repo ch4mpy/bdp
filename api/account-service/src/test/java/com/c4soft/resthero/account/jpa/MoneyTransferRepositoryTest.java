@@ -29,36 +29,35 @@ class MoneyTransferRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    transfer1 = moneyTransferJpaRepository
-        .save(
-            MoneyTransfer
-                .builder()
-                .sourceIban(Iban.of("FR76 111222333"))
-                .destinationIban(Iban.of("FR76 444555666"))
-                .amount(Amount.builder().digits(1000).currency(Currency.XPF).build())
-                .label("Test transfer 1000 XPF")
-                .timestamp(Instant.parse("2025-12-30T12:34:56Z"))
-                .build());
-    transfer2 = moneyTransferJpaRepository
-        .save(
-            MoneyTransfer
-                .builder()
-                .sourceIban(Iban.of("FR76 123456789"))
-                .destinationIban(Iban.of("FR76 987654321"))
-                .amount(Amount.builder().digits(2000).currency(Currency.EUR).build())
-                .label("Test transfer 20 EUR")
-                .timestamp(Instant.parse("2026-01-23T12:34:56Z"))
-                .build());
-    transfer3 = moneyTransferJpaRepository
-        .save(
-            MoneyTransfer
-                .builder()
-                .sourceIban(Iban.of("FR76 123456789"))
-                .destinationIban(Iban.of("FR76 444555666"))
-                .amount(Amount.builder().digits(3000).currency(Currency.AUD).build())
-                .label("Test transfer 3 AUD")
-                .timestamp(Instant.parse("2026-06-01T12:34:56Z"))
-                .build());
+    transfer1 = moneyTransferJpaRepository.save(
+        MoneyTransfer.of(
+            Iban.of("FR76 111222333"),
+            Iban.of("FR76 444555666"),
+            new Amount(1000, Currency.XPF),
+            "Test transfer 1000 XPF"));
+    pauseBetweenTransfers();
+    transfer2 = moneyTransferJpaRepository.save(
+        MoneyTransfer.of(
+            Iban.of("FR76 123456789"),
+            Iban.of("FR76 987654321"),
+            new Amount(2000, Currency.EUR),
+            "Test transfer 20 EUR"));
+    pauseBetweenTransfers();
+    transfer3 = moneyTransferJpaRepository.save(
+        MoneyTransfer.of(
+            Iban.of("FR76 123456789"),
+            Iban.of("FR76 444555666"),
+            new Amount(3000, Currency.AUD),
+            "Test transfer 3 AUD"));
+  }
+
+  private static void pauseBetweenTransfers() {
+    try {
+      Thread.sleep(10);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(e);
+    }
   }
 
   @Test
@@ -188,7 +187,7 @@ class MoneyTransferRepositoryTest {
 
   @Test
   void whenCriteriaOnMinTimestamp_thenTransfersFiltered() {
-    final var from = Instant.parse("2026-01-01T00:00:00Z");
+    final var from = transfer2.getTimestamp();
     var actual = moneyTransferJpaRepository
         .findAll(
             MoneyTransferRepository
@@ -203,12 +202,12 @@ class MoneyTransferRepositoryTest {
                         null,
                         null)));
     assertThat(actual).hasSize(2);
-    assertThat(actual.stream().allMatch(t -> t.getTimestamp().isAfter(from))).isTrue();
+    assertThat(actual.stream().allMatch(t -> !t.getTimestamp().isBefore(from))).isTrue();
   }
 
   @Test
   void whenCriteriaOnMaxTimestamp_thenTransfersFiltered() {
-    final var to = Instant.parse("2026-01-31T23:59:59Z");
+    final var to = transfer2.getTimestamp();
     var actual = moneyTransferJpaRepository
         .findAll(
             MoneyTransferRepository
@@ -223,7 +222,7 @@ class MoneyTransferRepositoryTest {
                         to,
                         null)));
     assertThat(actual).hasSize(2);
-    assertThat(actual.stream().allMatch(t -> t.getTimestamp().isBefore(to))).isTrue();
+    assertThat(actual.stream().allMatch(t -> !t.getTimestamp().isAfter(to))).isTrue();
   }
 
   @Test
@@ -247,7 +246,7 @@ class MoneyTransferRepositoryTest {
 
   @Test
   void whenAllCriteriaSet_thenTransfersFiltered() {
-    var instant = Instant.parse("2025-12-30T12:34:56Z");
+    var instant = transfer1.getTimestamp();
     var actual = moneyTransferJpaRepository
         .findAll(
             MoneyTransferRepository

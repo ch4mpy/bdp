@@ -13,20 +13,21 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Audited
 @Entity
 @Table(name = "cards")
-@Data
+@Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-@Builder
+@Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Card {
 
   @Id
@@ -40,18 +41,31 @@ public class Card {
   private Iban iban;
 
   @Embedded
+  @Setter
   private Ceilings ceilings;
 
   @Column(nullable = false)
   @Builder.Default
   private boolean active = false;
 
+  public void activate() {
+    this.active = true;
+  }
+
+  public void deactivate() {
+    this.active = false;
+  }
+
+  public static Card create(String number, Iban iban, Ceilings ceilings) {
+    return Card.builder().number(number).iban(iban).ceilings(ceilings).build();
+  }
 
   @Embeddable
-  @Data
+  @Getter
+  @Setter
   @Builder
   @NoArgsConstructor(access = AccessLevel.PROTECTED)
-  @AllArgsConstructor
+  @AllArgsConstructor(access = AccessLevel.PROTECTED)
   public static class Ceilings {
 
     @Column(name = "transaction_ceiling", nullable = false)

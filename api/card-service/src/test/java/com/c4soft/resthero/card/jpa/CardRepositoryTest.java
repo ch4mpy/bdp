@@ -17,8 +17,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import com.c4soft.resthero.card.CacheConfiguration;
 import com.c4soft.resthero.card.domain.Card;
-import com.c4soft.resthero.card.jpa.CardRepository;
-import com.c4soft.resthero.card.jpa.JpaCardRepository;
 import com.c4soft.resthero.commons.domain.Iban;
 
 @SpringBootTest(classes = {CacheConfiguration.class, CardRepository.class})
@@ -46,10 +44,7 @@ class CardRepositoryTest {
     ceilings = Card.Ceilings.builder().transaction(50000).rolling30(100000).build();
 
     final var cards = new ConcurrentHashMap<String, Card>();
-    cards
-        .put(
-            cardNumber,
-            Card.builder().number(cardNumber).iban(accountIban).ceilings(ceilings).build());
+    cards.put(cardNumber, Card.create(cardNumber, accountIban, ceilings));
 
     when(jpaCardRepo.findById(cardNumber))
         .thenAnswer(invocation -> Optional.ofNullable(cards.get(invocation.getArgument(0))));
@@ -80,14 +75,11 @@ class CardRepositoryTest {
 
     // save a new Card instance with the same card number and different ceilings
     // (do not work with a reference to the instance already in the cache)
-    var card = cardService
-        .save(
-            Card
-                .builder()
-                .iban(accountIban)
-                .ceilings(new Card.Ceilings(150000, 300000))
-                .number(cardNumber)
-                .build());
+    var card = cardService.save(
+        Card.create(
+            cardNumber,
+            accountIban,
+            Card.Ceilings.builder().transaction(150000).rolling30(300000).build()));
     assertEquals(300000, card.getCeilings().getRolling30());
 
     // retrieve the card from the cache to verify that it was updated when saving the new instance
@@ -112,14 +104,11 @@ class CardRepositoryTest {
 
     // save a new Card instance with the same card number and different ceilings
     // (do not work with a reference to the instance already in the cache)
-    var card = cardService
-        .save(
-            Card
-                .builder()
-                .iban(accountIban)
-                .ceilings(new Card.Ceilings(150000, 300000))
-                .number(cardNumber)
-                .build());
+    var card = cardService.save(
+        Card.create(
+            cardNumber,
+            accountIban,
+            Card.Ceilings.builder().transaction(150000).rolling30(300000).build()));
     assertEquals(300000, card.getCeilings().getRolling30());
 
     // retrieve the card from the cache to verify that it was evicted when saving the new instance

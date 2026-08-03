@@ -12,32 +12,23 @@ public class AccountFixtures {
   public static String SOMEONE_SUBJECT = "someone-subject";
 
   public static Account createCustomersXpfAccount(Integer balanceDigits) {
-    final var balance = Amount.builder().currency(Currency.XPF).digits(balanceDigits).build();
-    return Account
-        .builder()
-        .customerId(CUSTOMER_SUBJECT)
-        .iban(Iban.of("FR761111222233334441"))
-        .balance(balance)
-        .build();
+    final var account =
+        Account.create(Iban.of("FR761111222233334441"), CUSTOMER_SUBJECT, Currency.XPF);
+    account.credit(new Amount(balanceDigits, Currency.XPF));
+    return account;
   }
 
   public static Account createCustomersEurAccount(Integer balanceDigits) {
-    final var balance = Amount.builder().currency(Currency.EUR).digits(balanceDigits).build();
-    return Account
-        .builder()
-        .customerId(CUSTOMER_SUBJECT)
-        .iban(Iban.of("FR761111222233334442"))
-        .balance(balance)
-        .build();
+    final var account =
+        Account.create(Iban.of("FR761111222233334442"), CUSTOMER_SUBJECT, Currency.EUR);
+    account.credit(new Amount(balanceDigits, Currency.EUR));
+    return account;
   }
 
   public static Account createSomeonesXpfAccount(Integer balanceDigits) {
-    final var balance = Amount.builder().currency(Currency.XPF).digits(balanceDigits).build();
-    return Account
-        .builder()
-        .customerId(SOMEONE_SUBJECT)
-        .iban(Iban.of("FR761111222233334443"))
-        .balance(balance)
-        .build();
+    final var account =
+        Account.create(Iban.of("FR761111222233334443"), SOMEONE_SUBJECT, Currency.XPF);
+    account.credit(new Amount(balanceDigits, Currency.XPF));
+    return account;
   }
 }

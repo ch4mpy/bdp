@@ -17,20 +17,20 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Audited
 @Entity
 @Table(name = "transfers")
-@Data
+@Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-@Builder
+@Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class MoneyTransfer {
 
   @Id
@@ -58,4 +58,18 @@ public class MoneyTransfer {
   private Instant timestamp = Instant.now();
 
   private String label;
+
+  public static MoneyTransfer of(
+      Iban sourceIban,
+      Iban destinationIban,
+      Amount amount,
+      String label) {
+    return MoneyTransfer
+        .builder()
+        .sourceIban(sourceIban)
+        .destinationIban(destinationIban)
+        .amount(amount)
+        .label(label)
+        .build();
+  }
 }

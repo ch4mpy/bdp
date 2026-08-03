@@ -82,8 +82,11 @@ public class CustomerRepository {
               apiProperties.getRealmName(),
               Optional.of(mapper.map(customer)));
       var pathParts = response.getHeaders().getLocation().getPath().split("/");
-      customer.setId(pathParts[pathParts.length - 1]);
-      return customer;
+      return new Customer(
+          pathParts[pathParts.length - 1],
+          customer.getFirstName(),
+          customer.getLastName(),
+          customer.getEmail());
     } catch (HttpClientErrorException e) {
       // FIXME: handle 409 conflict when user already exists
       log

@@ -110,7 +110,7 @@ public class AccountController {
     }
 
     // Create the new account
-    final var account = accountRepo.save(accountMapper.map(dto));
+    final var account = accountRepo.save(accountMapper.createAccount(dto));
     log
         .info(
             "{} created account {} for customer {}",

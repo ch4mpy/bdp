@@ -15,9 +15,10 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Audited
@@ -25,12 +26,12 @@ import lombok.ToString;
 @Table(name = "benficiaries",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"iban", "userId"}),
         @UniqueConstraint(columnNames = {"label", "userId"})})
-@Data
+@Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-@Builder
+@Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Beneficiary {
 
   @Id
@@ -42,14 +43,20 @@ public class Beneficiary {
 
   @Column(nullable = false)
   @ToString.Include
+  @Setter
   private String label;
 
   @Column(nullable = false)
-  @ToString.Include
   @Convert(converter = IbanStringAttributeConverter.class)
+  @ToString.Include
+  @Setter
   private Iban iban;
 
   @Column(nullable = false)
   private String customerId;
+
+  public static Beneficiary of(String customerId, Iban iban, String label) {
+    return Beneficiary.builder().label(label).iban(iban).customerId(customerId).build();
+  }
 
 }

@@ -12,6 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -632,11 +633,11 @@ class CardControllerTest {
                 any(Instant.class)))
         .thenReturn(List.of());
     when(paymentRepo.save(any(CardPayment.class))).thenAnswer(i -> {
-      CardPayment p = i.getArgument(0);
-      if (p.getId() == null) {
-        p.setId(1L);
-      }
-      return p;
+      CardPayment payment = i.getArgument(0, CardPayment.class);
+      final var persistedPayment =
+          Mockito.mockingDetails(payment).isMock() ? payment : Mockito.spy(payment);
+      when(persistedPayment.getId()).thenReturn(1L);
+      return persistedPayment;
     });
     when(transfersApi.transferMoneyBetweenAccounts(any()))
         .thenReturn(ResponseEntity.accepted().build());
@@ -735,7 +736,7 @@ class CardControllerTest {
     var existingPayment = CardPayment
         .builder()
         .id(1L)
-        .amount(Amount.builder().currency(Currency.XPF).digits(400).build())
+        .amount(new Amount(400, Currency.XPF))
         .card(card)
         .destinationIban(Iban.of(CardFixtures.SOMEONE_IBAN))
         .accepted(true)

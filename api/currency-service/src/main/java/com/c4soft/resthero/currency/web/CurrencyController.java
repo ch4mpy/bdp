@@ -56,9 +56,7 @@ public class CurrencyController {
     Currency fromCurrency = Currency.valueOf(fromIso3);
     Currency toCurrency = Currency.valueOf(toIso3);
 
-    return forexService
-        .convert(Amount.builder().currency(fromCurrency).digits(digits).build(), toCurrency)
-        .getDigits();
+    return forexService.convert(new Amount(digits, fromCurrency), toCurrency).getDigits();
   }
 
 }

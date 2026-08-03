@@ -27,12 +27,15 @@ Bien que certains raccourcis métier aient été pris, ce support de TP répond 
   * [1.4. Génération de spec OpenAPI à partir du code source](#maven-build-openapi-spec-generation)
   * [1.5. Génération de code client à partir de spec OpenAPI](#maven-build-openapi-client-code-generation)
   * [1.6. Manipulation des ressources](#maven-build-resources-handling)
+  * [1.7. Profiles Maven](#maven-profiles)
 - [2. Fondamentaux Spring](#spring)
   * [2.1. Injection de dépendance](#spring-di)
   * [2.2. `@Component` et variantes](#spring-components)
-  * [2.3. `@Configuration` et `@Bean`](#spring-configuration)
-  * [2.4. Proxies générés](#spring-proxies)
-  * [2.5. Tests](#spring-testing)
+  * [2.3. Configuration externe](#spring-properties)
+  * [2.4. `@Configuration` et `@Bean`](#spring-configuration)
+  * [2.5. Proxies générés](#spring-proxies)
+  * [2.6. Tests](#spring-testing)
+  * [2.7. Starter Spring Boot](#spring-boot-starter)
 - [3. Modèles objet-relationnel et accès aux données](#jpa)
   * [3.1. `@Entity`](#jpa-entity)
   * [3.2. Identifiants générés](#jpa-generated-ids)
@@ -486,6 +489,21 @@ de modifier ce comportement dans le `buils`. Par exemple :
 </resources>
 ```
 
+### 1.7. <a name="maven-profiles"/>Profiles Maven
+
+Il est possible de définir un `profile` Maven pour lequel à peut près n'importe quoi peut être redéfini (properties, dependencies, plugin à appliquer, etc.). C'est ce qui est fait dans les modules pour :
+- basculer entre les dépendances pour H2 et celles pour PostgreSQL
+- activer la Swagger-UI (avec les dépendances springdoc-openapi), démarrer puis arrêter l'application autour des tests d'intégration Maven et enfin récupérer la spec OpenAPI exposée par Swagger au runtime pour l'écrire dans le système de fichier
+
+Pour activer un ou plusieurs profiles, ajouter l'option `-P` (majuscule) immédiatement suivie des profiles séparés par des virgules
+```bash
+mvn clean install -Popenapi,h2
+```
+
+Un profile peut être activé par défaut. C'est le cas du profile `postgresql` dans les modules.
+
+Attention, dès qu'au moins un profile est activé de manière explicite, il n'y a plus d'activation par défaut. Dans ce projet, on associera donc toujours le profile `openapi` soit au profile `h2` (comme ci-dessus) soit au profile `postgresql`.
+
 ## 2. <a name="spring"/>Fondamentaux Spring
 
 ### 2.1. <a name="spring-di"/>Injection de dépendance
@@ -517,6 +535,62 @@ public class AccountController {
 
 Spring s'occupe d'instancier les classes dans le bon ordre.
 
+Lorsque plusieurs beans ont le même type, il sont résolus par un _qualifier_ qui est par défaut le nom de la méthode `@Bean` qui a instancier chacun d'eux. Un exemple tiré de la `RestConfiguration` de l'account-service dans lequel `customerServiceClient` et `currenciesServiceClient` sont deux instances de `RestClient` exposées en tant que bean par `spring-addons-starter-rest`:
+```yaml
+com:
+  c4-soft:
+    springaddons:
+      rest:
+        client:
+          customer-service-client:
+            base-url: https://localhost:8081
+          currencies-service-client:
+            base-url: https://localhost:8084
+```
+```java
+@Configuration
+public class RestConfiguration {
+  @Bean
+  CustomersApi customersApi(RestClient customerServiceClient) throws Exception {
+    return new RestClientHttpExchangeProxyFactoryBean<>(CustomersApi.class, customerServiceClient)
+        .getObject();
+  }
+
+  @Bean
+  CurrenciesApi currenciesApi(RestClient currenciesServiceClient) throws Exception {
+    return new RestClientHttpExchangeProxyFactoryBean<>(
+        CurrenciesApi.class,
+        currenciesServiceClient).getObject();
+  }
+```
+
+Il est possible de surcharger le _qualifier_ par défaut lors de la définition d'un bean comme lors de son injection avec `@Qualifier`.
+
+Pour rendre une dépendance optionnelle (on s'attend à ce qu'il soit possible que la configuration de l'application puisse ne pas fournir un bean), typer cette dépendance avec `Optional<T>` :
+```java
+@TestConfiguration
+public class SpringDataWebConvertersTestConfiguration {
+  @Autowired(required = false)
+  Optional<AccountRepository> accountRepo;
+
+  @Bean
+  WebMvcConfigurer configurer() {
+    return new WebMvcConfigurer() {
+      @Override
+      public void addFormatters(FormatterRegistry registry) {
+        registry
+            .addConverter(
+                String.class,
+                Account.class,
+                iban -> accountRepo
+                    .flatMap(r -> iban == null ? Optional.empty() : r.findByIban(Iban.of(iban)))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+      }
+    };
+  }
+}
+```
+
 Les composants fournis par le biais de l'injection de dépendances peuvent être facilement remplacés pendant les tests.
 
 ### 2.2. <a name="spring-components"/>`@Component` et variantes
@@ -540,7 +614,79 @@ static class SecurityAwareRevisionListener implements RevisionListener {
   }
 }
 ```
-### 2.3. <a name="spring-configuration"/>`@Configuration` et `@Bean`
+
+Les `@Component` peuvent comporter des méthodes décorées avec `@PostConstruct` et `@PreDestroy`, ce qui permet de faire exécuter au conteneur d'application du code d'initialisation ou de nettoyage. C'est utile lorsqu'on initialise un cache, valide une configuration, ouvre une connexion, etc.
+```java
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class FrankfurterForexService implements ForexService {
+  public static final Currency PIVOT_CURR = Currency.EUR;
+
+  private final CachingRatesRepository ratesRepo;
+
+  @PostConstruct
+  void warmUp() {
+    for (final var curr : Currency.values()) {
+      if (!curr.equals(PIVOT_CURR)) {
+        ratesRepo.fetchRate(PIVOT_CURR, curr);
+      }
+    }
+  }
+}
+```
+
+### 2.3. <a name="spring-properties"/>Configuration externe
+
+La configuration Spring Boot s'appuie en grande partie sur les _properties_ avec comme source principale `application.properties` ou, comme c'est le cas dans ce projet, `application.yml`.
+```yaml
+spring:
+  datasource:
+    password: change-me
+```
+
+Les propriétés qui sont définies dans `application.yml` peuvent ête surchargées par 
+- des variables d'environnement
+```bash
+SPRING_DATASOURCE_PASSWORD=secret
+java -jar account-service.jar
+```
+- des arguments en ligne de commande
+```bash
+java -jar account-service.jar --spring.datasource.password=secret
+# Ou
+java -jar -Dspring.datasource.password=secret account-service.jar
+```
+
+Il est possible d'accéder à n'importe quelle _property_ en utilisant `@Value` lors de l'injection de dépendances
+```java
+@Component
+public class MyConfigurableComponent {
+  public MyConfigurableComponent(@Value("${spring.datasource.password}") String datassourcePassword) {
+    // ...
+  }
+}
+```
+
+Pour définir ses propres propriétés de configuration, le plus commode est d'employer `@ConfigurationProperties`
+```java
+@SpringBootApplication
+@ConfigurationPropertiesScan
+public class CustomerServiceApplication {
+}
+```
+```java
+@ConfigurationProperties(prefix = "keycloak-admin-api")
+@Data
+public class KeycloakAdminApiProperties {
+
+  private final URI baseUri;
+
+  private final String realmName;
+}
+```
+
+### 2.4. <a name="spring-configuration"/>`@Configuration` et `@Bean`
 
 Toutes les classes utiles à l'application ne peuvent pas être annotées avec `@Component`. C'est notamment le cas :
 - des classes provenant de bibliothèques tierces ;
@@ -562,7 +708,7 @@ Les paramètres d'une méthode `@Bean` sont injectés par Spring.
 
 Je recommande de regrouper les beans ayant une responsabilité commune dans une même classe de configuration (`RestConfiguration`, `CacheConfiguration`, `WebConfiguration`, etc.) plutôt que de créer une configuration unique pour toute l'application.
 
-### 2.4. <a name="spring-proxies"/>Proxies générés
+### 2.5. <a name="spring-proxies"/>Proxies générés
 
 Spring génère fréquemment des proxies autour des beans afin d'ajouter des comportements transverses (cross-cutting concerns) sans modifier le code métier.
 
@@ -612,7 +758,7 @@ public class AccountService {
 }
 ```
 
-### 2.5. <a name="spring-testing"/>Tests
+### 2.6. <a name="spring-testing"/>Tests
 
 Spring Boot fournit plusieurs niveaux de tests. Plus le contexte Spring chargé est réduit, plus les tests sont rapides.
 
@@ -626,6 +772,20 @@ Pour les tests d'accès aux données, `@DataJpaTest` effectue chaque test dans u
 Les dépendances injectées par Spring peuvent être :
 - remplacées par des `@MockitoBean` (ou des implémentations spécifiques aux tests)
 - importées explicitement avec `@Import({})` si elle ne font pas partie de la _tranche_ prévue par Spring
+
+
+### 2.7. <a name="spring-boot-starter"/>Starter Spring Boot
+
+Un starter Spring Boot sert à partager de l'auto-configuration.
+
+Les composants à configurer dans les applications qui l'utilisent sont définis dans `src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+```
+com.c4soft.resthero.commons.CommonWebConfiguration
+com.c4soft.resthero.commons.domain.IbanStringMapper
+com.c4soft.resthero.commons.exception.CommonExceptionsHandler
+```
+
+Lors de la création de starters, il est important d'être peu intrusif et de laisser la main à l'application pour surcharger l'auto-configuration proposée. Les annotations `@ConditionalOn...` telles que `@ConditionalOnMissingBean` et `@ConditionalOnProperty` peuvent alors trouver tout leur intérêt.
 
 ## 3. <a name="jpa"/>Modèles objet-relationnel et accès aux données
 

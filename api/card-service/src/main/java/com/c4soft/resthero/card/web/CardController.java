@@ -126,17 +126,14 @@ public class CardController {
     var card = cardRepo
         .save(
             Card
-                .builder()
-                .number(cardNumber)
-                .iban(iban)
-                .ceilings(
+                .create(
+                    cardNumber,
+                    iban,
                     Ceilings
                         .builder()
                         .rolling30(dto.rolling30Ceiling())
                         .transaction(dto.transactionCeiling())
-                        .build())
-                .active(true)
-                .build());
+                        .build()));
     log.info("{} created card {} for account {}", auth.getName(), card.getNumber(), dto.iban());
 
     return ResponseEntity
@@ -180,14 +177,22 @@ public class CardController {
       @PathVariable(name = CARD_NUMBER_PLACEHOLDER) Card card,
       @RequestBody @Valid CardStatusRequest dto,
       Authentication auth) {
-    log
-        .debug(
-            "{} is changing status {} card status from {} to {}",
-            auth.getName(),
-            card.getNumber(),
-            card.isActive(),
-            dto.isActive());
-    card.setActive(dto.isActive());
+    if (card.isActive() == dto.isActive()) {
+      log
+          .debug(
+              "{} attempted to change card {} status to {} but it is already in that status",
+              auth.getName(),
+              card.getNumber(),
+              dto.isActive());
+      return;
+    }
+
+    if (dto.isActive()) {
+      card.activate();
+    } else {
+      card.deactivate();
+    }
+
     cardRepo.save(card);
     log.info("{} changed card {} status to {}", auth.getName(), card.getNumber(), dto.isActive());
   }
@@ -381,12 +386,7 @@ public class CardController {
           .save(
               CardPayment
                   .builder()
-                  .amount(
-                      Amount
-                          .builder()
-                          .currency(Currency.valueOf(dto.currency()))
-                          .digits(dto.amount())
-                          .build())
+                  .amount(new Amount(dto.amount(), Currency.valueOf(dto.currency())))
                   .card(card)
                   .destinationIban(Iban.of(dto.destinationIban()))
                   .accepted(false)

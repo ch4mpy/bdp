@@ -11,8 +11,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import com.c4soft.resthero.card.domain.Card;
 import com.c4soft.resthero.card.domain.CardPayment;
-import com.c4soft.resthero.card.jpa.CardPaymentRepository;
-import com.c4soft.resthero.card.jpa.JpaCardRepository;
 import com.c4soft.resthero.commons.domain.Amount;
 import com.c4soft.resthero.commons.domain.Currency;
 import com.c4soft.resthero.commons.domain.Iban;
@@ -43,26 +41,24 @@ class CardPaymentRepositoryTest {
     card1 = cardRepo
         .save(
             Card
-                .builder()
-                .number("1111-1111-1111-1111-1")
-                .iban(iban)
-                .ceilings(Card.Ceilings.builder().rolling30(300000).transaction(100000).build())
-                .build());
+                .create(
+                    "1111-1111-1111-1111-1",
+                    iban,
+                    Card.Ceilings.builder().rolling30(300000).transaction(100000).build()));
     card2 = cardRepo
         .save(
             Card
-                .builder()
-                .number("2222-2222-2222-2222-2")
-                .iban(iban)
-                .ceilings(Card.Ceilings.builder().rolling30(500000).transaction(150000).build())
-                .build());
+                .create(
+                    "2222-2222-2222-2222-2",
+                    iban,
+                    Card.Ceilings.builder().rolling30(500000).transaction(150000).build()));
 
     payment1 = paymentRepo
         .save(
             CardPayment
                 .builder()
                 .card(card1)
-                .amount(Amount.builder().digits(120000).currency(Currency.XPF).build())
+                .amount(new Amount(120000, Currency.XPF))
                 .destinationIban(Iban.of("FR7622222222222222222"))
                 .accepted(false)
                 .timestamp(Instant.parse("2026-01-01T00:01:10Z"))
@@ -72,7 +68,7 @@ class CardPaymentRepositoryTest {
             CardPayment
                 .builder()
                 .card(card1)
-                .amount(Amount.builder().digits(120000).currency(Currency.XPF).build())
+                .amount(new Amount(120000, Currency.XPF))
                 .destinationIban(Iban.of("FR7622222222222222222"))
                 .accepted(false)
                 .timestamp(Instant.parse("2026-01-01T00:01:30Z"))
@@ -82,7 +78,7 @@ class CardPaymentRepositoryTest {
             CardPayment
                 .builder()
                 .card(card2)
-                .amount(Amount.builder().digits(120000).currency(Currency.XPF).build())
+                .amount(new Amount(120000, Currency.XPF))
                 .destinationIban(Iban.of("FR7622222222222222222"))
                 .timestamp(Instant.parse("2026-01-01T00:02:30Z"))
                 .accepted(true)
