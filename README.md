@@ -1070,8 +1070,8 @@ static class SecurityAwareRevisionListener implements RevisionListener {
     }
   }
 }
-
-
+```
+```java
 @Entity
 @Table(name = "REVINFO")
 @RevisionEntity(value = SecurityAwareRevisionListener.class)
