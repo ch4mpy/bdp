@@ -69,7 +69,7 @@ com:
       rest:
         client:
           customer-service-client:
-            base-url: ${reverse-proxy-uri}/gateway/m2m
+            base-url: https://${cn}:8083
             ssl-bundle: self-signed
             headers:
               Accept: 
@@ -79,7 +79,7 @@ com:
               oauth2:
                 oauth2-registration-id: account-service
           currencies-service-client:
-            base-url: ${reverse-proxy-uri}/gateway/m2m
+            base-url: https://${cn}:8084
             ssl-bundle: self-signed
             headers:
               Accept: 

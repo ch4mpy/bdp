@@ -59,26 +59,12 @@ spring:
                 - TokenRelay=
                 # remove the /gateway/bff prefix
                 - StripPrefix=2
-            # Do not apply the TokenRelay= filter (machine-to-machine communication)
-            - id: accounts-m2m
-              uri: ${accounts-service}
-              predicates:
-                - Path=/m2m/accounts/**,/m2m/transfers/**
-              filters:
-                # remove the /gateway/m2m prefix
-                - StripPrefix=2
             - id: cards-bff
               uri: ${cards-service}
               predicates:
                 - Path=/bff/cards/**
               filters:
                 - TokenRelay=
-                - StripPrefix=2
-            - id: cards-m2m
-              uri: ${cards-service}
-              predicates:
-                - Path=/m2m/cards/**
-              filters:
                 - StripPrefix=2
             - id: customers-bff
               uri: ${customers-service}
@@ -87,24 +73,12 @@ spring:
               filters:
                 - TokenRelay=
                 - StripPrefix=2
-            - id: customers-m2m
-              uri: ${customers-service}
-              predicates:
-                - Path=/m2m/customers/**
-              filters:
-                - StripPrefix=2
             - id: currencies-bff
               uri: ${currencies-service}
               predicates:
                 - Path=/bff/currencies/**
               filters:
                 - TokenRelay=
-                - StripPrefix=2
-            - id: currencies-m2m
-              uri: ${currencies-service}
-              predicates:
-                - Path=/m2m/currencies/**
-              filters:
                 - StripPrefix=2
     refresh:
       enabled: false
@@ -202,7 +176,6 @@ management:
 logging:
   level:
     "[org.springframework]": INFO
-    "[com.c4soft.demo.multitenancy]": DEBUG
 ---
 spring:
   config:

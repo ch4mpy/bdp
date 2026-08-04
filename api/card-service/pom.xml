@@ -267,22 +267,15 @@
                         <artifactId>wiremock-maven-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>start-wiremock</id>
-                                <phase>pre-integration-test</phase>
+                                <id>keycloak-wiremock</id>
                                 <goals>
                                     <goal>run</goal>
-                                </goals>
-                                <configuration>
-                                    <dir>src/test/resources/wiremock</dir>
-                                    <params>--port=8089</params>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>stop-wiremock</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
                                     <goal>stop</goal>
                                 </goals>
+                                <configuration>
+                                    <dir>src/test/resources/wiremock/keycloak</dir>
+                                    <params>--port=8089</params>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

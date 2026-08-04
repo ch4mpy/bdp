@@ -38,8 +38,7 @@ import com.c4soft.resthero.commons.domain.Iban;
 import com.c4soft.resthero.commons.domain.IbanStringMapper;
 import tools.jackson.databind.ObjectMapper;
 
-@WebMvcTest(controllers = MoneyTransferController.class,
-    properties = {"logging.level.org.springframework=DEBUG"})
+@WebMvcTest(controllers = MoneyTransferController.class, properties = {})
 @Import({IbanStringMapper.class, MoneyTransferMapperImpl.class,
     SpringDataWebConvertersTestConfiguration.class, SecurityConfig.class})
 @AutoConfigureAddonsWebmvcResourceServerSecurity

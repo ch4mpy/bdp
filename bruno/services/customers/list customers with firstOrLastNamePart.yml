@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: https://host.docker.internal/gateway/m2m/customers?firstOrLastNamePart=e
+  url: https://host.docker.internal:8083/customers?firstOrLastNamePart=e
   params:
     - name: firstOrLastNamePart
       value: e

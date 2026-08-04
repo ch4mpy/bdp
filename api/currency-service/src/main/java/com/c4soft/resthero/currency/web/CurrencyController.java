@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.c4soft.resthero.commons.domain.Amount;
 import com.c4soft.resthero.commons.domain.Currency;
 import com.c4soft.resthero.commons.validation.SupportedCurrency;
-import com.c4soft.resthero.currency.domain.ForexService;
+import com.c4soft.resthero.currency.frankfurter.ForexService;
 import io.micrometer.observation.annotation.Observed;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

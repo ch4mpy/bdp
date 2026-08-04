@@ -72,7 +72,7 @@ com:
       rest:
         client:
           keycloak-admin-api-client:
-            base-url: ${reverse-proxy-uri}/auth
+            base-url: https://${cn}:3643/auth
             ssl-bundle: self-signed
             headers:
               Accept: 

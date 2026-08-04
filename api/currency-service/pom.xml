@@ -207,22 +207,29 @@
                         <artifactId>wiremock-maven-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>start-wiremock</id>
+                                <id>keycloak-wiremock</id>
                                 <phase>pre-integration-test</phase>
                                 <goals>
                                     <goal>run</goal>
+                                    <goal>stop</goal>
                                 </goals>
                                 <configuration>
-                                    <dir>src/test/resources/wiremock</dir>
+                                    <dir>src/test/resources/wiremock/keycloak</dir>
                                     <params>--port=8089</params>
+                                    <skip>false</skip>
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>stop-wiremock</id>
-                                <phase>post-integration-test</phase>
+                                <id>frankfurter-wiremock</id>
                                 <goals>
+                                    <goal>run</goal>
                                     <goal>stop</goal>
                                 </goals>
+                                <configuration>
+                                    <dir>src/test/resources/wiremock/frankfurter</dir>
+                                    <params>--port=8090</params>
+                                    <skip>false</skip>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -259,6 +266,9 @@
                                     <arguments>
                                         <argument>
                                             --issuer=http://localhost:8089/auth/realms/labs
+                                        </argument>
+                                        <argument>
+                                            --com.c4-soft.springaddons.rest.client.frankfurter-client.base-url=http://localhost:8090
                                         </argument>
                                     </arguments>
                                     <environmentVariables>

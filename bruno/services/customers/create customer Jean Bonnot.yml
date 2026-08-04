@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: https://host.docker.internal/gateway/m2m/customers
+  url: https://host.docker.internal:8083/customers
   body:
     type: json
     data: |-

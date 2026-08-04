@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/rate/{base}/{quote}"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "date": "2026-08-01",
+      "base": "{{request.path.base}}",
+      "quote": "{{request.path.quote}}",
+      "rate": 1
+    }
+  }
+}

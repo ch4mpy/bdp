@@ -6,16 +6,14 @@ import java.math.RoundingMode;
 import java.util.Optional;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.server.ResponseStatusException;
 import com.c4soft.resthero.commons.domain.Amount;
 import com.c4soft.resthero.commons.domain.Currency;
-import com.c4soft.resthero.currency.domain.ForexService;
 import dev.frankfurter.api.RatesApi;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -24,21 +22,23 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class FrankfurterForexService implements ForexService {
+public class ForexService {
   public static final Currency PIVOT_CURR = Currency.EUR;
 
   private final CachingRatesRepository ratesRepo;
 
   @PostConstruct
   void warmUp() {
-    for (final var curr : Currency.values()) {
-      if (!curr.equals(PIVOT_CURR)) {
-        ratesRepo.fetchRate(PIVOT_CURR, curr);
+    try {
+      for (final var curr : Currency.values()) {
+        if (!curr.equals(PIVOT_CURR)) {
+          ratesRepo.fetchRate(PIVOT_CURR, curr);
+        }
       }
+    } catch (ResourceAccessException e) {
     }
   }
 
-  @Override
   public Amount convert(Amount amount, Currency targetCurrency) {
     final var source =
         new BigDecimal(amount.getDigits()).scaleByPowerOfTen(-1 * amount.getCurrency().decimals);

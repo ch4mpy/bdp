@@ -71,7 +71,7 @@
         <error_prone_core.version>2.49.0</error_prone_core.version>
         <nullaway.version>0.13.4</nullaway.version>
 
-        <wiremock-standalone.version>4.0.0-beta.34</wiremock-standalone.version>
+        <wiremock.version>4.0.0-beta.38</wiremock.version>
         <wiremock-maven-plugin.version>7.3.0</wiremock-maven-plugin.version>
         <wiremock-spring-boot.version>4.2.1</wiremock-spring-boot.version>
     </properties>
@@ -182,8 +182,13 @@
 
             <dependency>
                 <groupId>org.wiremock</groupId>
+                <artifactId>wiremock</artifactId>
+                <version>${wiremock.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wiremock</groupId>
                 <artifactId>wiremock-standalone</artifactId>
-                <version>${wiremock-standalone.version}</version>
+                <version>${wiremock.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wiremock.integrations</groupId>
@@ -360,8 +365,8 @@
                     <dependencies>
                         <dependency>
                             <groupId>org.wiremock</groupId>
-                            <artifactId>wiremock-standalone</artifactId>
-                            <version>${wiremock-standalone.version}</version>
+                            <artifactId>wiremock</artifactId>
+                            <version>${wiremock.version}</version>
                         </dependency>
                     </dependencies>
                 </plugin>
