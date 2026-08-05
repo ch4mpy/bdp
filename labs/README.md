@@ -1,0 +1,115 @@
+1# Génération des énoncés de TP
+
+Ce répertoire permet de générer, pour chaque entrée numérotée du sommaire de
+`README.md` (ex: `1.4.3`), une branche `lab/<id>` qui reprend l'état courant de
+`main` avec quelques éléments clefs retirés du code, à charge pour le stagiaire
+de les reconstruire.
+
+## Pour le stagiaire
+
+```bash
+./labs/scripts/build-lab.sh 1.4.3
+```
+
+Ceci (re)crée la branche `lab/1.4.3` à partir de `origin/main`, retire les
+éléments à reconstruire, et place l'énoncé du TP dans `lab.md` à la racine du
+repo. La commande peut être relancée à tout moment (par exemple après une mise
+à jour de `main`) : la branche est reconstruite à chaque fois depuis `main`, ce
+qui écrase tout travail local fait directement sur `lab/<id>`. Il faut donc
+committer son travail sur une autre branche avant de relancer le script.
+
+## Pour la personne qui prépare les TPs
+
+Chaque TP est composé de deux choses, versionnées sur `main` :
+
+1. `labs/<id>/lab.md` : l'énoncé du TP, tel qu'il sera copié à la racine du
+   dépôt sur la branche `lab/<id>`. `./labs/scripts/scaffold.py` génère un
+   squelette pour chaque entrée du sommaire de `README.md` qui n'en a pas
+   encore (il n'écrase jamais un `lab.md` existant).
+2. Des marqueurs en commentaire, directement dans le code source de `main`,
+   autour des éléments que le stagiaire doit reconstruire pour ce TP. Le
+   script `build-lab.sh` parcourt tout le dépôt à la recherche de marqueurs
+   correspondant à l'id demandé, quel que soit le fichier où ils se trouvent.
+
+Un TP sans marqueur reste valide : c'est un TP purement théorique, la branche
+`lab/<id>` ne contient alors que `lab.md` en plus de `main`.
+
+### Syntaxe des marqueurs
+
+Deux formes, selon que l'élément doit disparaître entièrement ou être
+remplacé par un repère pour le stagiaire :
+
+**Retrait complet** (rien ne subsiste, y compris les marqueurs eux-mêmes) :
+
+```java
+// LAB:1.4.3:REMOVE:START
+@Valid
+// LAB:1.4.3:REMOVE:END
+@RequestBody MoneyTransferRequest dto
+```
+
+**Retrait avec un repère `TODO`** (le bloc est remplacé par un unique
+commentaire, avec un message optionnel) :
+
+```java
+// LAB:1.4.3:TODO:START Ajouter la validation des champs d'entrée
+@Valid
+// LAB:1.4.3:TODO:END
+@RequestBody MoneyTransferRequest dto
+```
+
+devient, sur la branche `lab/1.4.3` :
+
+```java
+// TODO: Ajouter la validation des champs d'entrée
+@RequestBody MoneyTransferRequest dto
+```
+
+Les deux formes fonctionnent aussi en XML (commentaire `<!-- ... -->`) et en
+YAML/`.properties` (commentaire `#`) :
+
+```xml
+<!-- LAB:3.9:REMOVE:START -->
+<dependency>
+  <groupId>org.springframework.data</groupId>
+  <artifactId>spring-data-envers</artifactId>
+</dependency>
+<!-- LAB:3.9:REMOVE:END -->
+```
+
+```yaml
+# LAB:2.3:TODO:START renseigner le mot de passe applicatif
+spring:
+  datasource:
+    password: change-me
+# LAB:2.3:TODO:END
+```
+
+Règles :
+
+- Le marqueur `START` et le marqueur `END` doivent porter le même id et le
+  même verbe (`REMOVE` ou `TODO`).
+- Les marqueurs ne s'imbriquent pas pour un même id : le premier `END`
+  rencontré après un `START` referme le bloc.
+- Un même fichier peut porter des marqueurs pour plusieurs TPs différents ;
+  chaque génération de branche ne traite que l'id demandé et laisse les
+  marqueurs des autres TPs intacts.
+- Le retrait n'est qu'une opération texte : à l'auteur du TP de vérifier que
+  le code obtenu après retrait compile toujours (ou, pour un retrait complet,
+  que l'élément peut disparaître sans rien casser ailleurs).
+
+### Commandes
+
+```bash
+# Scaffolder les labs/<id>/lab.md manquants pour toutes les entrées du sommaire
+./labs/scripts/scaffold.py
+
+# Prévisualiser le résultat du retrait pour un id, sans créer de branche
+./labs/scripts/strip_markers.py 1.4.3 .
+```
+
+## Limite connue
+
+Le contenu retiré reste consultable dans l'historique Git de `main` (et dans
+les autres branches). Ce mécanisme dissuade la lecture directe de la
+solution, il ne l'empêche pas.
