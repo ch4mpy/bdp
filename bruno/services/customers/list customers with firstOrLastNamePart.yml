@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: https://host.docker.internal:8083/customers?firstOrLastNamePart=e
+  url: https://host.docker.internal:8083/customers?search=é
   params:
-    - name: firstOrLastNamePart
-      value: e
+    - name: search
+      value: é
       type: query
   auth: inherit
 
