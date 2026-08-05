@@ -43,7 +43,7 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="cards" uuid="cd711e2a-1b6e-4daa-9e96-531ce1b34378">
+    <data-source source="LOCAL" name="card_payments" uuid="cd711e2a-1b6e-4daa-9e96-531ce1b34378">
       <driver-ref>h2.unified</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
