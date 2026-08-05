@@ -1,4 +1,4 @@
-1# Génération des énoncés de TP
+# Génération des énoncés de TP
 
 Ce répertoire permet de générer, pour chaque entrée numérotée du sommaire de
 `README.md` (ex: `1.4.3`), une branche `lab/<id>` qui reprend l'état courant de
@@ -13,10 +13,17 @@ de les reconstruire.
 
 Ceci (re)crée la branche `lab/1.4.3` à partir de `origin/main`, retire les
 éléments à reconstruire, et place l'énoncé du TP dans `lab.md` à la racine du
-repo. La commande peut être relancée à tout moment (par exemple après une mise
-à jour de `main`) : la branche est reconstruite à chaque fois depuis `main`, ce
-qui écrase tout travail local fait directement sur `lab/<id>`. Il faut donc
-committer son travail sur une autre branche avant de relancer le script.
+repo.
+
+La commande peut être relancée à tout moment (par exemple après une mise à
+jour de `main`). Si la branche `lab/1.4.3` existe déjà en local, le script
+demande quoi en faire :
+- **b**asculer dessus telle quelle, sans rien changer (pour reprendre un TP en
+  cours) ;
+- ou la **r**éinitialiser depuis `origin/main` (l'énoncé reflète alors l'état
+  actuel de `main`, mais tout travail local fait directement sur `lab/<id>`
+  est perdu — il faut donc l'avoir committé sur une autre branche au
+  préalable).
 
 ## Pour la personne qui prépare les TPs
 
