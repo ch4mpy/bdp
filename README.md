@@ -8,7 +8,7 @@ Ce support de TPs répond à des exigences de production avancées. Les services
 - **Documentés** avec OpenAPI : permet aux clients de générer le code pour les consommer et aux développeurs de les visualiser dans une Swagger UI. Cette documentation est générée à partir des sources (commentaires JavaDoc compris)
 - **Communicants** : Appels REST inter-service:
   * Le `customer-service` utilise Keycloak pour accéder aux utilisateurs
-  * L'`account-service` vérifie auprès du `customer-service` qu'un client existe avant de créer un compte à son nom. Il sollicite éfalement le `currency-service` lorsqu'un virement nécessite des opérations de change.
+  * L'`account-service` vérifie auprès du `customer-service` qu'un client existe avant de créer un compte à son nom. Il sollicite également le `currency-service` lorsqu'un virement nécessite des opérations de change.
   * Le `card-service` vérifie auprès de l'`account-service` qu'un compte existe avant de lui attacher une carte et lui déclare un transfert d'argent lors d'un paiement par carte.
 - **Sécurisés** : 
   * Chaque endpoint d'API vérifie l'identité attachée à la requête et ses relations éventuelles avec les ressources qu'elle cherche à manipuler avant d'autoriser l'accès.
