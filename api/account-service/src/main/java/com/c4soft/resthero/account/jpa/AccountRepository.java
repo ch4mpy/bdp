@@ -39,9 +39,11 @@ public class AccountRepository {
     return jpaRepository.findByCustomerId(customerId);
   }
 
+  // LAB:5:TODO:START mettre à jour et invalider les caches lors d'une sauvegarde
   @Caching(put = @CachePut(cacheNames = ACCOUNTS_BY_IBAN_CACHE, key = "#account.iban"),
       evict = {@CacheEvict(cacheNames = ACCOUNT_EXISTS_BY_IBAN_CACHE, key = "#account.iban"),
           @CacheEvict(cacheNames = ACCOUNTS_BY_CUSTOMER_ID_CACHE, key = "#account.customerId")})
+  // LAB:5:TODO:END
   public Account save(Account account) {
     return jpaRepository.save(account);
   }

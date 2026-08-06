@@ -13,7 +13,9 @@ import org.springframework.context.annotation.Configuration;
  * @author Jerome Wacongne ch4mp&#64;c4-soft.com
  */
 @Configuration
+// LAB:5:TODO:START activer la mise en cache pour card-service
 @EnableCaching
+// LAB:5:TODO:END
 public class CacheConfiguration {
 
   @Bean
