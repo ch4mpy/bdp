@@ -250,9 +250,11 @@
         </profile>
         <profile>
             <id>postgresql</id>
+            <!-- LAB:1.7:REMOVE:START -->
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <!-- LAB:1.7:REMOVE:END -->
             <dependencies>
                 <dependency>
                     <groupId>org.postgresql</groupId>

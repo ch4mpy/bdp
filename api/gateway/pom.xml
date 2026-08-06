@@ -181,9 +181,11 @@
         </plugins>
 
         <resources>
+            <!-- LAB:1.6:REMOVE:START -->
             <resource>
                 <directory>src/main/resources</directory>
             </resource>
+            <!-- LAB:1.6:REMOVE:END -->
             <resource>
                 <directory>../../certs</directory>
             </resource>
