@@ -168,11 +168,13 @@ intégration, récupérer la spec OpenAPI sur la swagger-ui; puis arrêter l'app
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 1.1.1
+./start-lab.sh 1.1.1
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 #### 1.1.2. <a name="maven-build-phases"/>Phases
@@ -213,11 +215,13 @@ assemblées, il faut ajouter `-am`. Par exemple (`mvn install -pl account-servic
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 1.1.2
+./start-lab.sh 1.1.2
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 1.2. <a name="maven-build-dependencies"/>Dépendances
@@ -251,11 +255,13 @@ Dépendances utilisées durant les TPs:
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 1.2
+./start-lab.sh 1.2
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 1.3. <a name="maven-build-annotations-preprocessing"/>Processeurs d’annotations à la compilation
@@ -304,11 +310,13 @@ Mapstruct utilise les accesseurs générés par Lombok).
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 1.3
+./start-lab.sh 1.3
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 1.4. <a name="maven-build-openapi-spec-generation"/>Génération de spec OpenAPI à partir du code source
@@ -425,11 +433,13 @@ besoin de récupérer la configuration OpenID du provider, nous utiliserons le `
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 1.4
+./start-lab.sh 1.4
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 1.5. <a name="maven-build-openapi-client-code-generation"/>Génération de code client à partir de spec OpenAPI
@@ -527,11 +537,13 @@ problèmes de compilation, on applique le `fmt-maven-plugin`:
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 1.5
+./start-lab.sh 1.5
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 1.6. <a name="maven-build-resources-handling"/>Manipulation des ressources
@@ -553,11 +565,13 @@ de modifier ce comportement dans le `buils`. Par exemple :
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 1.6
+./start-lab.sh 1.6
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 1.7. <a name="maven-profiles"/>Profiles Maven
@@ -578,11 +592,13 @@ Attention, dès qu'au moins un profile est activé de manière explicite, il n'y
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 1.7
+./start-lab.sh 1.7
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ## 2. <a name="spring"/>Fondamentaux Spring
@@ -677,11 +693,13 @@ Les composants fournis par le biais de l'injection de dépendances peuvent être
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 2.1
+./start-lab.sh 2.1
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 2.2. <a name="spring-components"/>`@Component` et variantes
@@ -730,11 +748,13 @@ public class FrankfurterForexService implements ForexService {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 2.2
+./start-lab.sh 2.2
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 2.3. <a name="spring-properties"/>Configuration externe
@@ -790,11 +810,13 @@ public class KeycloakAdminApiProperties {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 2.3
+./start-lab.sh 2.3
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 2.4. <a name="spring-configuration"/>`@Configuration` et `@Bean`
@@ -822,11 +844,13 @@ Je recommande de regrouper les beans ayant une responsabilité commune dans une 
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 2.4
+./start-lab.sh 2.4
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 2.5. <a name="spring-proxies"/>Proxies générés
@@ -885,11 +909,13 @@ public class AccountService {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 2.5
+./start-lab.sh 2.5
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 2.6. <a name="spring-testing"/>Tests
@@ -910,11 +936,13 @@ Les dépendances injectées par Spring peuvent être :
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 2.6
+./start-lab.sh 2.6
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 
@@ -934,11 +962,13 @@ Lors de la création de starters, il est important d'être peu intrusif et de la
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 2.7
+./start-lab.sh 2.7
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ## 3. <a name="jpa"/>Modèles objet-relationnel et accès aux données
@@ -989,11 +1019,13 @@ public class Card {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 3.1
+./start-lab.sh 3.1
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 3.2. <a name="jpa-generated-ids"/>Identifiants générés
@@ -1016,11 +1048,13 @@ private Long id;
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 3.2
+./start-lab.sh 3.2
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 3.3. <a name="jpa-relations"/>Relations
@@ -1072,11 +1106,13 @@ public class Card {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 3.3
+./start-lab.sh 3.3
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 3.4. <a name="jpa-type-converter"/>Conversion de types
@@ -1122,11 +1158,13 @@ public class Card {
   ##### T.P.
   Initialisation :
   ```bash
-  ./lab.sh 3.4
+  ./start-lab.sh 3.4
   ```
   Retour à la branche principale après T.P.
   ```bash
-  git switch main
+  ./exit-lab.sh --keep
+  # ou pour restaurer l'état initial du TP
+  ./exit-lab.sh --reset
   ```
 
 ### 3.5. <a name="jpa-repositories"/>`@Repository` Spring Data JPA
@@ -1146,11 +1184,13 @@ interface JpaCardRepository extends JpaRepository<Card, String> {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 3.5
+./start-lab.sh 3.5
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 3.6. <a name="jpa-query-dsl"/>JPA query methods
@@ -1170,11 +1210,13 @@ public interface CardPaymentJpaRepository extends JpaRepository<CardPayment, Str
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 3.6
+./start-lab.sh 3.6
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 3.7. <a name="jpa-specifications"/>Spécifications JPA
@@ -1223,11 +1265,13 @@ public interface MoneyTransferRepository
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 3.7
+./start-lab.sh 3.7
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 3.8. <a name="jpa-transactions"/>Transactions
@@ -1254,11 +1298,13 @@ public List<AccountResponse> listAccounts(@RequestParam String customerId) {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 3.8
+./start-lab.sh 3.8
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 3.9. <a name="jpa-envers"/>Hibernate Envers
@@ -1336,11 +1382,13 @@ static class Revinfo implements Serializable {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 3.9
+./start-lab.sh 3.9
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ## 4. <a name="rest-controller"/>Services REST WebMvc avec Spring Boot
@@ -1387,11 +1435,13 @@ autant de ressources (ou tenter de le faire).
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 4.1
+./start-lab.sh 4.1
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 4.2. <a name="rest-controller-converters"/>Convertisseurs automatiques de Spring
@@ -1447,11 +1497,13 @@ public class WebConfiguration implements WebMvcConfigurer {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 4.2
+./start-lab.sh 4.2
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 4.3. <a name="rest-controller-validation"/>Validation des entrées
@@ -1511,11 +1563,13 @@ attribut obligatoire.
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 4.3
+./start-lab.sh 4.3
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 4.4. <a name="rest-controller-exceptions"/>Gestion des exceptions
@@ -1548,11 +1602,13 @@ Lorsque créer et intercepter une exception métier n'a pas d'intérêt intrins�
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 4.4
+./start-lab.sh 4.4
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ### 4.5. <a name="rest-controller-openapi"/>Génération de la documentation OpenAPI
@@ -1591,11 +1647,13 @@ public PagedModel<MoneyTransferResponse> listMoneyTransfers(
   ##### T.P.
   Initialisation :
   ```bash
-  ./lab.sh 4.5
+  ./start-lab.sh 4.5
   ```
   Retour à la branche principale après T.P.
   ```bash
-  git switch main
+  ./exit-lab.sh --keep
+  # ou pour restaurer l'état initial du TP
+  ./exit-lab.sh --reset
   ```
 
 ### 4.6. <a name="rest-controller-inter-service-communication"/>Appels de services REST externes
@@ -1673,11 +1731,13 @@ try{
     ##### T.P.
     Initialisation :
     ```bash
-    ./lab.sh 4.6
+    ./start-lab.sh 4.6
     ```
     Retour à la branche principale après T.P.
     ```bash
-    git switch main
+    ./exit-lab.sh --keep
+    # ou pour restaurer l'état initial du TP
+    ./exit-lab.sh --reset
     ```
 
 ### 4.7. <a name="rest-controller-logging"/>Logs
@@ -1721,11 +1781,13 @@ management:
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 4.7
+./start-lab.sh 4.7
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
 
 ## 5. <a name="caching"/>Mise en cache
@@ -1763,11 +1825,13 @@ public class CacheConfiguration {
 ##### T.P.
 Initialisation :
 ```bash
-./lab.sh 5
+./start-lab.sh 5
 ```
 Retour à la branche principale après T.P.
 ```bash
-git switch main
+./exit-lab.sh --keep
+# ou pour restaurer l'état initial du TP
+./exit-lab.sh --reset
 ```
   CacheManager cacheManager() {
     return new ConcurrentMapCacheManager();
