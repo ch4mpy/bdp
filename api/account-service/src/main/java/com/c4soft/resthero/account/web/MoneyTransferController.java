@@ -88,7 +88,11 @@ public class MoneyTransferController {
   // transfer money to it...
   @PreAuthorize("hasAuthority('account.transfer') or @ac.ownsAccount(#dto.sourceIban) or @ac.ownsAccount(#dto.destinationIban)")
   public ResponseEntity<Void> transferMoneyBetweenAccounts(
-      @RequestBody @Valid MoneyTransferRequest dto,
+      @RequestBody
+      // LAB:4.3:TODO:START activer la validation du body JSON
+      @Valid
+      // LAB:4.3:TODO:END
+      MoneyTransferRequest dto,
       Authentication auth) {
     final var sourceAccount = accountRepo.findByIban(Iban.of(dto.sourceIban()));
     final var destinationAccount = accountRepo.findByIban(Iban.of(dto.destinationIban()));
@@ -171,8 +175,10 @@ public class MoneyTransferController {
   @GetMapping(TRANSFER_PATH)
   @PreAuthorize("hasAuthority('account.read_any') or @ac.ownsAccount(#transfer.sourceIban) or @ac.ownsAccount(#transfer.destinationIban)")
   public MoneyTransferResponse getMoneyTransfer(
-      @Parameter(schema = @Schema(type = "integer"),
+            // LAB:4.5:TODO:START documenter l'identifiant de virement pour OpenAPI
+            @Parameter(schema = @Schema(type = "integer"),
           description = "The ID of the money transfer to retrieve")
+            // LAB:4.5:TODO:END
       @PathVariable(name = TRANSFER_ID_PLACEHOLDER) MoneyTransfer transfer) {
     return transferMapper.map(transfer);
   }

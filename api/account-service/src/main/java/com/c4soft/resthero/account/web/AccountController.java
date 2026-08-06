@@ -92,7 +92,9 @@ public class AccountController {
 
     // Assert that the customer ID is known by the customer service
     try {
+      // LAB:4.6:TODO:START appeler le customer-service pour vérifier l'existence du client
       customersApi.getCustomer(dto.customerId());
+      // LAB:4.6:TODO:END
     } catch (HttpClientErrorException e) {
       if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
         log.warn("Rejecting account {} creation for unknown customer {}", iban, dto.customerId());
