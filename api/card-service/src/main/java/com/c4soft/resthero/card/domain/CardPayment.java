@@ -46,8 +46,10 @@ public class CardPayment {
   @Embedded()
   private Amount amount;
 
+  // LAB:3.3:REMOVE:START
   @ManyToOne
   @JoinColumn(name = "card_number", nullable = false, updatable = false)
+  // LAB:3.3:REMOVE:END
   private Card card;
 
   @Column(nullable = false)

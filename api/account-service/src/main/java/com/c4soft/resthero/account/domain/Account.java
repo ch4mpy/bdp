@@ -32,8 +32,10 @@ import lombok.ToString;
 public class Account {
 
   @Id
+  // LAB:3.2:REMOVE:START
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "accountSeq")
   @SequenceGenerator(name = "accountSeq", sequenceName = "accounts_seq", allocationSize = 1)
+  // LAB:3.2:REMOVE:END
   @EqualsAndHashCode.Include
   @ToString.Include
   private Long id;
