@@ -1,3 +1,5 @@
 com.c4soft.resthero.commons.CommonWebConfiguration
+# LAB:2.7:REMOVE:START
 com.c4soft.resthero.commons.domain.IbanStringMapper
+# LAB:2.7:REMOVE:END
 com.c4soft.resthero.commons.exception.CommonExceptionsHandler

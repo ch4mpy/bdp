@@ -19,7 +19,9 @@ public class CommonWebConfiguration implements WebMvcConfigurer {
 
   @Override
   public void addFormatters(FormatterRegistry registry) {
+    // LAB:4.2:TODO:START enregistrer le convertisseur Iban partagé
     registry.addConverter(new StringIbanConverter(ibanStringMapper));
+    // LAB:4.2:TODO:END
   }
 
   @RequiredArgsConstructor

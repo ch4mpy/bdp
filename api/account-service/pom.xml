@@ -82,10 +82,12 @@
             <artifactId>swagger-annotations</artifactId>
         </dependency>
 
+        <!-- LAB:1.1.1:REMOVE:START -->
         <dependency>
             <groupId>com.c4soft.resthero</groupId>
             <artifactId>rest-hero-starter-common</artifactId>
         </dependency>
+        <!-- LAB:1.1.1:REMOVE:END -->
 
         <dependency>
             <groupId>org.jspecify</groupId>
@@ -178,10 +180,12 @@
 
     <build>
         <plugins>
+            <!-- LAB:1.1.2:REMOVE:START -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- LAB:1.1.2:REMOVE:END -->
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
@@ -230,11 +234,13 @@
         <profile>
             <id>h2</id>
             <dependencies>
+                <!-- LAB:1.2:REMOVE:START -->
                 <dependency>
                     <groupId>com.h2database</groupId>
                     <artifactId>h2</artifactId>
                     <scope>runtime</scope>
                 </dependency>
+                <!-- LAB:1.2:REMOVE:END -->
             </dependencies>
         </profile>
         <profile>
@@ -271,6 +277,7 @@
             </dependencies>
             <build>
                 <plugins>
+                    <!-- LAB:1.4:REMOVE:START -->
                     <plugin>
                         <groupId>uk.co.automatictester</groupId>
                         <artifactId>wiremock-maven-plugin</artifactId>
@@ -288,6 +295,7 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <!-- LAB:1.4:REMOVE:END -->
                     <plugin>
                         <groupId>org.springdoc</groupId>
                         <artifactId>springdoc-openapi-maven-plugin</artifactId>

@@ -45,7 +45,7 @@ public class CustomerRepository {
               Optional.empty(),
               Optional.of(pageable.getPageSize()),
               Optional.empty(),
-              Optional.ofNullable(search),
+              Optional.ofNullable("*%s".formatted(search)),
               Optional.empty());
 
       final List<UserRepresentation> users =
@@ -139,7 +139,7 @@ public class CustomerRepository {
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
-              Optional.ofNullable(search),
+              Optional.ofNullable("*%s".formatted(search)),
               Optional.empty());
 
       return response.getBody() == null ? 0 : response.getBody();

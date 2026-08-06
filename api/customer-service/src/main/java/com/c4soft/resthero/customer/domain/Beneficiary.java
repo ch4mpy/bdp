@@ -22,7 +22,9 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Audited
+// LAB:3.1:REMOVE:START
 @Entity
+// LAB:3.1:REMOVE:END
 @Table(name = "benficiaries",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"iban", "userId"}),
         @UniqueConstraint(columnNames = {"label", "userId"})})

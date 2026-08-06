@@ -69,7 +69,9 @@ public class CustomerController {
    * @return
    */
   @Transactional(readOnly = true)
+  // LAB:4.1:TODO:START déclarer la route de la liste des clients
   @GetMapping(path = BASE_PATH)
+  // LAB:4.1:TODO:END
   @PreAuthorize("hasAuthority('customer.read_any')")
   public PagedModel<CustomerResponse> listCustomers(
       @RequestParam(required = false) @Nullable String search,
@@ -91,7 +93,9 @@ public class CustomerController {
       @RequestBody @Valid CustomerCreationRequest dto,
       Authentication auth) {
     var customer = userRepo.save(customerMapper.map(dto));
+    // LAB:4.7:TODO:START journaliser la création d'un client
     log.info("{} created customer {}", auth.getName(), customer);
+    // LAB:4.7:TODO:END
     return ResponseEntity
         .created(
             URI

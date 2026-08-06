@@ -16,7 +16,11 @@ import com.c4soft.resthero.commons.domain.Iban;
  * @author Jerome Wacongne ch4mp&#64;c4-soft.com
  */
 public interface MoneyTransferRepository
-    extends JpaRepository<MoneyTransfer, Long>, JpaSpecificationExecutor<MoneyTransfer> {
+  extends JpaRepository<MoneyTransfer, Long>
+  // LAB:3.7:REMOVE:START
+  , JpaSpecificationExecutor<MoneyTransfer>
+  // LAB:3.7:REMOVE:END
+{
 
   static Specification<MoneyTransfer> searchSpec(MoneyTransferFilteringCriteria criteria) {
     var spec = Specification.<MoneyTransfer>unrestricted();

@@ -32,7 +32,11 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = AccountController.class, properties = {})
-@Import({IbanStringMapper.class, AccountMapperImpl.class, MoneyTransferMapperImpl.class,
+@Import({
+    // LAB:2.6:REMOVE:START
+    IbanStringMapper.class,
+    // LAB:2.6:REMOVE:END
+    AccountMapperImpl.class, MoneyTransferMapperImpl.class,
     SpringDataWebConvertersTestConfiguration.class, SecurityConfig.class})
 @AutoConfigureAddonsWebmvcResourceServerSecurity
 class AccountControllerTest {
@@ -43,7 +47,9 @@ class AccountControllerTest {
   @MockitoBean
   MoneyTransferRepository transferRepo;
 
+  // LAB:2.1:REMOVE:START
   @MockitoBean
+  // LAB:2.1:REMOVE:END
   CustomersApi customersApi;
 
   @Autowired

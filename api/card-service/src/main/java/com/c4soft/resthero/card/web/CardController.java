@@ -358,7 +358,9 @@ public class CardController {
     }
   }
 
+  // LAB:2.5:REMOVE:START
   @Service
+  // LAB:2.5:REMOVE:END
   @RequiredArgsConstructor
   static class TransactionalCardPaymentHelper {
     private final CardPaymentRepository paymentRepo;
@@ -380,7 +382,9 @@ public class CardController {
 
     }
 
+    // LAB:3.8:REMOVE:START
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
+    // LAB:3.8:REMOVE:END
     CardPayment createPayemnt(Card card, CardPaymentCreationRequest dto) {
       return paymentRepo
           .save(

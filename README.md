@@ -165,6 +165,16 @@ La section `profiles` permet de surcharger toute partie du build pour certaines 
 le profile `openapi` pour ajouter des dépendances à SpringDoc-OpenAPI, lancer l'application avant les test d'
 intégration, récupérer la spec OpenAPI sur la swagger-ui; puis arrêter l'application après les tests d'intégration.
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 1.1.1
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 #### 1.1.2. <a name="maven-build-phases"/>Phases
 
 - **_validate_** : intégrité des POMs
@@ -200,6 +210,16 @@ L'exécution d'une phase sur un module provoque son exécution sur l'ensemble de
 module spécifique, préciser son nom avec l'option `-pl` mais attention, pour que les dépendances soient aussi
 assemblées, il faut ajouter `-am`. Par exemple (`mvn install -pl account-service -am`)
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 1.1.2
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 1.2. <a name="maven-build-dependencies"/>Dépendances
 
 Spring Boot gère la compatibilité d'un très grand nombre de dépendances. Pour initier un projet,
@@ -227,6 +247,16 @@ Dépendances utilisées durant les TPs:
 - `spring-addons-starter-oidc` : auto-configuration OIDC supplémentaire
 - `mapstruct` : mapping automatique
 - `jspecify` : null safety
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 1.2
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
 
 ### 1.3. <a name="maven-build-annotations-preprocessing"/>Processeurs d’annotations à la compilation
 
@@ -269,6 +299,16 @@ Mapstruct utilise les accesseurs générés par Lombok).
     </annotationProcessorPaths>
   </configuration>
 </plugin>
+```
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 1.3
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
 ```
 
 ### 1.4. <a name="maven-build-openapi-spec-generation"/>Génération de spec OpenAPI à partir du code source
@@ -382,6 +422,16 @@ besoin de récupérer la configuration OpenID du provider, nous utiliserons le `
 </profile>
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 1.4
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 1.5. <a name="maven-build-openapi-client-code-generation"/>Génération de code client à partir de spec OpenAPI
 
 Le `openapi-generator-maven-plugin` permet de générer beaucoup de code à partir d'un spec OpenAPI. Ici nous nous
@@ -474,6 +524,16 @@ problèmes de compilation, on applique le `fmt-maven-plugin`:
 </plugin>
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 1.5
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 1.6. <a name="maven-build-resources-handling"/>Manipulation des ressources
 
 Par défaut, Maven utilise les ressources de `src/main/resources` et `src/test/resources` telles quelles. Il est possible
@@ -490,6 +550,16 @@ de modifier ce comportement dans le `buils`. Par exemple :
 </resources>
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 1.6
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 1.7. <a name="maven-profiles"/>Profiles Maven
 
 Il est possible de définir un `profile` Maven pour lequel à peut près n'importe quoi peut être redéfini (properties, dependencies, plugin à appliquer, etc.). C'est ce qui est fait dans les modules pour :
@@ -504,6 +574,16 @@ mvn clean install -Popenapi,h2
 Un profile peut être activé par défaut. C'est le cas du profile `postgresql` dans les modules.
 
 Attention, dès qu'au moins un profile est activé de manière explicite, il n'y a plus d'activation par défaut. Dans ce projet, on associera donc toujours le profile `openapi` soit au profile `h2` (comme ci-dessus) soit au profile `postgresql`.
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 1.7
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
 
 ## 2. <a name="spring"/>Fondamentaux Spring
 
@@ -594,6 +674,16 @@ public class SpringDataWebConvertersTestConfiguration {
 
 Les composants fournis par le biais de l'injection de dépendances peuvent être facilement remplacés pendant les tests.
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 2.1
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 2.2. <a name="spring-components"/>`@Component` et variantes
 
 Les objets instanciés par Spring sont appelés des beans. Ils sont généralement détectés automatiquement lors du component scan grâce à l'annotation `@Component` ou à l'une de ses spécialisations, notamment :
@@ -635,6 +725,16 @@ public class FrankfurterForexService implements ForexService {
     }
   }
 }
+```
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 2.2
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
 ```
 
 ### 2.3. <a name="spring-properties"/>Configuration externe
@@ -687,6 +787,16 @@ public class KeycloakAdminApiProperties {
 }
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 2.3
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 2.4. <a name="spring-configuration"/>`@Configuration` et `@Bean`
 
 Toutes les classes utiles à l'application ne peuvent pas être annotées avec `@Component`. C'est notamment le cas :
@@ -708,6 +818,16 @@ public class RestConfiguration {
 Les paramètres d'une méthode `@Bean` sont injectés par Spring.
 
 Je recommande de regrouper les beans ayant une responsabilité commune dans une même classe de configuration (`RestConfiguration`, `CacheConfiguration`, `WebConfiguration`, etc.) plutôt que de créer une configuration unique pour toute l'application.
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 2.4
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
 
 ### 2.5. <a name="spring-proxies"/>Proxies générés
 
@@ -762,6 +882,16 @@ public class AccountService {
 }
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 2.5
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 2.6. <a name="spring-testing"/>Tests
 
 Spring Boot fournit plusieurs niveaux de tests. Plus le contexte Spring chargé est réduit, plus les tests sont rapides.
@@ -777,6 +907,16 @@ Les dépendances injectées par Spring peuvent être :
 - remplacées par des `@MockitoBean` (ou des implémentations spécifiques aux tests)
 - importées explicitement avec `@Import({})` si elle ne font pas partie de la _tranche_ prévue par Spring
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 2.6
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 
 ### 2.7. <a name="spring-boot-starter"/>Starter Spring Boot
 
@@ -790,6 +930,16 @@ com.c4soft.resthero.commons.exception.CommonExceptionsHandler
 ```
 
 Lors de la création de starters, il est important d'être peu intrusif et de laisser la main à l'application pour surcharger l'auto-configuration proposée. Les annotations `@ConditionalOn...` telles que `@ConditionalOnMissingBean` et `@ConditionalOnProperty` peuvent alors trouver tout leur intérêt.
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 2.7
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
 
 ## 3. <a name="jpa"/>Modèles objet-relationnel et accès aux données
 
@@ -836,6 +986,16 @@ public class Card {
 }
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 3.1
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 3.2. <a name="jpa-generated-ids"/>Identifiants générés
 
 H2 et PostgreSQL utilisent les séquences pour les identifiants numériques auto-générés (pas de PK auto-incrémentée come
@@ -851,6 +1011,16 @@ Les séquences sont décrites avec `@Generator`.
 @GeneratedValue(generator = "cardPaymentSeq")
 @SequenceGenerator(name = "cardPaymentSeq", sequenceName = "payment_seq", allocationSize = 1)
 private Long id;
+```
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 3.2
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
 ```
 
 ### 3.3. <a name="jpa-relations"/>Relations
@@ -899,6 +1069,16 @@ public class Card {
 }
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 3.3
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 3.4. <a name="jpa-type-converter"/>Conversion de types
 
 Lorsqu'un objet est mappé sur un type simple en base, il possible définir un `@Converter(autoApply = true)` qui
@@ -939,6 +1119,16 @@ public class Card {
 }
 ```
 
+  ##### T.P.
+  Initialisation :
+  ```bash
+  ./lab.sh 3.4
+  ```
+  Retour à la branche principale après T.P.
+  ```bash
+  git switch main
+  ```
+
 ### 3.5. <a name="jpa-repositories"/>`@Repository` Spring Data JPA
 
 Leur rôle est de manipuler les données en base. Ce sont généralement des singletons générés par Spring à partir d'une
@@ -953,6 +1143,16 @@ interface JpaCardRepository extends JpaRepository<Card, String> {
 }
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 3.5
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 3.6. <a name="jpa-query-dsl"/>JPA query methods
 
 Spring Data expose
@@ -965,6 +1165,16 @@ public interface CardPaymentJpaRepository extends JpaRepository<CardPayment, Str
 
   List<CardPayment> findByCardNumberAndTimestampBetween(String cardNumber, Instant from, Instant to);
 }
+```
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 3.6
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
 ```
 
 ### 3.7. <a name="jpa-specifications"/>Spécifications JPA
@@ -1010,6 +1220,16 @@ public interface MoneyTransferRepository
 }
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 3.7
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 3.8. <a name="jpa-transactions"/>Transactions
 
 Les opérations d'accès aux données en base se font à l'intérieur d'une transaction.
@@ -1029,6 +1249,16 @@ public List<AccountResponse> listAccounts(@RequestParam String customerId) {
   final var accounts = accountRepo.findByCustomerId(customerId);
   return accounts.stream().map(accountMapper::map).toList();
 }
+```
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 3.8
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
 ```
 
 ### 3.9. <a name="jpa-envers"/>Hibernate Envers
@@ -1103,6 +1333,16 @@ static class Revinfo implements Serializable {
 }
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 3.9
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ## 4. <a name="rest-controller"/>Services REST WebMvc avec Spring Boot
 
 Nous nous intéressons ici aux `@RestController` qui forment la façade visible d'une API REST.
@@ -1143,6 +1383,16 @@ Pour rappel :
 Une différence notable entre `POST` et `PUT` est que lors de la répétition d'une requête `PUT` sur la même resource et
 avec le même _body_, seule la première requête devrait avoir un effet, alors que la répétition d'un `POST` doit créer
 autant de ressources (ou tenter de le faire).
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 4.1
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
 
 ### 4.2. <a name="rest-controller-converters"/>Convertisseurs automatiques de Spring
 
@@ -1192,6 +1442,16 @@ public class WebConfiguration implements WebMvcConfigurer {
     }
   }
 }
+```
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 4.2
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
 ```
 
 ### 4.3. <a name="rest-controller-validation"/>Validation des entrées
@@ -1248,6 +1508,16 @@ public @interface CurrencyIso3 {
 Je recommande de laisser passer `null` et de combiner les annotations avec `@NotNull` pour rendre un paramètre /
 attribut obligatoire.
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 4.3
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ### 4.4. <a name="rest-controller-exceptions"/>Gestion des exceptions
 
 Lorsqu'une erreur est détectée (technique ou métier), une exception est levée.
@@ -1274,6 +1544,16 @@ public class CommonExceptionsHandler {
 
 Lorsque créer et intercepter une exception métier n'a pas d'intérêt intrinsèque, un raccourci est de soulever une
 `ErrorResponseException` pour laquelle Spring fournit déjà un `@ExceptionHandler`.
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 4.4
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
 
 ### 4.5. <a name="rest-controller-openapi"/>Génération de la documentation OpenAPI
 
@@ -1307,6 +1587,16 @@ public PagedModel<MoneyTransferResponse> listMoneyTransfers(
     @Nullable @Valid @ParameterObject MoneyTransferFilterRequest dto,
     @ParameterObject Pageable pageable);
 ```
+
+  ##### T.P.
+  Initialisation :
+  ```bash
+  ./lab.sh 4.5
+  ```
+  Retour à la branche principale après T.P.
+  ```bash
+  git switch main
+  ```
 
 ### 4.6. <a name="rest-controller-inter-service-communication"/>Appels de services REST externes
 
@@ -1380,6 +1670,16 @@ try{
 }
 ```
 
+    ##### T.P.
+    Initialisation :
+    ```bash
+    ./lab.sh 4.6
+    ```
+    Retour à la branche principale après T.P.
+    ```bash
+    git switch main
+    ```
+
 ### 4.7. <a name="rest-controller-logging"/>Logs
 
 Les logs sont la première source d'audit de l'application. Il est important de loguer suffisamment et au bon niveau:
@@ -1418,6 +1718,16 @@ management:
           endpoint: http://host.docker.internal:4318/v1/logs
 ```
 
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 4.7
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
+
 ## 5. <a name="caching"/>Mise en cache
 
 L'enjeu principal de la mise en cache est l'obsolescence des données. Il faut donc remplacer ou supprimer des données en
@@ -1449,6 +1759,16 @@ Pour activer la mise en cache dans l'application :
 public class CacheConfiguration {
   // Nécessaire seulement pour spring.cache.type=simple (Caffeine et autres caches managés par Boot fournissent leur CacheManager)
   @Bean
+
+##### T.P.
+Initialisation :
+```bash
+./lab.sh 5
+```
+Retour à la branche principale après T.P.
+```bash
+git switch main
+```
   CacheManager cacheManager() {
     return new ConcurrentMapCacheManager();
   }

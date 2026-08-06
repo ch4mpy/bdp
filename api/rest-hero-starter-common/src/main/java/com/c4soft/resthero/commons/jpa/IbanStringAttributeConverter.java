@@ -7,7 +7,9 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import lombok.RequiredArgsConstructor;
 
+// LAB:3.4:REMOVE:START
 @Converter(autoApply = true)
+// LAB:3.4:REMOVE:END
 @RequiredArgsConstructor
 public class IbanStringAttributeConverter implements AttributeConverter<Iban, String> {
   private final IbanStringMapper ibanStringMapper;

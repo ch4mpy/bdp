@@ -27,7 +27,9 @@ import tools.jackson.databind.annotation.JsonSerialize;
 /**
  * @author Jerome Wacongne ch4mp&#64;c4-soft.com
  */
+// LAB:4.4:TODO:START rendre ce handler visible à tous les contrôleurs
 @RestControllerAdvice
+// LAB:4.4:TODO:END
 public class CommonExceptionsHandler {
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

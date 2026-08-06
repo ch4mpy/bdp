@@ -58,7 +58,9 @@ public class PersistenceConfiguration {
 
   @Entity
   @Table(name = "REVINFO")
+  // LAB:3.9:REMOVE:START
   @RevisionEntity(value = SecurityAwareRevisionListener.class)
+  // LAB:3.9:REMOVE:END
   @Data
   @NoArgsConstructor
   @AllArgsConstructor

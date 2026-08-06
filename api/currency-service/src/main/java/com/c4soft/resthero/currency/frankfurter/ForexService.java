@@ -19,7 +19,9 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+// LAB:2.2:REMOVE:START
 @Service
+// LAB:2.2:REMOVE:END
 @RequiredArgsConstructor
 @Slf4j
 public class ForexService {
@@ -27,7 +29,9 @@ public class ForexService {
 
   private final CachingRatesRepository ratesRepo;
 
+  // LAB:2.2:REMOVE:START
   @PostConstruct
+  // LAB:2.2:REMOVE:END
   void warmUp() {
     try {
       for (final var curr : Currency.values()) {

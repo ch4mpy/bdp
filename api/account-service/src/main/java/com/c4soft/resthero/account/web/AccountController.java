@@ -35,7 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping(
     produces = {MediaType.APPLICATION_PROBLEM_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE})
+// LAB:2.1:REMOVE:START
 @RequiredArgsConstructor
+// LAB:2.1:REMOVE:END
 @Observed
 @Slf4j
 public class AccountController {
@@ -90,7 +92,9 @@ public class AccountController {
 
     // Assert that the customer ID is known by the customer service
     try {
+      // LAB:4.6:TODO:START appeler le customer-service pour vérifier l'existence du client
       customersApi.getCustomer(dto.customerId());
+      // LAB:4.6:TODO:END
     } catch (HttpClientErrorException e) {
       if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
         log.warn("Rejecting account {} creation for unknown customer {}", iban, dto.customerId());
