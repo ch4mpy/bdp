@@ -9,10 +9,12 @@ import dev.frankfurter.api.RatesApi;
 @Configuration
 public class RestConfiguration {
 
+  // LAB:2.2:REMOVE:START
   @Bean
   RatesApi customersApi(RestClient frankfurterClient) throws Exception {
     return new RestClientHttpExchangeProxyFactoryBean<>(RatesApi.class, frankfurterClient)
         .getObject();
   }
+  // LAB:2.2:REMOVE:END
 
 }

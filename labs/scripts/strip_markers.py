@@ -15,6 +15,7 @@ LINE_COMMENT_EXTENSIONS = {
     ".yml": "#",
     ".yaml": "#",
     ".properties": "#",
+    ".imports": "#",
 }
 BLOCK_COMMENT_EXTENSIONS = {
     ".xml": ("<!--", "-->"),

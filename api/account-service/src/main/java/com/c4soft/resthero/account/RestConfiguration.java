@@ -11,7 +11,9 @@ import com.c4_soft.springaddons.rest.RestClientHttpExchangeProxyFactoryBean;
 import com.c4soft.resthero.api.CurrenciesApi;
 import com.c4soft.resthero.api.CustomersApi;
 
+// LAB:2.4:REMOVE:START
 @Configuration
+// LAB:2.4:REMOVE:END
 public class RestConfiguration {
 
   @SuppressWarnings("null")

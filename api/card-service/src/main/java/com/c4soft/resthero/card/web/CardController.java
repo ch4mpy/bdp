@@ -358,7 +358,9 @@ public class CardController {
     }
   }
 
+  // LAB:2.5:REMOVE:START
   @Service
+  // LAB:2.5:REMOVE:END
   @RequiredArgsConstructor
   static class TransactionalCardPaymentHelper {
     private final CardPaymentRepository paymentRepo;

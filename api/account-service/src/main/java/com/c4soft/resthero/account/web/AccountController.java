@@ -35,7 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping(
     produces = {MediaType.APPLICATION_PROBLEM_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE})
+// LAB:2.1:REMOVE:START
 @RequiredArgsConstructor
+// LAB:2.1:REMOVE:END
 @Observed
 @Slf4j
 public class AccountController {
