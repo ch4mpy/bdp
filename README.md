@@ -5,7 +5,7 @@ Ce support de TPs répond à des exigences de production avancées. Les services
     * Hibernate Envers garde la trace de chaque version des entités en base de données avec l'instant et l'auteur de la modification
     * Chaque endpoint qui modifie l'état de l'application (`POST`, `PUT` ou `DELETE`) log au niveau `info` un résumé de ce qui a été modifié et par qui
 - **Observables** et observées de manière centralisée : émet des logs collectés dans Loki, des métriques dans Mimir et des traces dans Tempo, le tout visualisé dans [Grafana](https://host.docker.internal/grafana).
-- **Documentés** avec OpenAPI : permet aux clients de générer le code pour les consommer et aux développeurs de la visualiser dans une Swagger-UI. Cette documentation est générée à partir des sources (commentaires JavaDoc compris)
+- **Documentés** avec OpenAPI : permet aux clients de générer le code pour les consommer et aux développeurs de les visualiser dans une Swagger UI. Cette documentation est générée à partir des sources (commentaires JavaDoc compris)
 - **Communicants** : Appels REST inter-service:
   * Le `customer-service` utilise Keycloak pour accéder aux utilisateurs
   * L'`account-service` vérifie auprès du `customer-service` qu'un client existe avant de créer un compte à son nom. Il sollicite éfalement le `currency-service` lorsqu'un virement nécessite des opérations de change.
