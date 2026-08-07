@@ -11,6 +11,7 @@ docker compose \
   -f compose-rest-api-db.yml \
   -f compose-mailpit.yml \
   -f compose-keycloak.yml \
+  -f compose-rabbitmq.yml \
   -f compose-observability.yml \
   -f compose-reverse-proxy.yml \
   up -d

@@ -30,6 +30,12 @@ KC_LOG_LEVEL=INFO\n\
 ACCOUNTS_DB_PORT=2633\n\
 CARDS_DB_PORT=2634\n\
 CUSTOMERS_DB_PORT=2635\n\
+\n\
+# RabbitMQ (application events)\n\
+RABBITMQ_PORT=5672\n\
+RABBITMQ_MANAGEMENT_PORT=15672\n\
+RABBITMQ_USER=rest-api\n\
+RABBITMQ_PASSWORD=secret\n\
 " > .env
 fi
 source ./.env

@@ -85,6 +85,16 @@ spring:
   web:
     error:
       include-message: always
+  rabbitmq:
+    host: ${cn}
+    port: 5672
+    username: rest-api
+    password: secret
+
+rest-hero:
+  events:
+    subscribed-exchanges:
+      - rest-hero.account-service
 
 springdoc:
   # currently broken (boot 4.1.0, springdoc-openapi 3.0.3)
