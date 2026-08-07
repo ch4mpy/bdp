@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.c4soft.resthero.account.domain.MoneyTransfer;
+import com.c4soft.resthero.account.events.ResourceType;
 import com.c4soft.resthero.account.jpa.AccountRepository;
 import com.c4soft.resthero.account.jpa.MoneyTransferRepository;
 import com.c4soft.resthero.api.CurrenciesApi;
@@ -137,7 +138,7 @@ public class MoneyTransferController {
               eventsExchange.getName(),
               "account.updated",
               new DomainEvent(
-                  "account",
+                  ResourceType.ACCOUNT.name(),
                   a.getIban().toMachineReadableString(),
                   a.getCustomerId(),
                   List.of("account.read_any"),
@@ -170,7 +171,7 @@ public class MoneyTransferController {
               eventsExchange.getName(),
               "account.updated",
               new DomainEvent(
-                  "account",
+                  ResourceType.ACCOUNT.name(),
                   a.getIban().toMachineReadableString(),
                   a.getCustomerId(),
                   List.of("account.read_any"),
