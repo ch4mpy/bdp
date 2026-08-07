@@ -5,6 +5,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,9 @@ import tools.jackson.databind.json.JsonMapper;
 public class EventsRabbitConfiguration {
 
   @Bean
+  // only services actually publishing events define rest-hero.events.exchange-name; consumer-only
+  // modules (like the gateway) must not declare an exchange with a null name
+  @ConditionalOnProperty(prefix = "rest-hero.events", name = "exchange-name")
   TopicExchange eventsExchange(RestHeroEventsProperties properties) {
     return new TopicExchange(properties.getExchangeName());
   }

@@ -15,11 +15,3 @@ docker compose \
   -f compose-observability.yml \
   -f compose-reverse-proxy.yml \
   up -d
-
-source ~/.bashrc
-sdk env install
-nvm install --lts
-nvm use
-cd api && mvn install -Popenapi,h2 && cd ..
-git submodule init && git submodule update
-cd frontend && npm i && npm run api && cd ..

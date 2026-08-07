@@ -95,6 +95,13 @@ Le script `deploy-dev.sh` :
 - installe les dépendances du front et génère le code client pour consommer l'API
 ```bash
 bash ./deploy-dev.sh
+
+sdk env install
+nvm install --lts
+nvm use
+cd api && mvn install -Popenapi,h2 && cd ..
+git submodule init && git submodule update
+cd frontend && npm i && npm run api && cd ..
 ```
 
 Dans [Keycloak](https://host.docker.internal/auth/admin/master/console/#/labs/realm-settings/email), éditer le mot de passe SMTP avec la valeur de `secrets/mail/password.txt`.
